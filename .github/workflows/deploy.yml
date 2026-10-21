@@ -31,10 +31,12 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
+      # Global CLI install; npm ships with Node and needs no PNPM_HOME setup
       - run: npm install --global vercel@${{ env.VERCEL_CLI_VERSION }}
 
       - name: Resolve Vercel target

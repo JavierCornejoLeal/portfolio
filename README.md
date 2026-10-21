@@ -6,20 +6,20 @@ Personal portfolio built with **Astro**, **React** and **Tailwind CSS**, deploye
 
 ## Run locally
 
-Requires Node.js 22.22 or newer.
+Requires Node.js 22.22 or newer and [pnpm](https://pnpm.io). The pnpm version is pinned in `package.json`; run `corepack enable` to use it automatically.
 
 ```sh
-npm install
-npm run dev        # http://localhost:4321
+pnpm install
+pnpm dev           # http://localhost:4321
 ```
 
-| Command            | What it does                         |
-| ------------------ | ------------------------------------ |
-| `npm run dev`      | Dev server with hot reload           |
-| `npm run build`    | Static build in `dist/`              |
-| `npm run preview`  | Serves the built site                |
-| `npm run check`    | Type checks Astro and TypeScript     |
-| `npm run test:e2e` | Runs the Playwright end-to-end tests |
+| Command         | What it does                         |
+| --------------- | ------------------------------------ |
+| `pnpm dev`      | Dev server with hot reload           |
+| `pnpm build`    | Static build in `dist/`              |
+| `pnpm preview`  | Serves the built site                |
+| `pnpm check`    | Type checks Astro and TypeScript     |
+| `pnpm test:e2e` | Runs the Playwright end-to-end tests |
 
 ### With Docker
 
@@ -33,8 +33,8 @@ docker compose --profile prod up prod   # production build on nginx, http://loca
 End-to-end tests live in `tests/e2e/` and run in a real Chromium browser against the production build.
 
 ```sh
-npx playwright install chromium   # first time only
-npm run test:e2e
+pnpm exec playwright install chromium   # first time only
+pnpm test:e2e
 ```
 
 They cover the home hero, the Silk background canvas and the 404 page.
