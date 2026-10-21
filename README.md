@@ -1,58 +1,66 @@
 # Portfolio
 
-Personal portfolio built with Astro, React and Tailwind CSS.
+Personal portfolio built with **Astro**, **React** and **Tailwind CSS**, deployed on **Vercel**.
 
-## Local development
+**Live:** https://portfolio-ebon-phi-74.vercel.app
+
+## Run locally
+
+Requires Node.js 22.22 or newer.
 
 ```sh
 npm install
-npm run dev      # http://localhost:4321
-npm run check    # type check
-npm run build    # static build in dist/
+npm run dev        # http://localhost:4321
+```
+
+| Command            | What it does                         |
+| ------------------ | ------------------------------------ |
+| `npm run dev`      | Dev server with hot reload           |
+| `npm run build`    | Static build in `dist/`              |
+| `npm run preview`  | Serves the built site                |
+| `npm run check`    | Type checks Astro and TypeScript     |
+| `npm run test:e2e` | Runs the Playwright end-to-end tests |
+
+### With Docker
+
+```sh
+docker compose up dev                   # dev server, http://localhost:4321
+docker compose --profile prod up prod   # production build on nginx, http://localhost:8080
 ```
 
 ## Tests
 
-End-to-end tests use [Playwright](https://playwright.dev) and live in `tests/e2e/`. They build the site and run it with `astro preview`.
+End-to-end tests live in `tests/e2e/` and run in a real Chromium browser against the production build.
 
 ```sh
 npx playwright install chromium   # first time only
 npm run test:e2e
 ```
 
-## Docker
+They cover the home hero, the Silk background canvas and the 404 page.
 
-```sh
-docker compose up dev                 # dev server with hot reload, http://localhost:4321
-docker compose --profile prod up prod # production build served by nginx, http://localhost:8080
-```
+## Deployment
 
-## Environments and CI/CD
+Every change goes through two environments before reaching production.
 
-| Branch    | Environment | Vercel target |
-| --------- | ----------- | ------------- |
-| `develop` | PRE         | Preview       |
-| `main`    | PRO         | Production    |
+| Branch    | Environment | Deploys                            |
+| --------- | ----------- | ---------------------------------- |
+| `develop` | PRE         | Automatically on merge             |
+| `main`    | PRO         | After manual approval in GitHub    |
 
-- **CI** (`.github/workflows/ci.yml`): runs on pull requests to `main` and `develop`. Type checks, builds the site, runs the Playwright end-to-end tests and builds the Docker image.
-- **Deploy** (`.github/workflows/deploy.yml`): runs CI, then deploys to Vercel on every push to `develop` (PRE) or `main` (PRO).
+**Release flow**
 
-Vercel's Git integration is disabled in `vercel.json`, so GitHub Actions is the only deploy path.
+1. Open a pull request from a `feat/*` branch to `develop`.
+2. Merge it. The site deploys to PRE for testing.
+3. Open a pull request from `develop` to `main` and merge it.
+4. Approve the deployment in GitHub Actions. The site goes live.
 
-Recommended flow: `feature/*` → PR to `develop` → test on PRE → PR `develop` → `main` → PRO.
+## Continuous integration
 
-### Required GitHub configuration
+GitHub Actions runs these checks on every pull request and before every deploy:
 
-Repository secrets:
+- Type check and build
+- End-to-end tests
+- Docker image build
 
-| Secret              | Source                                                    |
-| ------------------- | --------------------------------------------------------- |
-| `VERCEL_TOKEN`      | Vercel → Account Settings → Tokens                        |
-| `VERCEL_ORG_ID`     | `.vercel/project.json` after running `npx vercel link`    |
-| `VERCEL_PROJECT_ID` | `.vercel/project.json` after running `npx vercel link`    |
-
-GitHub environments `pre` and `pro` (Settings → Environments). Add required reviewers to `pro` to approve production deploys manually.
-
-Optional variable `PRE_DOMAIN` in the `pre` environment assigns a fixed domain to the latest PRE deployment. The domain must be added to the Vercel project first.
-
-PRE deployments are Vercel previews, which require Vercel login by default (Deployment Protection). Disable it in the Vercel project settings if PRE must be public.
+If any check fails, nothing is deployed. Results appear in the pull request **Checks** tab and in **Actions**.
