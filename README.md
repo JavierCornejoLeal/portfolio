@@ -11,6 +11,15 @@ npm run check    # type check
 npm run build    # static build in dist/
 ```
 
+## Tests
+
+End-to-end tests use [Playwright](https://playwright.dev) and live in `tests/e2e/`. They build the site and run it with `astro preview`.
+
+```sh
+npx playwright install chromium   # first time only
+npm run test:e2e
+```
+
 ## Docker
 
 ```sh
@@ -25,7 +34,7 @@ docker compose --profile prod up prod # production build served by nginx, http:/
 | `develop` | PRE         | Preview       |
 | `main`    | PRO         | Production    |
 
-- **CI** (`.github/workflows/ci.yml`): runs on pull requests to `main` and `develop`. Type checks, builds the site and builds the Docker image.
+- **CI** (`.github/workflows/ci.yml`): runs on pull requests to `main` and `develop`. Type checks, builds the site, runs the Playwright end-to-end tests and builds the Docker image.
 - **Deploy** (`.github/workflows/deploy.yml`): runs CI, then deploys to Vercel on every push to `develop` (PRE) or `main` (PRO).
 
 Vercel's Git integration is disabled in `vercel.json`, so GitHub Actions is the only deploy path.
