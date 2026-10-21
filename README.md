@@ -2,7 +2,7 @@
 
 Personal portfolio built with **Astro**, **React** and **Tailwind CSS**, deployed on **Vercel**.
 
-**Live:** https://portfolio-ebon-phi-74.vercel.app
+**Live:** https://javiercornejo.vercel.app
 
 ## Run locally
 
