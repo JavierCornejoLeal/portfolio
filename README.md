@@ -1,43 +1,49 @@
-# Astro Starter Kit: Minimal
+# Portfolio
+
+Personal portfolio built with Astro, React and Tailwind CSS.
+
+## Local development
 
 ```sh
-npm create astro@latest -- --template minimal
+npm install
+npm run dev      # http://localhost:4321
+npm run check    # type check
+npm run build    # static build in dist/
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Docker
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```sh
+docker compose up dev                 # dev server with hot reload, http://localhost:4321
+docker compose --profile prod up prod # production build served by nginx, http://localhost:8080
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Environments and CI/CD
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+| Branch    | Environment | Vercel target |
+| --------- | ----------- | ------------- |
+| `develop` | PRE         | Preview       |
+| `main`    | PRO         | Production    |
 
-Any static assets, like images, can be placed in the `public/` directory.
+- **CI** (`.github/workflows/ci.yml`): runs on pull requests to `main` and `develop`. Type checks, builds the site and builds the Docker image.
+- **Deploy** (`.github/workflows/deploy.yml`): runs CI, then deploys to Vercel on every push to `develop` (PRE) or `main` (PRO).
 
-## 🧞 Commands
+Vercel's Git integration is disabled in `vercel.json`, so GitHub Actions is the only deploy path.
 
-All commands are run from the root of the project, from a terminal:
+Recommended flow: `feature/*` → PR to `develop` → test on PRE → PR `develop` → `main` → PRO.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+### Required GitHub configuration
 
-## 👀 Want to learn more?
+Repository secrets:
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+| Secret              | Source                                                    |
+| ------------------- | --------------------------------------------------------- |
+| `VERCEL_TOKEN`      | Vercel → Account Settings → Tokens                        |
+| `VERCEL_ORG_ID`     | `.vercel/project.json` after running `npx vercel link`    |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` after running `npx vercel link`    |
+
+GitHub environments `pre` and `pro` (Settings → Environments). Add required reviewers to `pro` to approve production deploys manually.
+
+Optional variable `PRE_DOMAIN` in the `pre` environment assigns a fixed domain to the latest PRE deployment. The domain must be added to the Vercel project first.
+
+PRE deployments are Vercel previews, which require Vercel login by default (Deployment Protection). Disable it in the Vercel project settings if PRE must be public.

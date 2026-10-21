@@ -1,0 +1,19 @@
+services:
+  dev:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "127.0.0.1:4321:4321"
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  prod:
+    build:
+      context: .
+      target: prod
+    ports:
+      - "127.0.0.1:8080:80"
+    profiles:
+      - prod
