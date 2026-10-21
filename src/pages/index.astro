@@ -1,10 +1,24 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from '@/layouts/Layout.astro';
+import Silk from '@/components/Silk';
 ---
 
 <Layout title="Portfolio">
-	<main class="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6">
-		<h1 class="text-4xl font-bold tracking-tight sm:text-6xl">Portfolio</h1>
-		<p class="mt-4 text-lg text-zinc-400">Built with Astro and Tailwind CSS.</p>
+	<main class="relative h-screen overflow-hidden">
+		<Silk
+			client:only="react"
+			className="absolute inset-0"
+			color="#3F3A46"
+			sheenColor="#C9C3D6"
+			speed={4}
+			scale={1}
+			noiseIntensity={1.2}
+		/>
+		<section
+			class="pointer-events-none relative z-10 mx-auto flex h-full max-w-3xl flex-col justify-center px-6"
+		>
+			<h1 class="text-4xl font-bold tracking-tight sm:text-6xl">Portfolio</h1>
+			<p class="mt-4 text-lg text-zinc-300">Built with Astro and Tailwind CSS.</p>
+		</section>
 	</main>
 </Layout>
