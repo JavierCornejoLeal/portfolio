@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 export interface SilkProps {
   speed?: number;
@@ -303,6 +303,8 @@ const Silk = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wakeRef = useRef<(() => void) | null>(null);
+  // Bumped after a WebGL context restore to remount the canvas with fresh GPU resources
+  const [contextEpoch, setContextEpoch] = useState(0);
   const settingsRef = useRef<Settings>(null as unknown as Settings);
   settingsRef.current = {
     speed,
@@ -602,6 +604,15 @@ const Silk = ({
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
     document.addEventListener('visibilitychange', onVisibility);
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      cancelAnimationFrame(raf);
+      raf = 0;
+      wakeRef.current = null;
+    };
+    const onContextRestored = () => setContextEpoch(epoch => epoch + 1);
+    canvas.addEventListener('webglcontextlost', onContextLost);
+    canvas.addEventListener('webglcontextrestored', onContextRestored);
     resize();
 
     let lastDpr = settingsRef.current.dpr;
@@ -625,6 +636,8 @@ const Silk = ({
       window.removeEventListener('pointerdown', onPointerDown);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       document.removeEventListener('visibilitychange', onVisibility);
+      canvas.removeEventListener('webglcontextlost', onContextLost);
+      canvas.removeEventListener('webglcontextrestored', onContextRestored);
       gl.deleteTexture(texture);
       gl.deleteFramebuffer(framebuffer);
       gl.deleteProgram(fieldProgram.program);
@@ -633,7 +646,7 @@ const Silk = ({
       gl.deleteVertexArray(vao);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-  }, []);
+  }, [contextEpoch]);
 
   useEffect(() => {
     wakeRef.current?.();
@@ -641,7 +654,7 @@ const Silk = ({
 
   return (
     <div ref={containerRef} className={`relative w-full h-full overflow-hidden ${className}`} style={style}>
-      <canvas ref={canvasRef} className="absolute inset-0 block w-full h-full" aria-hidden="true" />
+      <canvas key={contextEpoch} ref={canvasRef} className="absolute inset-0 block w-full h-full" aria-hidden="true" />
     </div>
   );
 };
