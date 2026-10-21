@@ -1,0 +1,11 @@
+node_modules
+dist
+.astro
+.git
+.github
+.vercel
+.env
+.env.*
+npm-debug.log*
+Dockerfile
+docker-compose.yml
