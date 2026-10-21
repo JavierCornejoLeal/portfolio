@@ -1,7 +1,8 @@
 /// <reference types="node" />
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4321;
+// Dedicated port so tests never hit a running `astro dev` server on 4321
+const PORT = 4322;
 
 export default defineConfig({
 	testDir: './tests/e2e',
@@ -17,7 +18,7 @@ export default defineConfig({
 	webServer: {
 		command: `npm run build && npm run preview -- --host 127.0.0.1 --port ${PORT}`,
 		url: `http://127.0.0.1:${PORT}`,
-		reuseExistingServer: !process.env.CI,
+		reuseExistingServer: false,
 		timeout: 120_000,
 		// Astro backgrounds `astro preview` when it detects an AI agent; keep it in the foreground
 		env: { AI_AGENT: '', CLAUDECODE: '' },

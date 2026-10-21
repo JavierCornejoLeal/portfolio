@@ -15,10 +15,14 @@ test.describe('home page', () => {
 
 		const canvas = page.locator('main canvas');
 		await expect(canvas).toBeAttached();
-		const box = await canvas.boundingBox();
 		const viewport = page.viewportSize();
-		expect(box?.width).toBe(viewport?.width);
-		expect(box?.height).toBe(viewport?.height);
+		// Silk sizes its canvas asynchronously, so retry until it fills the viewport
+		await expect
+			.poll(async () => {
+				const box = await canvas.boundingBox();
+				return box && { width: box.width, height: box.height };
+			})
+			.toEqual({ width: viewport?.width, height: viewport?.height });
 	});
 
 	test('keeps the hero text from blocking pointer events on the background', async ({ page }) => {
