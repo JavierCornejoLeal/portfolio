@@ -5,7 +5,7 @@ test.describe('home page', () => {
 		const response = await page.goto('/');
 
 		expect(response?.status()).toBe(200);
-		await expect(page).toHaveTitle('Javier Cornejo · Incoming');
+		await expect(page).toHaveTitle('Javier Cornejo');
 		await expect(page.getByRole('heading', { level: 1, name: 'Incoming' })).toBeVisible();
 		await expect(page.locator('main p', { hasText: 'Something big is on its way.' })).toBeVisible();
 	});
@@ -147,12 +147,22 @@ test.describe('home page', () => {
 		});
 		await page.goto('/');
 		await expect(page.locator('main canvas')).toBeAttached();
-		await page.waitForTimeout(500);
+		const frames = () => page.evaluate(() => (window as unknown as { silkFrames: number }).silkFrames);
+		// Wait for startup renders (resize, visibility) to finish so only pointer work is measured
+		let settled = -1;
+		await expect
+			.poll(async () => {
+				const now = await frames();
+				const stable = now === settled;
+				settled = now;
+				return stable;
+			}, { intervals: [300] })
+			.toBe(true);
 
-		const before = await page.evaluate(() => (window as unknown as { silkFrames: number }).silkFrames);
+		const before = await frames();
 		for (let i = 0; i < 20; i++) await page.mouse.move(200 + i * 40, 200 + i * 15);
 		await page.waitForTimeout(800);
-		const after = await page.evaluate(() => (window as unknown as { silkFrames: number }).silkFrames);
+		const after = await frames();
 
 		// The pointer has no visible effect, so it must not wake the renderer at all
 		expect(after - before).toBe(0);
