@@ -1,1 +1,79 @@
 @import "tailwindcss";
+@import "@fontsource-variable/unbounded";
+@import "@fontsource-variable/space-grotesk";
+
+@theme {
+	--font-display: "Unbounded Variable", "Space Grotesk Variable", sans-serif;
+	--font-sans: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+	--color-silk: #c9c3d6;
+	--ease-curtain: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+	::selection {
+		background-color: var(--color-silk);
+		color: var(--color-zinc-950);
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-silk);
+		outline-offset: 4px;
+		border-radius: 2px;
+	}
+}
+
+/* Keeps text legible over the brightest Silk sheen: never fully transparent. */
+.silk-scrim {
+	background:
+		linear-gradient(to bottom, rgb(9 9 11 / 0.7), transparent 22%, transparent 72%, rgb(9 9 11 / 0.78)),
+		radial-gradient(ellipse at 30% 55%, rgb(9 9 11 / 0.72), rgb(9 9 11 / 0.4) 60%, rgb(9 9 11 / 0.35));
+}
+
+/* Curtain reveal: each glyph rises from behind a clip edge, staggered by --i. */
+.curtain-letter {
+	display: inline-block;
+	clip-path: inset(0 0 0 0);
+	animation: curtain-rise 1.4s var(--ease-curtain) both;
+	animation-delay: calc(0.35s + var(--i, 0) * 0.07s);
+}
+
+.curtain-fade {
+	animation: curtain-fade 1.2s var(--ease-curtain) both;
+	animation-delay: var(--delay, 1s);
+}
+
+/* Never hide a block that holds keyboard focus mid-entrance. */
+.curtain-fade:focus-within {
+	animation: none;
+}
+
+@keyframes curtain-rise {
+	from {
+		clip-path: inset(0 0 100% 0);
+		transform: translateY(0.55em);
+		filter: blur(6px);
+	}
+	to {
+		clip-path: inset(0 0 0 0);
+		transform: translateY(0);
+		filter: blur(0);
+	}
+}
+
+@keyframes curtain-fade {
+	from {
+		opacity: 0;
+		transform: translateY(0.75rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.curtain-letter,
+	.curtain-fade {
+		animation: none;
+	}
+}

@@ -388,7 +388,8 @@ const Silk = ({
       return rgb;
     };
 
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    let reduce = motionQuery?.matches ?? false;
     const view = { width: 1, height: 1, ratio: 1 };
     const pointer = { x: 0, y: 0, inside: false };
     const waves: Wave[] = [];
@@ -489,7 +490,8 @@ const Silk = ({
         state.x = pointer.x;
         state.y = pointer.y;
       }
-      const follow = 1 - Math.exp(-dt * 10);
+      // Under reduced motion the pointer has no visible effect, so snap instead of easing
+      const follow = reduce ? 1 : 1 - Math.exp(-dt * 10);
       const prevX = state.x;
       const prevY = state.y;
       state.x += (pointer.x - state.x) * follow;
@@ -499,6 +501,10 @@ const Silk = ({
       const dragBlend = 1 - Math.exp(-dt * 4);
       state.dragX += (clamp(velX * 0.03, -0.06, 0.06) - state.dragX) * dragBlend;
       state.dragY += (clamp(-velY * 0.03, -0.06, 0.06) - state.dragY) * dragBlend;
+      if (reduce) {
+        state.dragX = 0;
+        state.dragY = 0;
+      }
       state.touch += ((engaged ? 1 : 0) - state.touch) * (1 - Math.exp(-dt * (engaged ? 3.5 : 1.4)));
 
       let lightGoalX = DEFAULT_LIGHT[0];
@@ -567,7 +573,8 @@ const Silk = ({
       pointer.x = point.x;
       pointer.y = point.y;
       pointer.inside = point.inside;
-      wake();
+      // The pointer has no visible effect without interaction, so skip the render
+      if (settingsRef.current.mouseInteraction && !reduce) wake();
     };
 
     const onPointerDown = (event: PointerEvent) => {
@@ -582,10 +589,32 @@ const Silk = ({
 
     const onPointerLeave = () => {
       pointer.inside = false;
-      wake();
+      if (settingsRef.current.mouseInteraction && !reduce) wake();
     };
 
     const onVisibility = () => {
+      last = 0;
+      wake();
+    };
+
+    // Follow the OS setting live instead of freezing it at mount time
+    const onMotionChange = (event: MediaQueryListEvent) => {
+      reduce = event.matches;
+      if (reduce) {
+        // Settle the scene at once instead of letting ripples and easing play out
+        waves.length = 0;
+        state.intro = 1;
+        state.touch = 0;
+        state.dragX = 0;
+        state.dragY = 0;
+        state.x = pointer.x;
+        state.y = pointer.y;
+        state.lightX = DEFAULT_LIGHT[0];
+        state.lightY = DEFAULT_LIGHT[1];
+        cancelAnimationFrame(raf);
+        raf = 0;
+        render();
+      }
       last = 0;
       wake();
     };
@@ -604,6 +633,7 @@ const Silk = ({
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
     document.addEventListener('visibilitychange', onVisibility);
+    motionQuery?.addEventListener('change', onMotionChange);
     const onContextLost = (event: Event) => {
       event.preventDefault();
       cancelAnimationFrame(raf);
@@ -636,6 +666,7 @@ const Silk = ({
       window.removeEventListener('pointerdown', onPointerDown);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       document.removeEventListener('visibilitychange', onVisibility);
+      motionQuery?.removeEventListener('change', onMotionChange);
       canvas.removeEventListener('webglcontextlost', onContextLost);
       canvas.removeEventListener('webglcontextrestored', onContextRestored);
       gl.deleteTexture(texture);
