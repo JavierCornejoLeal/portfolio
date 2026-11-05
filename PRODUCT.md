@@ -32,7 +32,7 @@ Full stack: Javier delivers across frontend and backend, end to end. The specifi
 - Built with Astro, React and Tailwind CSS; deployed on Vercel (PRE from `develop`, PRO from `main`).
 - Bilingual: English and Spanish, with a language switch (i18n).
 - Contact channels: email, LinkedIn, GitHub, and an on-site contact form. The form needs a delivery backend or service; which one is undecided.
-- Current state: a single "Incoming" coming-soon page over an animated Silk background (`src/components/Silk.tsx`) with contact links (Instagram, LinkedIn, GitHub, email, phone), plus a 404 page.
+- Current state: a single "Incoming" coming-soon page over an animated Silk background (`src/components/Silk.tsx`) with Instagram, LinkedIn and GitHub links in the footer, plus a 404 page.
 - Live URL: https://javiercornejo.vercel.app
 
 ## Brand Commitments

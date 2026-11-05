@@ -7,7 +7,7 @@ test.describe('home page', () => {
 		expect(response?.status()).toBe(200);
 		await expect(page).toHaveTitle('Javier Cornejo · Incoming');
 		await expect(page.getByRole('heading', { level: 1, name: 'Incoming' })).toBeVisible();
-		await expect(page.getByText('Something big is on its way.')).toBeVisible();
+		await expect(page.locator('main p', { hasText: 'Something big is on its way.' })).toBeVisible();
 	});
 
 	test('keeps the hero inside the viewport once the Silk canvas mounts', async ({ page }) => {
@@ -20,16 +20,36 @@ test.describe('home page', () => {
 		expect(box?.y).toBe(0);
 	});
 
-	test('links to every contact channel', async ({ page }) => {
+	test('centers the headline and tagline', async ({ page }) => {
 		await page.goto('/');
 
-		const links = page.getByRole('list', { name: 'Contact' }).getByRole('link');
-		await expect(links).toHaveCount(5);
+		const viewport = page.viewportSize()!;
+		for (const block of [
+			page.getByRole('heading', { level: 1, name: 'Incoming' }),
+			page.locator('main p', { hasText: 'Something big is on its way.' })
+		]) {
+			const box = (await block.boundingBox())!;
+			expect(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThan(2);
+			await expect(block).toHaveCSS('text-align', 'center');
+		}
+	});
+
+	test('drops the header, email and phone', async ({ page }) => {
+		await page.goto('/');
+
+		await expect(page.locator('main header')).toHaveCount(0);
+		await expect(page.getByText('Full stack developer')).toHaveCount(0);
+		await expect(page.locator('a[href^="mailto:"], a[href^="tel:"]')).toHaveCount(0);
+	});
+
+	test('links to every social profile from the footer', async ({ page }) => {
+		await page.goto('/');
+
+		const links = page.locator('footer').getByRole('list', { name: 'Social links' }).getByRole('link');
+		await expect(links).toHaveCount(3);
 		await expect(page.getByRole('link', { name: /Instagram/ })).toHaveAttribute('href', 'https://www.instagram.com/javiiicornejo/');
 		await expect(page.getByRole('link', { name: /LinkedIn/ })).toHaveAttribute('href', 'https://www.linkedin.com/in/cornejolealjavier/');
 		await expect(page.getByRole('link', { name: /GitHub/ })).toHaveAttribute('href', 'https://github.com/JavierCornejoLeal');
-		await expect(page.getByRole('link', { name: /Email/ })).toHaveAttribute('href', 'mailto:cornejolealjavier@gmail.com');
-		await expect(page.getByRole('link', { name: /Phone/ })).toHaveAttribute('href', 'tel:+34634443602');
 		await expect(page.getByRole('link', { name: /Instagram/ })).toHaveCSS('pointer-events', 'auto');
 	});
 
@@ -37,11 +57,10 @@ test.describe('home page', () => {
 		await page.setViewportSize({ width: 844, height: 390 });
 		await page.goto('/');
 
-		const footer = page.getByText('Designed and built by Javier Cornejo.');
+		const footer = page.locator('footer p', { hasText: 'Designed and built by Javier Cornejo.' });
 		await footer.scrollIntoViewIfNeeded();
 		await expect(footer).toBeInViewport();
-		await page.getByRole('link', { name: /Phone/ }).scrollIntoViewIfNeeded();
-		await expect(page.getByRole('link', { name: /Phone/ })).toBeInViewport();
+		await expect(page.getByRole('link', { name: /GitHub/ })).toBeInViewport();
 	});
 
 	test('announces external links that open in a new tab', async ({ page }) => {
@@ -52,24 +71,49 @@ test.describe('home page', () => {
 			await expect(link).toHaveAttribute('target', '_blank');
 			await expect(link).toHaveAccessibleName(/\(opens in a new tab\)$/);
 		}
-		for (const name of ['Email', 'Phone']) {
-			const link = page.getByRole('link', { name: new RegExp(name) });
-			await expect(link).not.toHaveAttribute('target', '_blank');
-			await expect(link).not.toHaveAccessibleName(/opens in a new tab/);
-		}
 	});
 
-	test('shows a contact link as soon as it takes keyboard focus', async ({ page }) => {
+	test('shows a social link as soon as it takes keyboard focus', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
 
-		// Read opacity right after focusing, while the 1.4s entrance delay is still running
-		const opacity = await page.evaluate(() => {
-			const link = document.querySelector<HTMLAnchorElement>('ul[aria-label="Contact"] a');
+		// Read the glyphs right after focusing, while their entrance delay is still running
+		const animations = await page.evaluate(() => {
+			const link = document.querySelector<HTMLAnchorElement>('ul[aria-label="Social links"] a');
 			link?.focus();
-			return getComputedStyle(link!.closest('ul')!).opacity;
+			return [...link!.querySelectorAll('.curtain-letter')].map(glyph => getComputedStyle(glyph).animationName);
 		});
-		expect(opacity).toBe('1');
+		expect(animations.length).toBeGreaterThan(0);
+		expect(new Set(animations)).toEqual(new Set(['none']));
+	});
+
+	test('reveals every piece of text with the curtain effect', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+
+		for (const block of ['main h1', 'main section > div > p', 'footer a', 'footer p']) {
+			const glyphs = page.locator(`${block} .curtain-letter`);
+			expect(await glyphs.count(), block).toBeGreaterThan(0);
+			await expect(glyphs.first()).toHaveCSS('animation-name', 'curtain-rise');
+		}
+		// Glyphs start one after another, never all at once
+		const starts = await page
+			.locator('main section > div > p .curtain-letter')
+			.evaluateAll(glyphs => glyphs.map(glyph => parseFloat(getComputedStyle(glyph).animationDelay)));
+		expect(starts).toEqual([...starts].sort((a, b) => a - b));
+		expect(starts.at(-1)!).toBeGreaterThan(starts[0]);
+	});
+
+	test('runs the footer curtain one glyph after another without overlaps', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+
+		const starts = await page
+			.locator('footer .curtain-letter')
+			.evaluateAll(glyphs => glyphs.map(glyph => parseFloat(getComputedStyle(glyph).animationDelay)));
+		for (let i = 1; i < starts.length; i++) {
+			expect(starts[i], `glyph ${i} starts after glyph ${i - 1}`).toBeGreaterThan(starts[i - 1]);
+		}
 	});
 
 	test('freezes the Silk as soon as reduced motion turns on', async ({ page }) => {
@@ -118,8 +162,11 @@ test.describe('home page', () => {
 		await page.goto('/');
 
 		const year = new Date().getFullYear();
-		await expect(page.getByText(`© ${year} Javier Cornejo. All rights reserved.`)).toBeVisible();
-		await expect(page.getByText('Designed and built by Javier Cornejo.')).toBeVisible();
+		const footer = page.locator('footer p');
+		await expect(footer).toBeVisible();
+		await expect(footer.locator('.sr-only')).toHaveText(
+			`© ${year} Javier Cornejo. All rights reserved. Designed and built by Javier Cornejo.`
+		);
 	});
 
 	test('mounts the Silk background canvas behind the hero', async ({ page }) => {
