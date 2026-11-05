@@ -1,17 +1,25 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import Silk from '@/components/Silk';
+import CurtainText from '@/components/CurtainText.astro';
 
-const headline = 'Incoming';
 const year = new Date().getFullYear();
 
-const contacts = [
-	{ label: 'Instagram', value: '@javiiicornejo', href: 'https://www.instagram.com/javiiicornejo/', external: true },
-	{ label: 'LinkedIn', value: 'cornejolealjavier', href: 'https://www.linkedin.com/in/cornejolealjavier/', external: true },
-	{ label: 'GitHub', value: 'JavierCornejoLeal', href: 'https://github.com/JavierCornejoLeal', external: true },
-	{ label: 'Email', value: 'cornejolealjavier@gmail.com', href: 'mailto:cornejolealjavier@gmail.com', external: false },
-	{ label: 'Phone', value: '+34 634 443 602', href: 'tel:+34634443602', external: false }
-];
+const SOCIALS_START = 2;
+const SOCIAL_STEP = 0.03;
+
+// Chain the links so each one starts right after the previous link's last glyph
+let socialCursor = SOCIALS_START;
+const socials = [
+	{ label: 'Instagram', href: 'https://www.instagram.com/javiiicornejo/' },
+	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/cornejolealjavier/' },
+	{ label: 'GitHub', href: 'https://github.com/JavierCornejoLeal' }
+].map(social => {
+	const delay = socialCursor;
+	socialCursor += social.label.length * SOCIAL_STEP;
+	return { ...social, delay };
+});
+const footerStart = socialCursor;
 ---
 
 <Layout title="Javier Cornejo · Incoming">
@@ -26,65 +34,50 @@ const contacts = [
 				noiseIntensity={1.2}
 			/>
 		</div>
-		<div
-			class="silk-scrim pointer-events-none absolute inset-0"
-			aria-hidden="true"
-		>
-		</div>
+		<div class="silk-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
 		<section
 			class="pointer-events-none relative z-10 mx-auto flex min-h-dvh max-w-6xl flex-col gap-12 px-6 py-8 sm:px-10 sm:py-10"
 		>
-			<header class="curtain-fade flex items-baseline justify-between gap-6 text-sm" style="--delay: 0.2s">
-				<p class="font-display font-medium tracking-wide">Javier Cornejo</p>
-				<p class="text-zinc-300">Full stack developer</p>
-			</header>
-
-			<div class="flex flex-1 flex-col justify-center">
+			<div class="flex flex-1 flex-col items-center justify-center text-center">
 				<h1
-					class="font-display text-[clamp(2.75rem,12vw,6rem)] leading-[0.95] font-extrabold tracking-[-0.03em] uppercase"
-					aria-label={headline}
+					class="font-display text-[clamp(3rem,12.5vw,9rem)] leading-[0.95] font-extrabold tracking-[-0.03em] uppercase"
 				>
-					{
-						[...headline].map((letter, i) => (
-							<span class="curtain-letter" style={`--i: ${i}`} aria-hidden="true">
-								{letter}
-							</span>
-						))
-					}
+					<CurtainText text="Incoming" delay={0.35} step={0.07} />
 				</h1>
-				<p class="curtain-fade mt-6 max-w-xl text-lg text-pretty text-zinc-200 sm:text-xl" style="--delay: 1.1s">
-					Something big is on its way. I'm building my new portfolio right now, piece by piece.
+				<p class="mt-8 max-w-3xl text-xl text-balance text-zinc-200 sm:text-2xl md:text-3xl">
+					<CurtainText
+						text="Something big is on its way. I'm building my new portfolio right now, piece by piece."
+						delay={1}
+						step={0.012}
+					/>
 				</p>
+			</div>
 
-				<ul class="curtain-fade mt-10 flex flex-col gap-3 sm:mt-12" style="--delay: 1.4s" aria-label="Contact">
+			<footer class="flex flex-col items-center gap-4 text-center">
+				<ul class="flex flex-wrap justify-center gap-x-8 gap-y-2" aria-label="Social links">
 					{
-						contacts.map(contact => (
+						socials.map(social => (
 							<li>
 								<a
-									href={contact.href}
-									class="group pointer-events-auto inline-flex items-baseline gap-4 py-1"
-									{...(contact.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+									href={social.href}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="curtain-group pointer-events-auto text-sm text-zinc-200 underline decoration-zinc-500 decoration-1 underline-offset-[6px] transition-colors duration-300 hover:text-white hover:decoration-silk"
 								>
-									<span class="font-display w-28 shrink-0 text-xs font-medium tracking-[0.18em] text-zinc-400 uppercase transition-colors duration-300 group-hover:text-silk">
-										{contact.label}
-									</span>
-									<span class="text-base text-zinc-100 underline decoration-zinc-500 decoration-1 underline-offset-[6px] transition-colors duration-300 group-hover:decoration-silk">
-										{contact.value}
-									</span>
-									{contact.external && <span class="sr-only">(opens in a new tab)</span>}
+									<CurtainText text={social.label} delay={social.delay} step={SOCIAL_STEP} />
+									<span class="sr-only">(opens in a new tab)</span>
 								</a>
 							</li>
 						))
 					}
 				</ul>
-			</div>
-
-			<footer
-				class="curtain-fade flex flex-col gap-1 text-xs text-zinc-300 sm:flex-row sm:justify-between"
-				style="--delay: 1.7s"
-			>
-				<p>&copy; {year} Javier Cornejo. All rights reserved.</p>
-				<p>Designed and built by Javier Cornejo.</p>
+				<p class="text-xs text-zinc-300">
+					<CurtainText
+						text={`© ${year} Javier Cornejo. All rights reserved. Designed and built by Javier Cornejo.`}
+						delay={footerStart}
+						step={0.008}
+					/>
+				</p>
 			</footer>
 		</section>
 	</main>

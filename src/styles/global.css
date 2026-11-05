@@ -26,24 +26,19 @@
 .silk-scrim {
 	background:
 		linear-gradient(to bottom, rgb(9 9 11 / 0.7), transparent 22%, transparent 72%, rgb(9 9 11 / 0.78)),
-		radial-gradient(ellipse at 30% 55%, rgb(9 9 11 / 0.72), rgb(9 9 11 / 0.4) 60%, rgb(9 9 11 / 0.35));
+		radial-gradient(ellipse at 50% 50%, rgb(9 9 11 / 0.72), rgb(9 9 11 / 0.4) 60%, rgb(9 9 11 / 0.35));
 }
 
-/* Curtain reveal: each glyph rises from behind a clip edge, staggered by --i. */
+/* Curtain reveal: each glyph rises from behind a clip edge at its own --start (see CurtainText). */
 .curtain-letter {
 	display: inline-block;
 	clip-path: inset(0 0 0 0);
 	animation: curtain-rise 1.4s var(--ease-curtain) both;
-	animation-delay: calc(0.35s + var(--i, 0) * 0.07s);
+	animation-delay: var(--start, 0s);
 }
 
-.curtain-fade {
-	animation: curtain-fade 1.2s var(--ease-curtain) both;
-	animation-delay: var(--delay, 1s);
-}
-
-/* Never hide a block that holds keyboard focus mid-entrance. */
-.curtain-fade:focus-within {
+/* Never hide a link that holds keyboard focus mid-entrance. */
+.curtain-group:focus-within .curtain-letter {
 	animation: none;
 }
 
@@ -60,20 +55,8 @@
 	}
 }
 
-@keyframes curtain-fade {
-	from {
-		opacity: 0;
-		transform: translateY(0.75rem);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
 @media (prefers-reduced-motion: reduce) {
-	.curtain-letter,
-	.curtain-fade {
+	.curtain-letter {
 		animation: none;
 	}
 }
