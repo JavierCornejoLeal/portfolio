@@ -1,5 +1,5 @@
 import * as React from "react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react"
 import { ArrowUpRight, XIcon } from "lucide-react"
 
 import { projects, type Project } from "@/data/projects"
@@ -12,6 +12,7 @@ import {
   MorphingDialogImage,
   MorphingDialogTrigger
 } from "@/components/ui/morphing-dialog"
+import { TextRoll } from "@/components/ui/text-roll"
 import { cn } from "@/lib/utils"
 
 /*
@@ -105,6 +106,49 @@ function ProjectDialogBody({ project }: { project: Project }) {
         <XIcon aria-hidden="true" className="size-5" />
       </MorphingDialogClose>
     </MorphingDialogContainer>
+  )
+}
+
+const TITLE = "Featured projects"
+
+/** Rolls in letter by letter when it scrolls into view, and again on hover. Still under reduced motion. */
+function ProjectsTitle() {
+  const ref = React.useRef<HTMLHeadingElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.6 })
+  const reduced = useReducedMotion()
+  const [replay, setReplay] = React.useState(0)
+  const rolling = React.useRef(false)
+
+  const visual = reduced ? (
+    TITLE
+  ) : inView ? (
+    <TextRoll
+      key={replay}
+      duration={0.35}
+      getEnterDelay={(i) => i * 0.035}
+      getExitDelay={(i) => i * 0.035 + 0.15}
+      onAnimationComplete={() => (rolling.current = false)}
+    >
+      {TITLE}
+    </TextRoll>
+  ) : (
+    <span className="invisible">{TITLE}</span>
+  )
+
+  return (
+    <h2
+      ref={ref}
+      id="projects-title"
+      onPointerEnter={() => {
+        if (reduced || !inView || rolling.current) return
+        rolling.current = true
+        setReplay((n) => n + 1)
+      }}
+      className="pointer-events-auto font-display text-4xl font-semibold tracking-[-0.03em] text-ink sm:text-6xl lg:text-7xl"
+    >
+      <span className="sr-only">{TITLE}</span>
+      <span aria-hidden="true">{visual}</span>
+    </h2>
   )
 }
 
@@ -219,9 +263,6 @@ export default function ProjectsCarousel() {
 
   return (
     <section data-projects aria-labelledby="projects-title" className="relative">
-      <h2 id="projects-title" className="sr-only">
-        Selected projects
-      </h2>
       <div
         ref={stageRef}
         data-projects-stage
@@ -278,6 +319,9 @@ export default function ProjectsCarousel() {
             ))}
           </>
         )}
+        <div className="pointer-events-none absolute inset-x-0 top-[13%] z-10 flex justify-center px-6 text-center sm:top-[11%]">
+          <ProjectsTitle />
+        </div>
         <p
           id="projects-hint"
           className="pointer-events-none absolute inset-x-0 bottom-[14%] text-center text-[0.7rem] font-medium tracking-[0.2em] text-ink/70 uppercase"
