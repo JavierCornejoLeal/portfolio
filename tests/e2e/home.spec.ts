@@ -202,6 +202,40 @@ test.describe('home page', () => {
 		expect(errors).toEqual([]);
 	});
 
+	test('keeps the glass dark for a mouse and autoplays it for touch', async ({ page, browser }) => {
+		const glass = page.locator('main [data-autoplay]');
+		await page.goto('/');
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+		await page.mouse.move(400, 300);
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+
+		const phone = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+		const mobile = await phone.newPage();
+		await mobile.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await mobile.goto('/');
+		await expect(mobile.locator('main [data-autoplay]')).toHaveAttribute('data-autoplay', 'on');
+		await phone.close();
+	});
+
+	test('switches autoplay with the pointer in use on hybrid touch-and-mouse devices', async ({ browser }) => {
+		const hybrid = await browser.newContext({ hasTouch: true });
+		const page = await hybrid.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		const glass = page.locator('main [data-autoplay]');
+		// Touch emulation reports no hovering pointer at all, so before any input it guesses touch.
+		await expect(glass).toHaveAttribute('data-autoplay', 'on');
+
+		// The media query says "no hover", but a mouse is what is actually in use: stay dark.
+		await page.mouse.move(500, 320);
+		await page.mouse.move(520, 340);
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+
+		await page.touchscreen.tap(400, 300);
+		await expect(glass).toHaveAttribute('data-autoplay', 'on');
+		await hybrid.close();
+	});
+
 	test('shows the copyright footer', async ({ page }) => {
 		await page.goto('/');
 

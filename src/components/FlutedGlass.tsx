@@ -51,7 +51,8 @@ export interface FlutedGlassProps {
   intensity?: number
   /** How slowly the liquid fades once the pointer rests */
   trail?: number
-  /** Stirs the liquid along a slow wandering path whenever the pointer has been away for a moment */
+  /** Stirs the liquid along a slow wandering path whenever the pointer has been away for a moment.
+   * "touch" does so only while the pointer in use cannot hover (a finger or pen), so a mouse keeps the surface dark */
   autoplay?: boolean | "touch"
   /** Lets the pointer stir coloured liquid behind the glass */
   interactive?: boolean
@@ -71,9 +72,6 @@ export interface FlutedGlassProps {
 
 type Settings = Required<Omit<FlutedGlassProps, "className" | "style" | "children">>
 
-/** "touch" autoplays only where there is no hovering pointer, so desktop stays dark until the cursor stirs it. */
-const autoplayOn = (S: Settings) =>
-  S.autoplay === true || (S.autoplay === "touch" && window.matchMedia("(hover: none)").matches)
 
 const DEFAULTS: Settings = {
   colors: ["#5227FF", "#FF9FFC"],
@@ -630,6 +628,25 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
 
   const running = () => visible && !reduced && !live.current.paused && !lost && !document.hidden
 
+  // "touch" follows the pointer actually in use, so hybrid devices switch with the person: a mouse leaves the
+  // surface dark until it stirs, a finger (which cannot hover) gets autoplay. Before any input, guess from
+  // whether any hovering pointer exists at all.
+  const anyHover = window.matchMedia("(any-hover: hover)")
+  let lastPointerType: string | null = null
+  function autoplayOn() {
+    const mode = live.current.autoplay
+    if (mode !== "touch") return mode
+    return lastPointerType ? lastPointerType !== "mouse" : !anyHover.matches
+  }
+  function reflectAutoplay() {
+    root.dataset.autoplay = autoplayOn() ? "on" : "off"
+  }
+  function onPointerType(e: PointerEvent) {
+    if (e.pointerType === lastPointerType) return
+    lastPointerType = e.pointerType
+    reflectAutoplay()
+  }
+
   function autoStroke(dt: number): Stroke {
     const a = pathAt(autoT)
     autoT += dt * live.current.speed
@@ -643,13 +660,13 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
     time += dt * S.speed
     const strokes = pending
     pending = []
-    if (autoplayOn(S) && now - lastPointerAt > AUTOPLAY_AFTER * 1000) strokes.push(autoStroke(dt))
+    if (autoplayOn() && now - lastPointerAt > AUTOPLAY_AFTER * 1000) strokes.push(autoStroke(dt))
     step(dt, strokes)
   }
 
   /** Pours a few seconds of autoplay so a fresh surface, or a still frame, never starts empty when autoplay is on. */
   function warm() {
-    if (!autoplayOn(live.current)) return
+    if (!autoplayOn()) return
     for (let i = 0; i < 90; i++) step(1 / 60, [autoStroke(1 / 60)])
   }
 
@@ -691,6 +708,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   }
 
   function onPointerMove(e: PointerEvent) {
+    onPointerType(e)
     // Under reduced motion or while frozen the pointer has no visible effect, so it must not wake anything.
     if (!live.current.interactive || !running()) return
     const rect = root.getBoundingClientRect()
@@ -744,6 +762,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   motionQuery.addEventListener("change", onMotion)
   document.addEventListener("visibilitychange", onVisibility)
   window.addEventListener("pointermove", onPointerMove, { passive: true })
+  window.addEventListener("pointerdown", onPointerType, { passive: true })
   const onRestored = () => {
     try {
       // The old textures and framebuffers died with the context: forget them, never delete them.
@@ -764,6 +783,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   canvas.addEventListener("webglcontextlost", onLost)
   canvas.addEventListener("webglcontextrestored", onRestored)
 
+  reflectAutoplay()
   resize()
   render()
   kick()
@@ -771,6 +791,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   return {
     /** Props changed: pick up pause/resume, and redraw a still frame. */
     update() {
+      reflectAutoplay()
       resize()
       if (running()) kick()
       else {
@@ -785,6 +806,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
       motionQuery.removeEventListener("change", onMotion)
       document.removeEventListener("visibilitychange", onVisibility)
       window.removeEventListener("pointermove", onPointerMove)
+      window.removeEventListener("pointerdown", onPointerType)
       canvas.removeEventListener("webglcontextlost", onLost)
       canvas.removeEventListener("webglcontextrestored", onRestored)
       freeTargets()
