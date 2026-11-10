@@ -36,6 +36,64 @@ test.describe('projects carousel', () => {
 		await expect(stage).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 	});
 
+	test('titles the section above the covers and rolls the title in letter by letter', async ({ page }) => {
+		await openSection(page);
+		const title = page.getByRole('heading', { level: 2, name: 'Featured projects' });
+		await expect(title).toBeInViewport();
+		const titleBox = (await title.boundingBox())!;
+		const cardBox = (await page.locator('[data-project-anchor]').first().boundingBox())!;
+		expect(titleBox.y + titleBox.height).toBeLessThan(cardBox.y);
+
+		// One rolling letter per character, and once the roll ends every incoming face stands upright.
+		const letters = title.locator('[data-roll-letter]');
+		await expect(letters).toHaveCount('Featuredprojects'.length);
+		await expect
+			.poll(() => letters.evaluateAll(items => items.every(item => getComputedStyle(item.children[1]).transform === 'none')))
+			.toBe(true);
+	});
+
+	test('shows the title still under reduced motion', async ({ browser }) => {
+		const context = await browser.newContext({ reducedMotion: 'reduce' });
+		const page = await context.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await openSection(page);
+		const title = page.getByRole('heading', { level: 2, name: 'Featured projects' });
+		await expect(title).toBeInViewport();
+		await expect(title.locator('[data-roll-letter]')).toHaveCount(0);
+		await context.close();
+	});
+
+	test('wraps the title between words, never inside one, on a phone', async ({ browser }) => {
+		const phone = await browser.newContext({ viewport: { width: 393, height: 852 }, hasTouch: true, isMobile: true });
+		const page = await phone.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await openSection(page);
+		// Every letter of a word shares its line: the tops of "projects" letters are all equal.
+		const tops = await page
+			.locator('[data-roll-letter]')
+			.evaluateAll(items => items.slice('Featured'.length).map(item => Math.round(item.getBoundingClientRect().top)));
+		expect(new Set(tops).size).toBe(1);
+		await phone.close();
+	});
+
+	// One WebGL page per test: two at once starve a CI runner that renders WebGL in software.
+	test('sizes the covers at 30% of the width on desktop', async ({ page }) => {
+		await openSection(page);
+		const width = page.viewportSize()!.width;
+		const middle = (await page.locator('[data-project-anchor]').first().boundingBox())!;
+		expect(middle.width).toBeCloseTo(width * 0.3, 0);
+		expect(middle.height).toBeCloseTo((width * 0.3) / 1.509, 0);
+	});
+
+	test('sizes the covers at 80% of the width on phones', async ({ browser }) => {
+		const phone = await browser.newContext({ viewport: { width: 393, height: 852 }, hasTouch: true, isMobile: true });
+		const page = await phone.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await openSection(page);
+		expect((await page.locator('[data-project-anchor]').first().boundingBox())!.width).toBeCloseTo(393 * 0.8, 0);
+		await phone.close();
+	});
+
 	test('steps with the arrow keys and returns home', async ({ page }) => {
 		await openSection(page);
 		const stage = page.locator(stageSelector);
@@ -95,13 +153,35 @@ test.describe('projects carousel', () => {
 		await expect(page.getByRole('button', { name: 'Open Eduardo Calabuig' })).toBeFocused();
 	});
 
+	test('never shows the flat trigger copies over the lens, before or after a dialog', async ({ page }) => {
+		// Opacity multiplies down the tree: what the eye sees of a trigger's cover is the product along its ancestors.
+		const shown = () =>
+			page.locator('[data-project-anchor] img').evaluateAll(images =>
+				images.map(image => {
+					let opacity = 1;
+					for (let node: Element | null = image; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+					return opacity;
+				})
+			);
+		await openSection(page);
+		expect(await shown()).toEqual([0, 0, 0]);
+
+		const box = (await page.locator(stageSelector).boundingBox())!;
+		await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+		await expect(page.getByRole('dialog')).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('dialog')).toHaveCount(0);
+		await expect.poll(shown).toEqual([0, 0, 0]);
+	});
+
 	test('brings a bent edge card to the middle instead of opening it', async ({ page }) => {
 		await openSection(page);
 		const stage = page.locator(stageSelector);
 		const box = (await stage.boundingBox())!;
 		const before = await stage.getAttribute('data-active');
 
-		await page.mouse.click(box.x + box.width * 0.92, box.y + box.height / 2);
+		// The far edge: past the crisp neighbour, on the card that bends through the rim.
+		await page.mouse.click(box.x + box.width * 0.98, box.y + box.height / 2);
 		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(stage).not.toHaveAttribute('data-active', before!);
 	});

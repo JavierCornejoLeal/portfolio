@@ -1,5 +1,5 @@
 import * as React from "react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react"
 import { ArrowUpRight, XIcon } from "lucide-react"
 
 import { projects, type Project } from "@/data/projects"
@@ -12,6 +12,7 @@ import {
   MorphingDialogImage,
   MorphingDialogTrigger
 } from "@/components/ui/morphing-dialog"
+import { TextRoll } from "@/components/ui/text-roll"
 import { cn } from "@/lib/utils"
 
 /*
@@ -108,14 +109,57 @@ function ProjectDialogBody({ project }: { project: Project }) {
   )
 }
 
+const TITLE = "Featured projects"
+
+/** Rolls in letter by letter when it scrolls into view, and again on hover. Still under reduced motion. */
+function ProjectsTitle() {
+  const ref = React.useRef<HTMLHeadingElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.6 })
+  const reduced = useReducedMotion()
+  const [replay, setReplay] = React.useState(0)
+  const rolling = React.useRef(false)
+
+  const visual = reduced ? (
+    TITLE
+  ) : inView ? (
+    <TextRoll
+      key={replay}
+      duration={0.35}
+      getEnterDelay={(i) => i * 0.035}
+      getExitDelay={(i) => i * 0.035 + 0.15}
+      onAnimationComplete={() => (rolling.current = false)}
+    >
+      {TITLE}
+    </TextRoll>
+  ) : (
+    <span className="invisible">{TITLE}</span>
+  )
+
+  return (
+    <h2
+      ref={ref}
+      id="projects-title"
+      onPointerEnter={() => {
+        if (reduced || !inView || rolling.current) return
+        rolling.current = true
+        setReplay((n) => n + 1)
+      }}
+      className="pointer-events-auto font-display text-4xl font-semibold tracking-[-0.03em] text-ink sm:text-6xl lg:text-7xl"
+    >
+      <span className="sr-only">{TITLE}</span>
+      <span aria-hidden="true">{visual}</span>
+    </h2>
+  )
+}
+
 function StaticStrip() {
   return (
-    <div data-projects-static className="flex h-full snap-x snap-mandatory items-center gap-2.5 overflow-x-auto px-[18vw] sm:gap-3.5">
+    <div data-projects-static className="flex h-full snap-x snap-mandatory items-center gap-2.5 overflow-x-auto px-[10vw] sm:gap-3.5">
       {projects.map((project) => (
         <MorphingDialog key={project.url} transition={DIALOG_TRANSITION}>
           <MorphingDialogTrigger
             aria-label={`Open ${project.name}`}
-            className="w-[64vw] shrink-0 snap-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300 sm:w-[min(20.5vw,470px)]"
+            className="w-[80vw] shrink-0 snap-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300 sm:w-[min(30vw,760px)]"
             style={{ borderRadius: 3 }}
           >
             <MorphingDialogImage
@@ -219,9 +263,6 @@ export default function ProjectsCarousel() {
 
   return (
     <section data-projects aria-labelledby="projects-title" className="relative">
-      <h2 id="projects-title" className="sr-only">
-        Selected projects
-      </h2>
       <div
         ref={stageRef}
         data-projects-stage
@@ -257,12 +298,20 @@ export default function ProjectsCarousel() {
                     className="block size-full outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300"
                     style={{ borderRadius: 3 }}
                   >
-                    <MorphingDialogImage
-                      src={project.cover}
-                      alt=""
-                      className={cn("block size-full object-cover", revealed === index ? "opacity-100" : "opacity-0")}
-                      style={{ borderRadius: 3 }}
-                    />
+                    {/* The veil, not the image, carries the visibility: Motion writes an inline opacity on
+                        layoutId elements, which would override a class on the image and leave a flat copy
+                        of the cover floating over the lens. */}
+                    <span
+                      data-trigger-veil
+                      className={cn("block size-full", revealed === index ? "opacity-100" : "opacity-0")}
+                    >
+                      <MorphingDialogImage
+                        src={project.cover}
+                        alt=""
+                        className="block size-full object-cover"
+                        style={{ borderRadius: 3 }}
+                      />
+                    </span>
                   </MorphingDialogTrigger>
                   <ProjectDialogBody project={project} />
                 </MorphingDialog>
@@ -270,6 +319,9 @@ export default function ProjectsCarousel() {
             ))}
           </>
         )}
+        <div className="pointer-events-none absolute inset-x-0 top-[13%] z-10 flex justify-center px-6 text-center sm:top-[11%]">
+          <ProjectsTitle />
+        </div>
         <p
           id="projects-hint"
           className="pointer-events-none absolute inset-x-0 bottom-[14%] text-center text-[0.7rem] font-medium tracking-[0.2em] text-ink/70 uppercase"
