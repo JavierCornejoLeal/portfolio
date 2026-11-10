@@ -1,6 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import Silk from '@/components/Silk';
+import FlutedGlass from '@/components/FlutedGlass';
 import CurtainText from '@/components/CurtainText.astro';
 
 const year = new Date().getFullYear();
@@ -25,16 +25,14 @@ const footerStart = socialCursor;
 <Layout>
 	<main class="relative min-h-dvh overflow-x-clip">
 		<div class="absolute inset-0">
-			<Silk
+			<FlutedGlass
 				client:only="react"
-				color="#3F3A46"
-				sheenColor="#C9C3D6"
-				speed={4}
-				scale={1}
-				noiseIntensity={1.2}
+				className="size-full"
+				colors={['#178b00', '#78ff50']}
+				backgroundColor="#070907"
 			/>
 		</div>
-		<div class="silk-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
+		<div class="hero-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
 		<section
 			class="pointer-events-none relative z-10 mx-auto flex min-h-dvh max-w-6xl flex-col gap-12 px-6 py-8 sm:px-10 sm:py-10"
 		>
@@ -62,7 +60,7 @@ const footerStart = socialCursor;
 									href={social.href}
 									target="_blank"
 									rel="noopener noreferrer"
-									class="curtain-group pointer-events-auto text-sm text-zinc-200 underline decoration-zinc-500 decoration-1 underline-offset-[6px] transition-colors duration-300 hover:text-white hover:decoration-silk"
+									class="curtain-group pointer-events-auto text-sm text-zinc-200 underline decoration-zinc-500 decoration-1 underline-offset-[6px] transition-colors duration-300 hover:text-white hover:decoration-harlequin-400"
 								>
 									<CurtainText text={social.label} delay={social.delay} step={SOCIAL_STEP} />
 									<span class="sr-only">(opens in a new tab)</span>
