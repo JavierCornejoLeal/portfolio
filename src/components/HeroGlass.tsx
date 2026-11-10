@@ -61,40 +61,6 @@ export function GlassCta({ href, children }: { href: string; children: React.Rea
 }
 
 /* ------------------------------------------------------------------ *
- * Latest work card
- * ------------------------------------------------------------------ */
-export interface LatestWorkProps {
-  title: string
-  context: string
-  summary: string
-  href: string
-}
-
-export function LatestWork({ title, context, summary, href }: LatestWorkProps) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group relative isolate block w-full max-w-sm rounded-3xl p-5 text-ink transition-transform duration-300 hover:-translate-y-1 focus-visible:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:transform-none sm:p-6"
-    >
-      <GlassLayer radius={24} smoked className="-z-10" />
-      {/* Each half stays whole and wraps as a unit on narrow cards. */}
-      <span className="legend flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-ink-muted">
-        <span className="whitespace-nowrap text-harlequin-300">Latest work</span>
-        <span className="whitespace-nowrap">{context}</span>
-      </span>
-      <span className="mt-3 flex items-center justify-between gap-4">
-        <span className="font-display text-2xl font-medium tracking-[-0.02em]">{title}</span>
-        <ArrowUpRight aria-hidden="true" className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none" />
-      </span>
-      <span className="mt-2 line-clamp-3 block text-sm leading-relaxed text-ink-muted">{summary}</span>
-      <span className="sr-only"> (opens in a new tab)</span>
-    </a>
-  )
-}
-
-/* ------------------------------------------------------------------ *
  * Menu: a "=" that turns into a cross and opens a glass dock to its left
  * ------------------------------------------------------------------ */
 interface DockLink {
@@ -143,7 +109,18 @@ const SOCIALS: DockLink[] = [
   { label: "Instagram", href: "https://www.instagram.com/javiiicornejo/", Icon: InstagramIcon, external: true },
 ]
 
-function DockItem({ link, index, onNavigate }: { link: DockLink; index: number; onNavigate: () => void }) {
+function DockItem({
+  link,
+  index,
+  onNavigate,
+  tooltip = true,
+}: {
+  link: DockLink
+  index: number
+  onNavigate: () => void
+  /** Show the label under the icon on hover and focus. Off on touch docks, where it stays for screen readers. */
+  tooltip?: boolean
+}) {
   const reduce = useReducedMotion()
   const { Icon } = link
   return (
@@ -160,7 +137,13 @@ function DockItem({ link, index, onNavigate }: { link: DockLink; index: number; 
         className="group/item relative grid size-9 place-items-center rounded-2xl text-ink transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-115 focus-visible:-translate-y-1 focus-visible:scale-115 motion-reduce:transition-none motion-reduce:hover:transform-none motion-reduce:focus-visible:transform-none min-[380px]:size-10 sm:size-12"
       >
         <Icon aria-hidden="true" className="size-5 sm:size-6" />
-        <span className="legend pointer-events-none absolute top-full mt-3 rounded-full bg-ground-raised/80 px-2.5 py-1 whitespace-nowrap text-ink opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover/item:opacity-100 group-focus-visible/item:opacity-100">
+        <span
+          className={
+            tooltip
+              ? "legend pointer-events-none absolute top-full mt-3 rounded-full bg-ground-raised/80 px-2.5 py-1 whitespace-nowrap text-ink opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover/item:opacity-100 group-focus-visible/item:opacity-100"
+              : "sr-only"
+          }
+        >
           {link.label}
           {link.external && <span className="sr-only"> (opens in a new tab)</span>}
         </span>
@@ -199,7 +182,7 @@ export function DockMenu() {
   const line = "absolute left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-ink transition-transform duration-300 ease-out motion-reduce:transition-none"
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative max-sm:hidden">
       <button
         ref={buttonRef}
         type="button"
@@ -244,5 +227,32 @@ export function DockMenu() {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------ *
+ * Phone dock: on small screens the menu is a glass dock pinned to the bottom, always there, like the one on
+ * a phone's home screen. It clears the home indicator through the safe-area inset.
+ * ------------------------------------------------------------------ */
+export function MobileDock() {
+  return (
+    <nav
+      aria-label="Main"
+      className="fixed inset-x-0 z-30 flex justify-center px-3 sm:hidden"
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+    >
+      <div className="relative isolate w-full max-w-sm rounded-[1.75rem]">
+        <GlassLayer radius={28} smoked className="-z-10" />
+        <ul className="flex h-16 items-center justify-between px-2">
+          {SECTIONS.map((link, i) => (
+            <DockItem key={link.href} link={link} index={i} onNavigate={() => {}} tooltip={false} />
+          ))}
+          <li aria-hidden="true" className="mx-0.5 h-8 w-px bg-white/20" />
+          {SOCIALS.map((link, i) => (
+            <DockItem key={link.href} link={link} index={SECTIONS.length + i} onNavigate={() => {}} tooltip={false} />
+          ))}
+        </ul>
+      </div>
+    </nav>
   )
 }

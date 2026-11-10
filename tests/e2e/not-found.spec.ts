@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test('unknown routes return the custom 404 page', async ({ page }) => {
+	// About the 404 page, not the loader: come back home as a returning visitor.
+	await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 	const response = await page.goto('/this-page-does-not-exist');
 
 	expect(response?.status()).toBe(404);

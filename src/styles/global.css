@@ -69,20 +69,28 @@
 		radial-gradient(ellipse at 50% 50%, rgb(7 9 7 / 0.3), rgb(7 9 7 / 0.3) 60%, rgb(7 9 7 / 0.35));
 }
 
-/* Hero geometry. Insets grow with the screen; the name is sized by whichever runs out first: the width
-   (Anton measures 6.05em for the full name) or the height left once the slogan, the card, the insets and
-   ~40px of breathing room on each side are taken (26rem on wide layouts, 29rem when stacked on phones).
-   The name is stretched 1.3x on screen, hence the division by 1.17 (0.9 line height x 1.3). */
+/* Hero geometry. Insets grow with the screen. The name is stretched like a cover (--name-sx wider,
+   --name-sy taller) and sized by whichever runs out first: the width (Anton measures 6.05em for the full
+   name, times the horizontal stretch) or the height left once the slogan, the call to action, the insets
+   and ~40px of air on each side are taken (17rem). On screen it is 0.9 x --name-sy times its font size tall. */
 .hero {
 	--inset-x: clamp(2rem, 7vw, 10rem);
 	--inset-y: clamp(3rem, 8dvh, 6.5rem);
-	--name-size: max(3rem, min(calc((100vw - 2rem) / 6.15), calc((100dvh - 2 * var(--inset-y) - 26rem) / 1.17)));
+	--name-sx: 1.12;
+	--name-sy: 1.5;
+	--name-size: max(3rem, min(calc((100vw - 2rem) / 6.9), calc((100dvh - 2 * var(--inset-y) - 17rem) / 1.35)));
 	padding: var(--inset-y) var(--inset-x);
 }
 @media (width < 40rem) {
 	.hero {
-		/* Two lines on phones: CORNEJO measures 3.3em, and both stretched lines count against the height. */
-		--name-size: max(3rem, min(calc((100vw - 1.5rem) / 3.4), calc((100dvh - 2 * var(--inset-y) - 29rem) / 2.34)));
+		/* Phones: two stacked lines (CORNEJO measures 3.3em), a taller stretch, and room kept at the bottom for
+		   the pinned dock and the home indicator. Both stretched lines count against the height (2 x 0.9 x 1.5). */
+		--inset-y: clamp(1.5rem, 4dvh, 3rem);
+		--name-sx: 1;
+		--name-sy: 1.5;
+		--dock-room: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+		--name-size: max(2.5rem, min(calc((100vw - 1.5rem) / 3.4), calc((100dvh - 2 * var(--inset-y) - var(--dock-room) - 15rem) / 2.7)));
+		padding-bottom: calc(var(--inset-y) + var(--dock-room));
 	}
 }
 .hero-bleed {
@@ -90,6 +98,9 @@
 }
 .hero-name {
 	font-size: var(--name-size);
+}
+.name-stretch {
+	scale: var(--name-sx) var(--name-sy);
 }
 
 /* The name in white, fading to more transparent towards its foot so the background shows through. */

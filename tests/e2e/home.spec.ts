@@ -32,7 +32,7 @@ test.describe('home page', () => {
 		expect(box?.y).toBe(0);
 	});
 
-	test('lays the hero out like a poster: slogan and menu on top, name centred, work and contact below', async ({ page }) => {
+	test('lays the hero out like a cover: slogan and menu on top, name centred, contact below', async ({ page }) => {
 		await page.goto('/');
 		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
 		const viewport = page.viewportSize()!;
@@ -40,8 +40,8 @@ test.describe('home page', () => {
 
 		const slogan = await box(page.locator('main p', { hasText: 'Code you can see through' }));
 		const menu = await box(page.getByRole('button', { name: 'Open menu' }));
-		const name = await box(page.getByRole('heading', { level: 1 }));
-		const work = await box(page.getByRole('link', { name: /Latest work/ }));
+		// The visible letters, stretched wider than the h1's own box.
+		const name = await box(page.locator('h1 .name-fade'));
 		const cta = await box(page.getByRole('link', { name: "Let's talk" }));
 
 		// Slogan top left, menu top right.
@@ -51,13 +51,11 @@ test.describe('home page', () => {
 		expect(menu.y).toBeLessThan(viewport.height * 0.15);
 		// Name centred on one line, spanning most of the width.
 		expect(Math.abs(name.x + name.width / 2 - viewport.width / 2)).toBeLessThan(4);
-		// On a short 720px screen the name gives up width for breathing room; tall screens run it edge to edge.
-		expect(name.width).toBeGreaterThan(viewport.width * 0.7);
+		expect(name.width).toBeGreaterThan(viewport.width * 0.9);
 		expect(name.height).toBeLessThan(viewport.height * 0.35);
 		expect(name.y).toBeGreaterThan(slogan.y + slogan.height);
-		// Latest work bottom left, call to action bottom right.
-		expect(work.x).toBeLessThan(viewport.width * 0.1);
-		expect(work.y).toBeGreaterThan(name.y + name.height);
+		// Call to action bottom right, below the name.
+		expect(cta.y).toBeGreaterThan(name.y + name.height);
 		expect(cta.x + cta.width).toBeGreaterThan(viewport.width * 0.85);
 		expect(cta.y + cta.height).toBeGreaterThan(viewport.height * 0.8);
 		// Held in from the corner rather than pushed into it.
@@ -75,15 +73,12 @@ test.describe('home page', () => {
 		};
 
 		const slogan = await insets(page.locator('main p', { hasText: 'Code you can see through' }));
-		const work = await insets(page.getByRole('link', { name: /Latest work/ }));
 		const cta = await insets(page.getByRole('link', { name: "Let's talk" }));
 		const name = await insets(page.getByRole('heading', { level: 1 }));
 		const menu = await insets(page.getByRole('button', { name: 'Open menu' }));
 
 		expect(slogan.left).toBeGreaterThanOrEqual(64);
 		expect(slogan.top).toBeGreaterThanOrEqual(56);
-		expect(work.left).toBeGreaterThanOrEqual(64);
-		expect(work.bottom).toBeGreaterThanOrEqual(56);
 		expect(cta.right).toBeGreaterThanOrEqual(64);
 		expect(cta.bottom).toBeGreaterThanOrEqual(56);
 		// The name leaves breathing room above and below on a laptop-height screen.
@@ -101,9 +96,9 @@ test.describe('home page', () => {
 
 		const name = (await page.locator('h1 .name-fade').boundingBox())!;
 		const slogan = (await page.locator('main p', { hasText: 'Code you can see through' }).boundingBox())!;
-		const work = (await page.getByRole('link', { name: /Latest work/ }).boundingBox())!;
+		const cta = (await page.getByRole('link', { name: "Let's talk" }).boundingBox())!;
 		expect(name.y - (slogan.y + slogan.height)).toBeGreaterThanOrEqual(40);
-		expect(work.y - (name.y + name.height)).toBeGreaterThanOrEqual(40);
+		expect(cta.y - (name.y + name.height)).toBeGreaterThanOrEqual(40);
 		expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(783);
 		await laptop.close();
 	});
@@ -136,9 +131,10 @@ test.describe('home page', () => {
 		const stroke = await letters.evaluate(element => getComputedStyle(element).webkitTextStrokeWidth);
 		expect(parseFloat(stroke)).toBe(0);
 		// Stretched taller than its natural line.
-		// Tailwind's scale-y-* sets the individual `scale` property: "1 1.3".
-		const scaleY = await letters.evaluate(element => parseFloat(getComputedStyle(element).scale.split(' ')[1] ?? '1'));
-		expect(scaleY).toBeGreaterThan(1.2);
+		// Stretched like a cover through the individual `scale` property: wider and taller.
+		const [scaleX, scaleY] = await letters.evaluate(element => getComputedStyle(element).scale.split(' ').map(parseFloat));
+		expect(scaleX).toBeGreaterThan(1.05);
+		expect(scaleY).toBeGreaterThanOrEqual(1.5);
 	});
 
 	test('stacks the name on two big lines on phones', async ({ browser }) => {
@@ -155,21 +151,6 @@ test.describe('home page', () => {
 		expect(box.x + box.width).toBeLessThanOrEqual(390);
 		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 		await phone.close();
-	});
-
-	test('shows the latest project in a card that opens its live site', async ({ page }) => {
-		await page.goto('/');
-
-		const card = page.getByRole('link', { name: /Latest work/ });
-		await expect(card).toHaveAttribute('href', 'https://ocaive.com/');
-		await expect(card).toHaveAttribute('target', '_blank');
-		await expect(card).toContainText('ÒCAIVE');
-		await expect(card).toContainText('A tech and creative studio with 200+ end-to-end projects');
-		// No date, no stack chips, no office list.
-		await expect(card).not.toContainText('2025');
-		await expect(card).not.toContainText('Next.js');
-		await expect(card).not.toContainText('València');
-		await expect(card).toHaveAccessibleName(/\(opens in a new tab\)$/);
 	});
 
 	test('sends the call to action to the contact section', async ({ page }) => {
@@ -254,18 +235,55 @@ test.describe('home page', () => {
 		await expect(page).toHaveURL(/#projects$/);
 	});
 
-	test('fits the dock on narrow phones without horizontal scroll', async ({ browser }) => {
-		const phone = await browser.newContext({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true });
-		const page = await phone.newPage();
-		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
-		await page.goto('/');
-		await page.getByRole('button', { name: 'Open menu' }).tap();
+	test('turns the menu into a dock pinned to the bottom on phones, always visible', async ({ browser }) => {
+		for (const [width, height] of [[320, 568], [393, 659]]) {
+			const phone = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true });
+			const page = await phone.newPage();
+			await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+			await page.goto('/');
 
-		const dock = (await page.getByRole('navigation', { name: 'Main' }).boundingBox())!;
-		expect(dock.x).toBeGreaterThanOrEqual(0);
-		expect(dock.x + dock.width).toBeLessThanOrEqual(320);
-		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
-		await phone.close();
+			await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden();
+			const dock = page.getByRole('navigation', { name: 'Main' });
+			await expect(dock).toBeVisible();
+			await expect(dock).toHaveCSS('position', 'fixed');
+			for (const [name, href] of [['About', '#about'], ['Projects', '#projects'], ['Stack', '#stack'], ['Contact', '#contact']]) {
+				await expect(dock.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
+			}
+			await expect(dock.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('target', '_blank');
+
+			const box = (await dock.boundingBox())!;
+			expect(box.x).toBeGreaterThanOrEqual(0);
+			expect(box.x + box.width).toBeLessThanOrEqual(width);
+			expect(height - (box.y + box.height)).toBeLessThanOrEqual(24);
+			// It never covers the call to action, and the page does not scroll sideways.
+			const cta = (await page.getByRole('link', { name: "Let's talk" }).boundingBox())!;
+			expect(cta.y + cta.height).toBeLessThanOrEqual(box.y);
+			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+			await phone.close();
+		}
+	});
+
+	test('keeps the glass dark when the browser falls back to frosted glass, whatever the OS colour scheme', async ({ browser }) => {
+		// Safari and Firefox cannot refract through an SVG backdrop filter; force that path and a light OS scheme.
+		const context = await browser.newContext({ colorScheme: 'light' });
+		await context.addInitScript(() => {
+			sessionStorage.setItem('loader-seen', '1');
+			const supports = CSS.supports.bind(CSS);
+			CSS.supports = ((property: string, value?: string) =>
+				value?.startsWith('url(') ? false : supports(property, value as string)) as typeof CSS.supports;
+		});
+		const page = await context.newPage();
+		await page.goto('/');
+
+		const glass = page.locator('[data-refract]');
+		await expect(glass.first()).toBeAttached();
+		// The fallback kicks in on the component's first effect, so wait for every surface to settle on it.
+		await expect
+			.poll(() => glass.evaluateAll(elements => elements.map(element => getComputedStyle(element).backgroundColor)))
+			.toEqual(expect.arrayContaining([expect.stringMatching(/^rgba\(7, 9, 7, 0\.5\d*\)$/)]));
+		const backgrounds = await glass.evaluateAll(elements => elements.map(element => getComputedStyle(element).backgroundColor));
+		for (const background of backgrounds) expect(background).toMatch(/^rgba\(7, 9, 7, 0\.5\d*\)$/);
+		await context.close();
 	});
 
 	test('brings the hero elements in from top to bottom', async ({ page }) => {
@@ -278,12 +296,11 @@ test.describe('home page', () => {
 				const style = getComputedStyle(placed);
 				return { name: style.animationName, delay: parseFloat(style.animationDelay) };
 			});
-		// Ordered by how high each element sits: menu, slogan, name, latest work, call to action.
+		// Ordered by how high each element sits: menu, slogan, name, call to action.
 		const order = [
 			await delayOf(page.getByRole('button', { name: 'Open menu' })),
 			await delayOf(page.locator('main p', { hasText: 'Code you can see through' })),
 			await delayOf(page.getByRole('heading', { level: 1 })),
-			await delayOf(page.getByRole('link', { name: /Latest work/ })),
 			await delayOf(page.getByRole('link', { name: "Let's talk" }))
 		];
 		for (const step of order) expect(step.name).toBe('place-in');
@@ -393,7 +410,8 @@ test.describe('home page', () => {
 		const mobile = await phone.newPage();
 		await mobile.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await mobile.goto('/');
-		await expect(mobile.locator('main [data-autoplay]')).toHaveAttribute('data-autoplay', 'on');
+		// A fresh context mounts the WebGL island from scratch; give it room on a busy machine.
+		await expect(mobile.locator('main [data-autoplay]')).toHaveAttribute('data-autoplay', 'on', { timeout: 10_000 });
 		await phone.close();
 	});
 

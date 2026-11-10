@@ -145,8 +145,10 @@ export function LiquidGlass({
       data-refract={mode === "pending" && filter ? "true" : "false"}
       className={cn(
         "relative overflow-hidden",
-        mode === "simple" && "bg-white/70 dark:bg-neutral-900/60",
-        mode === "opaque" && "bg-white dark:bg-neutral-900",
+        // Deviation from the source: the site is dark only, so the fallbacks use the ground colour instead of
+        // `bg-white` + `dark:` (which follows the OS scheme and turned the glass milky white on iPhones in light mode).
+        mode === "simple" && "bg-[rgb(7_9_7/0.5)]",
+        mode === "opaque" && "bg-ground-raised",
         className,
       )}
       style={{
