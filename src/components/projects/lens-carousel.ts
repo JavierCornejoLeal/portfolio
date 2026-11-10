@@ -35,6 +35,24 @@ const LENS_ANGLE = (-65 * Math.PI) / 180
 const LENS_HALF = [0.565, 1] as const
 const LENS_REFERENCE_ASPECT = 1440 / 1028
 
+/*
+ * Dispersion weights: 12 taps along the bend, each split into red, green and blue by Gaussians centred at
+ * 0, .5 and 1 (width .38), with alpha taking their mean. They never change, so they are computed once here,
+ * already divided by each channel's total, instead of 36 exp() calls per pixel per frame.
+ */
+const TAPS = 12
+const TAP_WEIGHTS = (() => {
+  const gauss = (t: number, centre: number) => Math.exp(-0.5 * ((t - centre) / 0.38) ** 2)
+  const raw = Array.from({ length: TAPS }, (_, i) => {
+    const t = i / (TAPS - 1)
+    const rgb = [gauss(t, 0), gauss(t, 0.5), gauss(t, 1)]
+    return [...rgb, (rgb[0] + rgb[1] + rgb[2]) / 3]
+  })
+  const totals = [0, 1, 2, 3].map((channel) => raw.reduce((sum, weight) => sum + weight[channel], 0))
+  const vectors = raw.map((weight) => `vec4(${weight.map((value, channel) => (value / totals[channel]).toFixed(8)).join(", ")})`)
+  return `const vec4 TAP_WEIGHTS[${TAPS}] = vec4[${TAPS}](${vectors.join(", ")});`
+})()
+
 const STRIP_VERTEX = /* glsl */ `
   varying vec2 vUv;
   void main() {
@@ -83,10 +101,7 @@ const LENS_FRAGMENT = /* glsl */ `
     return (uv * uRes + uPad) / (uRes + 2.0 * uPad);
   }
 
-  float gauss(float t, float c) {
-    float x = (t - c) / 0.38;
-    return exp(-0.5 * x * x);
-  }
+  ${TAP_WEIGHTS}
 
   void main() {
     float aspect = uRes.x / uRes.y;
@@ -112,18 +127,19 @@ const LENS_FRAGMENT = /* glsl */ `
     offset.x /= aspect;
     vec2 uv = vUv + offset;
 
-    float spread = 0.004 * smoothstep(0.55, 1.0, d);
-    vec4 sum = vec4(0.0);
-    vec4 total = vec4(0.0);
-    for (int i = 0; i < 12; i++) {
-      float t = float(i) / 11.0;
-      vec4 texel = texture2D(tStrip, toTarget(uv + offset * float(i) * spread));
-      vec3 w = vec3(gauss(t, 0.0), gauss(t, 0.5), gauss(t, 1.0));
-      float wa = (w.r + w.g + w.b) / 3.0;
-      sum += vec4(texel.rgb * w, texel.a * wa);
-      total += vec4(w, wa);
+    vec2 tapStep = offset * 0.004 * smoothstep(0.55, 1.0, d);
+    // Where the taps would spread less than a fifth of a pixel (the calm middle, and outside the lens) they
+    // all land on the same texel: one sample gives the identical colour at a twelfth of the cost.
+    if (length(tapStep * uRes) * ${(TAPS - 1).toFixed(1)} < 0.2) {
+      gl_FragColor = texture2D(tStrip, toTarget(uv));
+    } else {
+      vec4 sum = vec4(0.0);
+      for (int i = 0; i < ${TAPS}; i++) {
+        vec4 texel = texture2D(tStrip, toTarget(uv + tapStep * float(i)));
+        sum += texel * TAP_WEIGHTS[i];
+      }
+      gl_FragColor = sum;
     }
-    gl_FragColor = sum / total;
 
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -239,6 +255,9 @@ export class LensCarousel {
   private entryStart: number | null = null
   private entryDone = false
   private activeProject = -1
+  /** What the last drawn frame showed; the loop skips drawing while nothing on screen would change. */
+  private drawnState = ""
+  private dirty = true
 
   private readonly resizeObserver: ResizeObserver
   private readonly intersectionObserver: IntersectionObserver
@@ -254,7 +273,7 @@ export class LensCarousel {
     this.renderer.setClearColor(0x000000, 0)
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
 
-    this.target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false })
+    this.target = new THREE.WebGLRenderTarget(1, 1, { colorSpace: THREE.SRGBColorSpace, depthBuffer: false })
 
     const loader = new THREE.TextureLoader()
     const anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy())
@@ -447,6 +466,7 @@ export class LensCarousel {
 
     this.current = offsetCards * this.stride
     this.targetX = targetCards * this.stride
+    this.drawnState = ""
     this.requestFrame()
   }
 
@@ -576,7 +596,14 @@ export class LensCarousel {
       event.preventDefault()
     })
 
-    on(stage, "pointerenter", () => (this.hovered = true))
+    // Hover is read, not only waited for: a pointer resting where the section scrolls in was "entered" before
+    // these listeners existed (the section hydrates on arrival), so pointerenter would never come.
+    this.hovered = stage.matches(":hover")
+    const hover = (event: PointerEvent) => {
+      if (event.pointerType !== "touch") this.hovered = true
+    }
+    on(stage, "pointerenter", hover)
+    on(stage, "pointermove", hover)
     on(stage, "pointerleave", () => (this.hovered = false))
     on(stage, "focusin", () => (this.focused = true))
     on(stage, "focusout", (event: FocusEvent) => {
@@ -613,7 +640,9 @@ export class LensCarousel {
     this.velocity = 0
     this.current = this.targetX = this.snapped(this.targetX)
     this.needsSnap = false
-    this.requestFrame()
+    // Explicit navigation lands at once: positions and the active card update now, not on the next frame.
+    if (this.running) this.update(0, performance.now())
+    else this.requestFrame()
   }
 
   private tap(clientX: number, clientY: number) {
@@ -680,7 +709,10 @@ export class LensCarousel {
     const dt = Math.min(0.05, Math.max(0, (now - this.lastFrame) / 1000))
     this.lastFrame = now
     this.update(dt * 60, now)
-    this.render()
+    if (this.dirty) {
+      this.render()
+      this.dirty = false
+    }
     this.options.onFrame?.()
   }
 
@@ -711,6 +743,8 @@ export class LensCarousel {
     const speed = frames > 0 ? Math.abs(this.current - previous) / frames : 0
     const wanted = this.reducedMotion ? 0 : Math.min(1, speed / SHRINK_SPEED) * SHRINK_MAX
     this.shrink += (wanted - this.shrink) * frameEase(wanted > this.shrink ? SHRINK_ATTACK : SHRINK_RELEASE, frames)
+    // Settle the tail: below a ten-thousandth the cards are a fraction of a pixel smaller, which no one sees.
+    if (Math.abs(this.shrink - wanted) < 1e-4) this.shrink = wanted
 
     // Entrance: covers rise from below in screen order, grow to full height, then the lens forms.
     let rise = 1
@@ -740,6 +774,19 @@ export class LensCarousel {
       const ready = this.loaded[index % this.options.covers.length] ? 1 : 0
       uniforms.uAlpha.value = index === this.hiddenInstance ? 0 : rise * ready
     })
+
+    const state = [
+      this.current.toFixed(2),
+      this.shrink.toFixed(4),
+      lens.toFixed(4),
+      this.entryDone ? "done" : now,
+      this.hiddenInstance,
+      this.loaded.filter(Boolean).length
+    ].join("|")
+    if (state !== this.drawnState) {
+      this.drawnState = state
+      this.dirty = true
+    }
 
     const active = this.projectOf(this.nearestCard())
     if (active !== this.activeProject) {
