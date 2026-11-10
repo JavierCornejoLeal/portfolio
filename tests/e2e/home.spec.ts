@@ -190,9 +190,10 @@ test.describe('home page', () => {
 			ext.restoreContext();
 		});
 
-		// Autoplay keeps the surface moving, so a live renderer never shows the same frame twice.
+		// A live renderer keeps moving (liquid stirred by the pointer, animated grain), so it never shows the same frame twice.
 		await expect
 			.poll(async () => {
+				for (let i = 0; i < 10; i++) await page.mouse.move(300 + i * 60, 300 + i * 20);
 				const first = await canvas.screenshot();
 				await page.waitForTimeout(300);
 				return first.equals(await canvas.screenshot());

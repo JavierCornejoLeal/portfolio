@@ -52,7 +52,7 @@ export interface FlutedGlassProps {
   /** How slowly the liquid fades once the pointer rests */
   trail?: number
   /** Stirs the liquid along a slow wandering path whenever the pointer has been away for a moment */
-  autoplay?: boolean
+  autoplay?: boolean | "touch"
   /** Lets the pointer stir coloured liquid behind the glass */
   interactive?: boolean
   /** Film grain, weighted towards the darker areas */
@@ -70,6 +70,10 @@ export interface FlutedGlassProps {
 }
 
 type Settings = Required<Omit<FlutedGlassProps, "className" | "style" | "children">>
+
+/** "touch" autoplays only where there is no hovering pointer, so desktop stays dark until the cursor stirs it. */
+const autoplayOn = (S: Settings) =>
+  S.autoplay === true || (S.autoplay === "touch" && window.matchMedia("(hover: none)").matches)
 
 const DEFAULTS: Settings = {
   colors: ["#5227FF", "#FF9FFC"],
@@ -147,7 +151,9 @@ void main() {
   float h = clamp(dot(p - a, ab) / max(dot(ab, ab), 1e-8), 0.0, 1.0);
   vec2 d = p - a - ab * h;
   float g = exp(-dot(d, d) / (uRadius * uRadius));
-  outColor = vec4(clamp(texture(uTarget, vUv).xyz + uValue * g, -uCap, uCap), 1.0);
+  vec3 v = texture(uTarget, vUv).xyz + uValue * g;
+  float peak = max(abs(v.x), max(abs(v.y), abs(v.z)));
+  outColor = vec4(v * min(1.0, uCap / max(peak, 1e-4)), 1.0);
 }`
 
 const SCALE = `${HEAD}
@@ -245,11 +251,12 @@ void main() {
   float t = uTime * 0.04;
   vec2 q = vec2(fbm(p * 1.2 + vec2(t, -t)), fbm(p * 1.2 + vec2(5.2 - t, 1.3 + t)));
   float n = fbm(p * 1.5 + 2.2 * q + vec2(0.6 * t, -0.3 * t));
-  vec3 swirl = mix(uC0, uC1, smoothstep(0.3, 0.7, q.y)) * smoothstep(0.45, 0.95, n) * 0.35 * uTexture;
+  // A faint neutral sheen: the backdrop stays black, colour only comes from the liquid.
+  vec3 swirl = vec3(smoothstep(0.35, 0.95, n) * 0.045 * uTexture);
   vec3 add = swirl + texture(uDye, vUv).rgb;
   float peak = max(add.r, max(add.g, add.b));
   // Soft saturation: dense liquid approaches full colour without a hard plateau edge.
-  float m = 1.0 - exp(-1.8 * peak);
+  float m = 1.0 - exp(-2.0 * peak);
   outColor = vec4(mix(uBg, add / max(peak, 1e-4), m), m);
 }`
 
@@ -282,14 +289,14 @@ void main() {
   vec2 across = vec2(c, -s); // direction in which r.x grows: across the flutes
   float fw = aspect / max(uFlutes, 1.0);
 
-  float u = r.x / fw + uDrift * uTime * 0.1 + (0.5 * uWave / fw) * sin(r.y * uWaveFreq * 6.2831853 + uTime * 0.6);
+  float u = r.x / fw + uDrift * uTime * 0.1 + (0.03 * uWave / fw) * sin(r.y * uWaveFreq * 6.2831853 + uTime * 0.6);
   float f = fract(u) - 0.5;
   float a = abs(2.0 * f);
 
   // Lens profile: flat with steep seams at softness 0, one gentle curve at 1.
   float profile = mix(sign(f) * pow(a, 6.0), 2.0 * f, uSoftness);
-  float bend = profile * uRefraction * fw * 0.12;
-  float compress = -f * fw * min(uRefraction * 0.08, 0.8);
+  float bend = profile * uRefraction * fw * 0.2;
+  float compress = -f * fw * min(uRefraction * 0.12, 0.85);
   vec2 offset = across * (bend + compress);
   vec2 split = across * sign(f) * uAberration * fw * 0.06 * pow(a, 3.0);
 
@@ -301,9 +308,9 @@ void main() {
   float alpha = max(sr.a, max(sg.a, sb.a));
 
   // Volume: a touch darker at the seams, then the specular line.
-  col *= 1.0 - 0.1 * pow(a, 4.0);
+  col *= 1.0 - 0.35 * smoothstep(0.96, 1.0, a);
   float lightPos = 0.45 * sin(radians(uLightAngle));
-  float width = mix(0.012, 0.22, uHighlightSoft);
+  float width = mix(0.004, 0.16, uHighlightSoft * uHighlightSoft);
   float spec = uHighlight * exp(-pow((f - lightPos) / width, 2.0));
   col = mix(col + spec, col * (1.0 - spec * 0.6), uLightSurface);
   alpha = max(alpha, spec * (1.0 - uLightSurface));
@@ -519,7 +526,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   function step(dt: number, strokes: Stroke[]) {
     const S = live.current
     const [c0, c1] = [hexToRgb(S.colors[0]), hexToRgb(S.colors[1])]
-    const radius = Math.max(S.radius, 0.1) * 0.008
+    const radius = Math.max(S.radius, 0.1) * 0.014
     const momentum = Math.max(S.momentum, 0.1)
 
     if (fluid) {
@@ -542,6 +549,10 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
           gl!.uniform1f(u.uDt, dt)
         }, [["uVel", vel.read.tex], ["uCurl", curl.tex]])
         vel.swap()
+      }
+      // Always project: a compressible flow advecting itself forms shock fronts that pile the liquid
+      // into hard, jagged edges. Swirl only adds vorticity on top.
+      {
         draw(P.divergence, divergence, (u) => gl!.uniform2f(u.uTexel, texel[0], texel[1]), [["uVel", vel.read.tex]])
         draw(P.scale, pressure.write, (u) => gl!.uniform1f(u.uK, 0.8), [["uSrc", pressure.read.tex]])
         pressure.swap()
@@ -564,9 +575,9 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
       const len = Math.hypot(s.v[0], s.v[1])
       // Up and to the right leans towards the second colour, down and to the left towards the first.
       const t = len > 1e-5 ? 0.5 + 0.5 * ((s.v[0] + s.v[1]) / (len * Math.SQRT2)) : 0.5
-      const amount = 0.35 * S.intensity * s.strength * Math.min(1, len * 4)
+      const amount = 0.42 * S.intensity * s.strength * Math.min(1, len * 4)
       const col: [number, number, number] = [0, 1, 2].map((i) => (c0[i] + (c1[i] - c0[i]) * t) * amount) as [number, number, number]
-      splat(dye, s, col, radius, 1.2)
+      splat(dye, s, col, radius, 1.0)
     }
   }
 
@@ -632,12 +643,13 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
     time += dt * S.speed
     const strokes = pending
     pending = []
-    if (S.autoplay && now - lastPointerAt > AUTOPLAY_AFTER * 1000) strokes.push(autoStroke(dt))
+    if (autoplayOn(S) && now - lastPointerAt > AUTOPLAY_AFTER * 1000) strokes.push(autoStroke(dt))
     step(dt, strokes)
   }
 
-  /** Pours a few seconds of autoplay so a fresh surface, or a still frame, never starts empty. */
+  /** Pours a few seconds of autoplay so a fresh surface, or a still frame, never starts empty when autoplay is on. */
   function warm() {
+    if (!autoplayOn(live.current)) return
     for (let i = 0; i < 90; i++) step(1 / 60, [autoStroke(1 / 60)])
   }
 
