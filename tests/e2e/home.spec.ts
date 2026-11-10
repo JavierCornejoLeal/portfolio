@@ -1,190 +1,213 @@
 import { expect, test } from '@playwright/test';
 
-const PROJECTS = ['ÒCAIVE', 'Eduardo Calabuig', 'Hub Cultural Cabanyal', 'Baleària internal tools'];
-
 test.describe('home page', () => {
-	test('introduces Javier with his name, role and a path to the work', async ({ page }) => {
+	test('renders the incoming headline and tagline', async ({ page }) => {
 		const response = await page.goto('/');
 
 		expect(response?.status()).toBe(200);
-		await expect(page).toHaveTitle('Javier Cornejo · Full stack developer');
-		await expect(page.getByRole('heading', { level: 1, name: 'Javier Cornejo' })).toBeVisible();
-		await expect(page.locator('#hero p').filter({ hasText: 'Full stack developer' }).first()).toBeVisible();
-		await expect(page.getByRole('link', { name: 'See the work' })).toHaveAttribute('href', '#work');
+		await expect(page).toHaveTitle('Javier Cornejo');
+		await expect(page.getByRole('heading', { level: 1, name: 'Incoming' })).toBeVisible();
+		await expect(page.locator('main p', { hasText: 'Something big is on its way.' })).toBeVisible();
 	});
 
-	test('lists every section in the main navigation', async ({ page }) => {
+	test('keeps the hero inside the viewport once the Silk canvas mounts', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('main canvas')).toBeAttached();
+
+		const heading = page.getByRole('heading', { level: 1, name: 'Incoming' });
+		await expect(heading).toBeInViewport();
+		const box = await page.locator('main section').boundingBox();
+		expect(box?.y).toBe(0);
+	});
+
+	test('centers the headline and tagline', async ({ page }) => {
 		await page.goto('/');
 
-		const nav = page.getByRole('navigation', { name: 'Main' });
-		for (const [label, href] of [
-			['Work', '#work'],
-			['Stack', '#stack'],
-			['Experience', '#experience'],
-			['Contact', '#contact']
+		const viewport = page.viewportSize()!;
+		for (const block of [
+			page.getByRole('heading', { level: 1, name: 'Incoming' }),
+			page.locator('main p', { hasText: 'Something big is on its way.' })
 		]) {
-			await expect(nav.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', href);
+			const box = (await block.boundingBox())!;
+			expect(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThan(2);
+			await expect(block).toHaveCSS('text-align', 'center');
 		}
 	});
 
-	test('mounts the topographic field behind the page', async ({ page }) => {
+	test('drops the header, email and phone', async ({ page }) => {
 		await page.goto('/');
 
-		const canvas = page.locator('canvas[aria-hidden="true"]').first();
-		await expect(canvas).toBeAttached();
-		const viewport = page.viewportSize()!;
-		await expect
-			.poll(async () => {
-				const box = await canvas.boundingBox();
-				return box && { width: Math.round(box.width), height: Math.round(box.height) };
-			})
-			.toEqual({ width: viewport.width, height: viewport.height });
-		const position = await canvas.evaluate(element => getComputedStyle(element.parentElement!.parentElement!).position);
-		expect(position).toBe('fixed');
+		await expect(page.locator('main header')).toHaveCount(0);
+		await expect(page.getByText('Full stack developer')).toHaveCount(0);
+		await expect(page.locator('a[href^="mailto:"], a[href^="tel:"]')).toHaveCount(0);
 	});
 
-	test('freezes the topographic field under reduced motion', async ({ page }) => {
-		await page.emulateMedia({ reducedMotion: 'reduce' });
+	test('links to every social profile from the footer', async ({ page }) => {
 		await page.goto('/');
-		const canvas = page.locator('canvas[aria-hidden="true"]').first();
-		await expect(canvas).toBeAttached();
-		await page.waitForTimeout(300);
 
+		const links = page.locator('footer').getByRole('list', { name: 'Social links' }).getByRole('link');
+		await expect(links).toHaveCount(3);
+		await expect(page.getByRole('link', { name: /Instagram/ })).toHaveAttribute('href', 'https://www.instagram.com/javiiicornejo/');
+		await expect(page.getByRole('link', { name: /LinkedIn/ })).toHaveAttribute('href', 'https://www.linkedin.com/in/cornejolealjavier/');
+		await expect(page.getByRole('link', { name: /GitHub/ })).toHaveAttribute('href', 'https://github.com/JavierCornejoLeal');
+		await expect(page.getByRole('link', { name: /Instagram/ })).toHaveCSS('pointer-events', 'auto');
+	});
+
+	test('keeps every contact link reachable on short viewports', async ({ page }) => {
+		await page.setViewportSize({ width: 844, height: 390 });
+		await page.goto('/');
+
+		const footer = page.locator('footer p', { hasText: 'Designed and built by Javier Cornejo.' });
+		await footer.scrollIntoViewIfNeeded();
+		await expect(footer).toBeInViewport();
+		await expect(page.getByRole('link', { name: /GitHub/ })).toBeInViewport();
+	});
+
+	test('announces external links that open in a new tab', async ({ page }) => {
+		await page.goto('/');
+
+		for (const name of ['Instagram', 'LinkedIn', 'GitHub']) {
+			const link = page.getByRole('link', { name: new RegExp(name) });
+			await expect(link).toHaveAttribute('target', '_blank');
+			await expect(link).toHaveAccessibleName(/\(opens in a new tab\)$/);
+		}
+	});
+
+	test('shows a social link as soon as it takes keyboard focus', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+
+		// Read the glyphs right after focusing, while their entrance delay is still running
+		const animations = await page.evaluate(() => {
+			const link = document.querySelector<HTMLAnchorElement>('ul[aria-label="Social links"] a');
+			link?.focus();
+			return [...link!.querySelectorAll('.curtain-letter')].map(glyph => getComputedStyle(glyph).animationName);
+		});
+		expect(animations.length).toBeGreaterThan(0);
+		expect(new Set(animations)).toEqual(new Set(['none']));
+	});
+
+	test('reveals every piece of text with the curtain effect', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+
+		for (const block of ['main h1', 'main section > div > p', 'footer a', 'footer p']) {
+			const glyphs = page.locator(`${block} .curtain-letter`);
+			expect(await glyphs.count(), block).toBeGreaterThan(0);
+			await expect(glyphs.first()).toHaveCSS('animation-name', 'curtain-rise');
+		}
+		// Glyphs start one after another, never all at once
+		const starts = await page
+			.locator('main section > div > p .curtain-letter')
+			.evaluateAll(glyphs => glyphs.map(glyph => parseFloat(getComputedStyle(glyph).animationDelay)));
+		expect(starts).toEqual([...starts].sort((a, b) => a - b));
+		expect(starts.at(-1)!).toBeGreaterThan(starts[0]);
+	});
+
+	test('runs the footer curtain one glyph after another without overlaps', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+
+		const starts = await page
+			.locator('footer .curtain-letter')
+			.evaluateAll(glyphs => glyphs.map(glyph => parseFloat(getComputedStyle(glyph).animationDelay)));
+		for (let i = 1; i < starts.length; i++) {
+			expect(starts[i], `glyph ${i} starts after glyph ${i - 1}`).toBeGreaterThan(starts[i - 1]);
+		}
+	});
+
+	test('freezes the Silk as soon as reduced motion turns on', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+		const canvas = page.locator('main canvas');
+		await expect(canvas).toBeAttached();
+		await page.mouse.move(640, 360);
+		await page.mouse.down();
+		await page.mouse.up();
+
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		await page.waitForTimeout(100);
 		const first = await canvas.screenshot();
-		await page.mouse.move(400, 300);
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(400);
 		const second = await canvas.screenshot();
 		expect(second.equals(first)).toBe(true);
 	});
 
-	test('walks the project carousel with buttons, keyboard and the station rail', async ({ page }) => {
+	test('does no animation work on pointer moves under reduced motion', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		await page.addInitScript(() => {
+			const counter = window as unknown as { silkFrames: number };
+			counter.silkFrames = 0;
+			const raf = window.requestAnimationFrame.bind(window);
+			window.requestAnimationFrame = callback =>
+				raf(time => {
+					counter.silkFrames++;
+					callback(time);
+				});
+		});
 		await page.goto('/');
-		const carousel = page.getByRole('region', { name: 'Selected projects' });
-		await carousel.scrollIntoViewIfNeeded();
+		await expect(page.locator('main canvas')).toBeAttached();
+		const frames = () => page.evaluate(() => (window as unknown as { silkFrames: number }).silkFrames);
+		// Wait for startup renders (resize, visibility) to finish so only pointer work is measured
+		let settled = -1;
+		await expect
+			.poll(async () => {
+				const now = await frames();
+				const stable = now === settled;
+				settled = now;
+				return stable;
+			}, { intervals: [300] })
+			.toBe(true);
 
-		const showing = (name: string) => expect(carousel.getByRole('heading', { level: 3, name, exact: true })).toBeVisible();
-		await showing(PROJECTS[0]);
+		const before = await frames();
+		for (let i = 0; i < 20; i++) await page.mouse.move(200 + i * 40, 200 + i * 15);
+		await page.waitForTimeout(800);
+		const after = await frames();
 
-		await carousel.getByRole('button', { name: 'Next project' }).click();
-		await showing(PROJECTS[1]);
-
-		await carousel.getByRole('button', { name: 'Next project' }).focus();
-		await page.keyboard.press('ArrowRight');
-		await showing(PROJECTS[2]);
-
-		await page.keyboard.press('ArrowLeft');
-		await showing(PROJECTS[1]);
-
-		const stations = carousel.getByRole('list', { name: 'Project stations' }).getByRole('button');
-		await expect(stations).toHaveCount(PROJECTS.length);
-		await stations.nth(3).click();
-		await showing(PROJECTS[3]);
-		await expect(stations.nth(3)).toHaveAttribute('aria-current', 'step');
-
-		// Wraps around from the last station to the first
-		await carousel.getByRole('button', { name: 'Next project' }).click();
-		await showing(PROJECTS[0]);
-	});
-
-	test('links each public project to its live site in a new tab', async ({ page }) => {
-		await page.goto('/');
-		const carousel = page.getByRole('region', { name: 'Selected projects' });
-		await carousel.scrollIntoViewIfNeeded();
-
-		const link = carousel.getByRole('link', { name: /Visit ocaive\.com/ });
-		await expect(link).toHaveAttribute('href', 'https://ocaive.com/');
-		await expect(link).toHaveAttribute('target', '_blank');
-		await expect(link).toHaveAccessibleName(/\(opens in a new tab\)$/);
-	});
-
-	test('labels the Baleària image as an illustration, not a capture', async ({ page }) => {
-		await page.goto('/');
-		const carousel = page.getByRole('region', { name: 'Selected projects' });
-		await carousel.scrollIntoViewIfNeeded();
-		await carousel.getByRole('list', { name: 'Project stations' }).getByRole('button').nth(3).click();
-
-		await expect(carousel.getByText('Illustration · internal tools are confidential')).toBeVisible();
-		await expect(carousel.getByRole('link', { name: /Visit/ })).toHaveCount(0);
-	});
-
-	test('lists the stack by group', async ({ page }) => {
-		await page.goto('/');
-
-		const stack = page.locator('#stack');
-		for (const group of ['Frontend', 'Backend', 'Data', 'Delivery']) {
-			await expect(stack.getByRole('heading', { level: 3, name: group })).toBeAttached();
-		}
-		await expect(stack.getByRole('listitem').filter({ hasText: 'Spring Boot' })).toHaveCount(1);
-	});
-
-	test('shows work experience and education', async ({ page }) => {
-		await page.goto('/');
-
-		const experience = page.locator('#experience');
-		await expect(experience.getByRole('heading', { level: 3, name: 'Huming' })).toBeAttached();
-		await expect(experience.getByRole('heading', { level: 3, name: 'Baleària' })).toBeAttached();
-		await expect(experience.getByText('Public Works Engineering')).toBeAttached();
-	});
-
-	test('offers email and every social profile in the contact close', async ({ page }) => {
-		await page.goto('/');
-
-		const contact = page.locator('#contact');
-		await expect(contact.getByRole('link', { name: 'cornejolealjavier@gmail.com' })).toHaveAttribute(
-			'href',
-			'mailto:cornejolealjavier@gmail.com'
-		);
-		const socials = contact.getByRole('list', { name: 'Social links' }).getByRole('link');
-		await expect(socials).toHaveCount(3);
-		for (const [name, href] of [
-			['LinkedIn', 'https://www.linkedin.com/in/cornejolealjavier/'],
-			['GitHub', 'https://github.com/JavierCornejoLeal'],
-			['Instagram', 'https://www.instagram.com/javiiicornejo/']
-		]) {
-			const link = contact.getByRole('link', { name: new RegExp(name) });
-			await expect(link).toHaveAttribute('href', href);
-			await expect(link).toHaveAttribute('target', '_blank');
-			await expect(link).toHaveAccessibleName(/\(opens in a new tab\)$/);
-		}
+		// The pointer has no visible effect, so it must not wake the renderer at all
+		expect(after - before).toBe(0);
 	});
 
 	test('shows the copyright footer', async ({ page }) => {
 		await page.goto('/');
 
 		const year = new Date().getFullYear();
-		await expect(page.locator('footer p').first()).toHaveText(
-			`© ${year} Javier Cornejo. Designed and built by Javier Cornejo.`
+		const footer = page.locator('footer p');
+		await expect(footer).toBeVisible();
+		await expect(footer.locator('.sr-only')).toHaveText(
+			`© ${year} Javier Cornejo. All rights reserved. Designed and built by Javier Cornejo.`
 		);
 	});
 
-	test('keeps every section visible when scripts never run', async ({ browser }) => {
-		const context = await browser.newContext({ javaScriptEnabled: false });
-		const page = await context.newPage();
+	test('mounts the Silk background canvas behind the hero', async ({ page }) => {
 		await page.goto('/');
 
-		for (const id of ['work', 'stack', 'experience', 'contact']) {
-			await expect(page.locator(`#${id} h2`)).toHaveCSS('opacity', '1');
-		}
-		await context.close();
+		const canvas = page.locator('main canvas');
+		await expect(canvas).toBeAttached();
+		const viewport = page.viewportSize();
+		// Silk sizes its canvas asynchronously, so retry until it fills the viewport
+		await expect
+			.poll(async () => {
+				const box = await canvas.boundingBox();
+				return box && { width: box.width, height: box.height };
+			})
+			.toEqual({ width: viewport?.width, height: viewport?.height });
 	});
 
-	test('never scrolls sideways on a phone', async ({ page }) => {
-		await page.setViewportSize({ width: 390, height: 844 });
+	test('keeps the hero text from blocking pointer events on the background', async ({ page }) => {
 		await page.goto('/');
 
-		const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-		expect(overflow).toBe(0);
+		const section = page.locator('main section');
+		await expect(section).toHaveCSS('pointer-events', 'none');
 	});
 
-	test('reveals the hero text with the curtain effect, one glyph after another', async ({ page }) => {
-		await page.emulateMedia({ reducedMotion: 'no-preference' });
-		await page.goto('/');
+	test('loads without runtime errors', async ({ page }) => {
+		const errors: string[] = [];
+		page.on('pageerror', error => errors.push(error.message));
 
-		const glyphs = page.locator('h1 .curtain-letter');
-		expect(await glyphs.count()).toBeGreaterThan(0);
-		await expect(glyphs.first()).toHaveCSS('animation-name', 'curtain-rise');
-		const starts = await glyphs.evaluateAll(items => items.map(item => parseFloat(getComputedStyle(item).animationDelay)));
-		expect(starts).toEqual([...starts].sort((a, b) => a - b));
-		expect(starts.at(-1)!).toBeGreaterThan(starts[0]);
+		await page.goto('/');
+		await expect(page.locator('main canvas')).toBeAttached();
+
+		expect(errors).toEqual([]);
 	});
 });

@@ -1,276 +1,84 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import TopoField from '@/components/TopoField';
-import ProjectTraverse from '@/components/ProjectTraverse';
-import ScrollVelocity from '@/components/ScrollVelocity';
+import Silk from '@/components/Silk';
 import CurtainText from '@/components/CurtainText.astro';
-import { contact, education, experience, projects, stack } from '@/data/portfolio';
-
-import ocaive from '@/assets/projects/ocaive.webp';
-import calabuig from '@/assets/projects/calabuig.webp';
-import cabanyal from '@/assets/projects/cabanyal.webp';
-import balearia from '@/assets/projects/balearia.webp';
-
-const images: Record<string, string> = {
-	ocaive: ocaive.src,
-	calabuig: calabuig.src,
-	cabanyal: cabanyal.src,
-	balearia: balearia.src
-};
-const traverse = projects.map(project => ({ ...project, image: images[project.id] }));
 
 const year = new Date().getFullYear();
-const nav = [
-	{ label: 'Work', href: '#work' },
-	{ label: 'Stack', href: '#stack' },
-	{ label: 'Experience', href: '#experience' },
-	{ label: 'Contact', href: '#contact' }
-];
-const bandRows = [
-	stack[0].items.join(' — ') + ' —',
-	[...stack[1].items, ...stack[2].items].join(' — ') + ' —'
-];
+
+const SOCIALS_START = 2;
+const SOCIAL_STEP = 0.03;
+
+// Chain the links so each one starts right after the previous link's last glyph
+let socialCursor = SOCIALS_START;
+const socials = [
+	{ label: 'Instagram', href: 'https://www.instagram.com/javiiicornejo/' },
+	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/cornejolealjavier/' },
+	{ label: 'GitHub', href: 'https://github.com/JavierCornejoLeal' }
+].map(social => {
+	const delay = socialCursor;
+	socialCursor += social.label.length * SOCIAL_STEP;
+	return { ...social, delay };
+});
+const footerStart = socialCursor;
 ---
 
-<Layout
-	title="Javier Cornejo · Full stack developer"
-	description="Javier Cornejo, full stack developer in Dénia, Spain. React, TypeScript and Next.js on the front, Java, Spring Boot and Node.js on the back. Selected work, stack and contact."
->
-	<div class="fixed inset-0 -z-10" aria-hidden="true">
-		<TopoField client:load focus={[0.74, 0.42]} />
-		<div class="topo-scrim absolute inset-0"></div>
-	</div>
-
-	<header class="absolute inset-x-0 top-0 z-20">
-		<nav
-			aria-label="Main"
-			class="mx-auto flex max-w-[90rem] items-center justify-between gap-6 px-6 py-6 sm:px-10"
-		>
-			<a href="#top" class="font-poster text-2xl leading-none tracking-wide text-ink uppercase">JC</a>
-			<ul class="hidden gap-8 md:flex">
-				{
-					nav.map(item => (
-						<li>
-							<a
-								href={item.href}
-								class="legend text-ink-muted transition-colors duration-300 hover:text-harlequin-400"
-							>
-								{item.label}
-							</a>
-						</li>
-					))
-				}
-			</ul>
-			<a
-				href={`mailto:${contact.email}`}
-				class="legend rounded-full border border-harlequin-500 px-5 py-3 text-ink transition-colors duration-300 hover:bg-harlequin-500 hover:text-ground"
-			>
-				Get in touch
-			</a>
-		</nav>
-	</header>
-
-	<main id="top">
-		<!-- Hero: the survey's first station -->
+<Layout>
+	<main class="relative min-h-dvh overflow-x-clip">
+		<div class="absolute inset-0">
+			<Silk
+				client:only="react"
+				color="#3F3A46"
+				sheenColor="#C9C3D6"
+				speed={4}
+				scale={1}
+				noiseIntensity={1.2}
+			/>
+		</div>
+		<div class="silk-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
 		<section
-			id="hero"
-			class="relative mx-auto flex min-h-dvh max-w-[90rem] flex-col justify-end px-6 pt-32 pb-12 sm:px-10 sm:pb-16"
+			class="pointer-events-none relative z-10 mx-auto flex min-h-dvh max-w-6xl flex-col gap-12 px-6 py-8 sm:px-10 sm:py-10"
 		>
-			<p class="legend text-harlequin-400">
-				<CurtainText text="38.84° N · 0.11° E — Dénia, Spain" delay={0.2} step={0.015} />
-			</p>
-			<h1
-				class="mt-6 font-poster text-[clamp(3.5rem,14.5vw,13rem)] leading-[0.82] tracking-[0.005em] text-ink uppercase"
-			>
-				<span class="block"><CurtainText text="Javier" delay={0.35} step={0.06} /></span>
-				<span class="block"><CurtainText text="Cornejo" delay={0.72} step={0.06} /></span>
-			</h1>
-			<div class="mt-10 grid gap-8 md:grid-cols-12 md:items-end">
-				<p class="font-display text-lg font-medium tracking-[0.12em] text-harlequin-400 uppercase md:col-span-4">
-					<CurtainText text="Full stack developer" delay={1.2} step={0.02} />
-				</p>
-				<p class="max-w-[52ch] text-xl leading-relaxed text-ink text-pretty md:col-span-5">
+			<div class="flex flex-1 flex-col items-center justify-center text-center">
+				<h1
+					class="font-display text-[clamp(3rem,12.5vw,9rem)] leading-[0.95] font-extrabold tracking-[-0.03em] uppercase"
+				>
+					<CurtainText text="Incoming" delay={0.35} step={0.07} />
+				</h1>
+				<p class="mt-8 max-w-3xl text-xl text-balance text-zinc-200 sm:text-2xl md:text-3xl">
 					<CurtainText
-						text="I build web products end to end, from the interface people touch to the API and the database behind it. React, TypeScript and Next.js up front; Java, Spring Boot and Node.js underneath."
-						delay={1.4}
-						step={0.006}
+						text="Something big is on its way. I'm building my new portfolio right now, piece by piece."
+						delay={1}
+						step={0.012}
 					/>
 				</p>
-				<div class="flex flex-wrap gap-4 md:col-span-3 md:justify-end">
-					<a
-						href="#work"
-						class="legend rounded-full bg-harlequin-500 px-6 py-4 text-ground transition-colors duration-300 hover:bg-harlequin-400"
-					>
-						See the work
-					</a>
-				</div>
 			</div>
-		</section>
 
-		<!-- Work: the traverse -->
-		<section id="work" class="relative mx-auto max-w-[90rem] scroll-mt-8 px-6 py-28 sm:px-10 sm:py-36">
-			<h2 class="reveal font-poster text-[clamp(2.25rem,10.5vw,6rem)] leading-[0.9] text-ink uppercase">Selected work</h2>
-			<p class="reveal mt-6 max-w-[56ch] text-lg leading-relaxed text-ink-muted">
-				Four stations from the last two years: products I built from an empty repository, platforms I extended in
-				production, and the internal tools of a ferry company.
-			</p>
-			<div class="mt-16">
-				<ProjectTraverse client:visible projects={traverse} />
-			</div>
-		</section>
-
-		<!-- Stack: a velocity band, then the honest list -->
-		<section id="stack" class="relative scroll-mt-8 py-24 sm:py-32" aria-labelledby="stack-title">
-			<div class="mx-auto max-w-[90rem] px-6 sm:px-10">
-				<h2 id="stack-title" class="reveal font-poster text-[clamp(2.25rem,10.5vw,6rem)] leading-[0.9] text-ink uppercase">
-					The stack
-				</h2>
-			</div>
-			<div class="mt-14 border-y border-rule py-6" aria-hidden="true">
-				<ScrollVelocity
-					client:visible
-					texts={bandRows}
-					velocity={40}
-					numCopies={4}
-					fadeEdges
-					skewWithVelocity={6}
-					outlineAlternate
-					scrollerClassName="font-poster! font-normal! uppercase text-[clamp(3rem,8vw,7rem)]! leading-[1.05]! tracking-[0.01em]! drop-shadow-none!"
-					color="var(--color-harlequin-500)"
-				/>
-			</div>
-			<div class="mx-auto mt-16 grid max-w-[90rem] gap-10 px-6 sm:grid-cols-2 sm:px-10 lg:grid-cols-4">
-				{
-					stack.map(group => (
-						<div class="reveal">
-							<h3 class="legend text-harlequin-400">{group.group}</h3>
-							<span aria-hidden="true" class="rail mt-4 block text-rule" />
-							<ul class="mt-5 space-y-2">
-								{group.items.map(item => (
-									<li class="text-lg text-ink">{item}</li>
-								))}
-							</ul>
-						</div>
-					))
-				}
-			</div>
-		</section>
-
-		<!-- Experience: the survey log -->
-		<section id="experience" class="relative mx-auto max-w-[90rem] scroll-mt-8 px-6 py-24 sm:px-10 sm:py-32">
-			<h2 class="reveal font-poster text-[clamp(2.25rem,10.5vw,6rem)] leading-[0.9] text-ink uppercase">Experience</h2>
-			<ol class="mt-14">
-				{
-					experience.map(role => (
-						<li class="reveal grid gap-3 border-t border-rule py-8 md:grid-cols-12 md:gap-8">
-							<p class="legend text-harlequin-400 tabular-nums md:col-span-3">{role.period}</p>
-							<div class="md:col-span-4">
-								<h3 class="font-display text-xl font-medium text-ink">{role.company}</h3>
-								<p class="mt-1 text-ink-muted">
-									{role.title} · {role.place}
-								</p>
-							</div>
-							<p class="max-w-[52ch] leading-relaxed text-ink/90 md:col-span-5">{role.detail}</p>
-						</li>
-					))
-				}
-			</ol>
-
-			<h3 class="reveal mt-20 font-display text-sm font-medium tracking-[0.18em] text-ink uppercase">Education</h3>
-			<ol class="mt-6">
-				{
-					education.map(item => (
-						<li class="reveal grid gap-2 border-t border-rule py-6 md:grid-cols-12 md:gap-8">
-							<p class="legend text-harlequin-400 tabular-nums md:col-span-3">{item.period}</p>
-							<p class="text-lg text-ink md:col-span-4">{item.title}</p>
-							<p class="text-ink-muted md:col-span-5">{item.company}</p>
-						</li>
-					))
-				}
-			</ol>
-		</section>
-
-		<!-- Contact: the close -->
-		<section id="contact" class="relative mx-auto max-w-[90rem] scroll-mt-8 px-6 pt-24 pb-16 sm:px-10 sm:pt-36">
-			<h2 class="reveal font-poster text-[clamp(2.25rem,11vw,10rem)] leading-[0.85] text-ink uppercase">
-				Let’s build<br />
-				<span class="text-harlequin-500">something</span>
-			</h2>
-			<p class="reveal mt-10 max-w-[52ch] text-xl leading-relaxed text-ink-muted">
-				Hiring a full stack developer or planning a product? Write to me and tell me what you’re building.
-			</p>
-			<a
-				href={`mailto:${contact.email}`}
-				class="reveal group mt-12 inline-block font-display text-[clamp(0.95rem,4.2vw,3rem)] font-medium [overflow-wrap:anywhere] text-ink"
-			>
-				<span
-					class="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_2px] bg-bottom-left bg-no-repeat pb-2 text-harlequin-400 transition-[background-size] duration-700 ease-[var(--ease-curtain)] group-hover:bg-[length:100%_2px]"
-				>
-					{contact.email}
-				</span>
-			</a>
-			<ul class="reveal mt-12 flex flex-wrap gap-x-10 gap-y-4" aria-label="Social links">
-				{
-					contact.socials.map(social => (
-						<li>
-							<a
-								href={social.href}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="legend text-ink underline decoration-harlequin-700 underline-offset-[8px] transition-colors duration-300 hover:text-harlequin-400 hover:decoration-harlequin-400"
-							>
-								{social.label}
-								<span class="sr-only">(opens in a new tab)</span>
-							</a>
-						</li>
-					))
-				}
-			</ul>
-
-			<footer class="mt-28 flex flex-col gap-3 border-t border-rule pt-8 text-sm text-ink-muted sm:flex-row sm:justify-between">
-				<p>© {year} Javier Cornejo. Designed and built by Javier Cornejo.</p>
-				<p class="legend">Astro · React · WebGL</p>
+			<footer class="flex flex-col items-center gap-4 text-center">
+				<ul class="flex flex-wrap justify-center gap-x-8 gap-y-2" aria-label="Social links">
+					{
+						socials.map(social => (
+							<li>
+								<a
+									href={social.href}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="curtain-group pointer-events-auto text-sm text-zinc-200 underline decoration-zinc-500 decoration-1 underline-offset-[6px] transition-colors duration-300 hover:text-white hover:decoration-silk"
+								>
+									<CurtainText text={social.label} delay={social.delay} step={SOCIAL_STEP} />
+									<span class="sr-only">(opens in a new tab)</span>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+				<p class="text-xs text-zinc-300">
+					<CurtainText
+						text={`© ${year} Javier Cornejo. All rights reserved. Designed and built by Javier Cornejo.`}
+						delay={footerStart}
+						step={0.008}
+					/>
+				</p>
 			</footer>
 		</section>
 	</main>
 </Layout>
-
-<script>
-	import { setTopoFocus } from '@/components/TopoField';
-
-	// Sections rise once as they enter; content stays visible without this script.
-	const items = document.querySelectorAll('.reveal');
-	const reveal = new IntersectionObserver(
-		entries => {
-			for (const entry of entries) {
-				if (!entry.isIntersecting) continue;
-				entry.target.classList.add('is-in');
-				reveal.unobserve(entry.target);
-			}
-		},
-		{ rootMargin: '0px 0px -10% 0px' }
-	);
-	items.forEach(item => reveal.observe(item));
-
-	// Hand the terrain's summit back to the hero, and to the contact close.
-	const anchors: [string, [number, number]][] = [
-		['hero', [0.74, 0.42]],
-		['stack', [0.2, 0.35]],
-		['experience', [0.8, 0.6]],
-		['contact', [0.65, 0.3]]
-	];
-	const focus = new IntersectionObserver(
-		entries => {
-			for (const entry of entries) {
-				if (!entry.isIntersecting) continue;
-				const anchor = anchors.find(([id]) => id === entry.target.id);
-				if (anchor) setTopoFocus(...anchor[1]);
-			}
-		},
-		{ threshold: 0.4 }
-	);
-	for (const [id] of anchors) {
-		const section = document.getElementById(id);
-		if (section) focus.observe(section);
-	}
-</script>

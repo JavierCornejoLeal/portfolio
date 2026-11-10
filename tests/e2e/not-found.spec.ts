@@ -9,5 +9,5 @@ test('unknown routes return the custom 404 page', async ({ page }) => {
 
 	await page.getByRole('link', { name: 'Back home' }).click();
 	await expect(page).toHaveURL('/');
-	await expect(page.getByRole('heading', { level: 1, name: 'Javier Cornejo' })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 1, name: 'Incoming' })).toBeVisible();
 });
