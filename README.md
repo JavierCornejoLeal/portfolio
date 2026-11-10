@@ -2,12 +2,12 @@
 
 Personal portfolio of Javier Cornejo, full stack developer. Built with **Astro**, **React** and **Tailwind CSS**, deployed on **Vercel**.
 
-| Environment | URL                                                    | Branch    |
-| ----------- | ------------------------------------------------------ | --------- |
-| PRO         | https://javiercornejo.vercel.app/                      | `main`    |
-| PRE         | https://portfolio-h8p9tlaug-javier-cornejo.vercel.app/ | `develop` |
+| Environment | URL                                   | Branch    |
+| ----------- | ------------------------------------- | --------- |
+| PRO         | https://javiercornejo.vercel.app/     | `main`    |
+| PRE         | https://javiercornejo-pre.vercel.app/ | `develop` |
 
-PRE always carries the next release; PRO only receives what has already been verified there.
+PRE always carries the next release; PRO only receives what has already been verified there. The PRE address is a fixed alias (`PRE_DOMAIN` in the `pre` GitHub environment) that the deploy workflow moves to every new `develop` deployment.
 
 ## Stack
 

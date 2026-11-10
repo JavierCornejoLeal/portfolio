@@ -64,4 +64,5 @@ jobs:
 
       - name: Alias PRE domain
         if: github.ref_name == 'develop' && vars.PRE_DOMAIN != ''
-        run: vercel alias set "${{ steps.deploy.outputs.url }}" "${{ vars.PRE_DOMAIN }}" --token=${{ secrets.VERCEL_TOKEN }}
+        # alias does not read the linked project's team, so pass it explicitly (team tokens fail with "User not found")
+        run: vercel alias set "${{ steps.deploy.outputs.url }}" "${{ vars.PRE_DOMAIN }}" --scope="$VERCEL_ORG_ID" --token=${{ secrets.VERCEL_TOKEN }}
