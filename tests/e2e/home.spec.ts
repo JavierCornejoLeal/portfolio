@@ -51,8 +51,8 @@ test.describe('home page', () => {
 		expect(menu.y).toBeLessThan(viewport.height * 0.15);
 		// Name centred on one line, spanning most of the width.
 		expect(Math.abs(name.x + name.width / 2 - viewport.width / 2)).toBeLessThan(4);
-		expect(name.width).toBeGreaterThan(viewport.width * 0.85);
-		expect(name.height).toBeLessThan(viewport.height * 0.25);
+		expect(name.width).toBeGreaterThan(viewport.width * 0.8);
+		expect(name.height).toBeLessThan(viewport.height * 0.35);
 		expect(name.y).toBeGreaterThan(slogan.y + slogan.height);
 		// Latest work bottom left, call to action bottom right.
 		expect(work.x).toBeLessThan(viewport.width * 0.1);
@@ -62,6 +62,47 @@ test.describe('home page', () => {
 		// Held in from the corner rather than pushed into it.
 		expect(viewport.width - (cta.x + cta.width)).toBeGreaterThanOrEqual(56);
 		expect(viewport.height - (cta.y + cta.height)).toBeGreaterThanOrEqual(56);
+	});
+
+	test('gives the content generous room from the edges while the menu stays in its corner', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+		const viewport = page.viewportSize()!;
+		const insets = async (locator: import('@playwright/test').Locator) => {
+			const box = (await locator.boundingBox())!;
+			return { left: box.x, top: box.y, right: viewport.width - box.x - box.width, bottom: viewport.height - box.y - box.height };
+		};
+
+		const slogan = await insets(page.locator('main p', { hasText: 'Code you can see through' }));
+		const work = await insets(page.getByRole('link', { name: /Latest work/ }));
+		const cta = await insets(page.getByRole('link', { name: "Let's talk" }));
+		const name = await insets(page.getByRole('heading', { level: 1 }));
+		const menu = await insets(page.getByRole('button', { name: 'Open menu' }));
+
+		expect(slogan.left).toBeGreaterThanOrEqual(64);
+		expect(slogan.top).toBeGreaterThanOrEqual(56);
+		expect(work.left).toBeGreaterThanOrEqual(64);
+		expect(work.bottom).toBeGreaterThanOrEqual(56);
+		expect(cta.right).toBeGreaterThanOrEqual(64);
+		expect(cta.bottom).toBeGreaterThanOrEqual(56);
+		// The name is the exception: it runs edge to edge.
+		expect(Math.max(name.left, name.right)).toBeLessThanOrEqual(48);
+		expect(menu.top).toBeLessThanOrEqual(48);
+		expect(menu.right).toBeLessThanOrEqual(48);
+	});
+
+	test('draws the name as stretched glass lettering the background shows through', async ({ page }) => {
+		await page.goto('/');
+
+		const letters = page.getByRole('heading', { level: 1, name: 'Javier Cornejo' }).locator('.glass-type');
+		await expect(letters).toHaveCSS('-webkit-text-fill-color', 'rgba(0, 0, 0, 0)');
+		await expect(letters).toHaveCSS('background-clip', 'text');
+		const stroke = await letters.evaluate(element => getComputedStyle(element).webkitTextStrokeWidth);
+		expect(parseFloat(stroke)).toBeGreaterThan(0);
+		// Stretched taller than its natural line.
+		// Tailwind's scale-y-* sets the individual `scale` property: "1 1.3".
+		const scaleY = await letters.evaluate(element => parseFloat(getComputedStyle(element).scale.split(' ')[1] ?? '1'));
+		expect(scaleY).toBeGreaterThan(1.2);
 	});
 
 	test('stacks the name on two big lines on phones', async ({ browser }) => {

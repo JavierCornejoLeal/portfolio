@@ -61,11 +61,29 @@
 	}
 }
 
-/* Keeps hero text legible over the brightest liquid behind the fluted glass: never fully transparent. */
+/* Keeps the slogan and the cards legible over the brightest liquid. Lighter in the middle, where the glass
+   lettering of the name should let the liquid show through. */
 .hero-scrim {
 	background:
 		linear-gradient(to bottom, rgb(7 9 7 / 0.7), transparent 22%, transparent 72%, rgb(7 9 7 / 0.8)),
-		radial-gradient(ellipse at 50% 50%, rgb(7 9 7 / 0.72), rgb(7 9 7 / 0.4) 60%, rgb(7 9 7 / 0.35));
+		radial-gradient(ellipse at 50% 50%, rgb(7 9 7 / 0.3), rgb(7 9 7 / 0.3) 60%, rgb(7 9 7 / 0.35));
+}
+
+/* Glass lettering: a barely tinted body with a light top edge, outlined by a fine rim, so the letters read
+   at rest and the liquid behind the fluted glass shows through them when it is stirred. */
+.glass-type {
+	color: transparent;
+	-webkit-text-fill-color: transparent;
+	background-image: linear-gradient(
+		to bottom,
+		rgb(255 255 255 / 0.32),
+		rgb(255 255 255 / 0.08) 34%,
+		rgb(255 255 255 / 0.04) 62%,
+		rgb(255 255 255 / 0.12)
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-stroke: 1.5px rgb(233 239 230 / 0.6);
 }
 
 /* Survey legend: small uppercase Unbounded with open tracking. */

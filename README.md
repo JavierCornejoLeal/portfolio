@@ -26,6 +26,7 @@ The visual language and its tokens are documented in `DESIGN.md`; the audience a
 - **Islands, not a SPA.** Pages ship as static HTML. React is loaded only for the components that render WebGL, so the text content is readable before any JavaScript runs.
 - **Survey ground palette.** The background is a near-black with a faint green cast (`#070907`), never pure black. The accent scale, named *harlequin*, runs from `#ecffe4` to `#063400`.
 - **Three typefaces with fixed roles.** Anton for monumental condensed display, Unbounded for uppercase labels, DM Sans for reading text.
+- **Glass lettering.** The name is drawn as glass: a barely tinted body with a light top edge and a fine rim, stretched 1.3x tall. It reads at rest, and the liquid stirred behind the fluted glass shows through the letters.
 - **Poster hero.** The name runs one line across the full width in Anton, sized from its measured width (6.05 em) so it always fits, and stacks on two lines on phones; a short slogan sits top left, the latest project in a glass card bottom left, the call to action bottom right.
 - **Favicon.** The same green J as the loader, rendered from its SVG path for every icon size.
 - **Placed by hand.** Hero elements arrive one after another a little above their spot, larger, tilted and casting a deep shadow, then are set down with a small settle. It is CSS only, waits for the loader, and is skipped under reduced motion.
