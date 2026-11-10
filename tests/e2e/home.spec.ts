@@ -236,6 +236,34 @@ test.describe('home page', () => {
 		await hybrid.close();
 	});
 
+	test('treats a hovering pen like a mouse and a contact-only pen like a finger', async ({ browser }) => {
+		const tablet = await browser.newContext({ hasTouch: true });
+		const page = await tablet.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		const glass = page.locator('main [data-autoplay]');
+		const pen = (type: string, buttons: number) =>
+			page.evaluate(
+				([type, buttons]) =>
+					window.dispatchEvent(new PointerEvent(type as string, { pointerType: 'pen', buttons: buttons as number, clientX: 400, clientY: 300 })),
+				[type, buttons]
+			);
+
+		// A pen that touches down before it is ever seen hovering behaves like a finger.
+		await pen('pointerdown', 1);
+		await pen('pointermove', 1);
+		await expect(glass).toHaveAttribute('data-autoplay', 'on');
+
+		// Moving without contact proves it hovers: keep the surface dark like a mouse.
+		await pen('pointermove', 0);
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+
+		// Touching down again does not take that back.
+		await pen('pointerdown', 1);
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+		await tablet.close();
+	});
+
 	test('shows the copyright footer', async ({ page }) => {
 		await page.goto('/');
 

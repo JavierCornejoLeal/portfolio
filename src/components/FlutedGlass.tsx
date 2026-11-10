@@ -628,22 +628,31 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
 
   const running = () => visible && !reduced && !live.current.paused && !lost && !document.hidden
 
-  // "touch" follows the pointer actually in use, so hybrid devices switch with the person: a mouse leaves the
-  // surface dark until it stirs, a finger (which cannot hover) gets autoplay. Before any input, guess from
-  // whether any hovering pointer exists at all.
+  // "touch" follows whether the pointer actually in use can hover, so hybrid devices switch with the person:
+  // a mouse, or a pen seen moving without contact, leaves the surface dark until it stirs; a finger, or a pen
+  // that only moves while touching, gets autoplay. Before any input, guess from whether any hovering pointer
+  // exists at all.
   const anyHover = window.matchMedia("(any-hover: hover)")
   let lastPointerType: string | null = null
+  let inputHovers: boolean | null = null
   function autoplayOn() {
     const mode = live.current.autoplay
     if (mode !== "touch") return mode
-    return lastPointerType ? lastPointerType !== "mouse" : !anyHover.matches
+    return inputHovers === null ? !anyHover.matches : !inputHovers
   }
   function reflectAutoplay() {
     root.dataset.autoplay = autoplayOn() ? "on" : "off"
   }
   function onPointerType(e: PointerEvent) {
-    if (e.pointerType === lastPointerType) return
+    const switched = e.pointerType !== lastPointerType
     lastPointerType = e.pointerType
+    let hovers = inputHovers
+    if (e.pointerType === "mouse") hovers = true
+    else if (e.pointerType === "touch") hovers = false
+    else if (e.type === "pointermove" && e.buttons === 0) hovers = true // a pen hovering above the screen
+    else if (switched) hovers = false // a pen not yet seen hovering behaves like a finger
+    if (hovers === inputHovers) return
+    inputHovers = hovers
     reflectAutoplay()
   }
 
