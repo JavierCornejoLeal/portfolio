@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import PageLoader from '@/components/PageLoader';
 
 interface Props {
 	title?: string;
@@ -35,7 +36,22 @@ const person = {
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<script is:inline>document.documentElement.classList.add('js');</script>
+		<script is:inline>
+			(function () {
+				var root = document.documentElement;
+				root.classList.add('js');
+				var seen = false;
+				try {
+					seen = sessionStorage.getItem('loader-seen') === '1';
+				} catch (e) {}
+				if (seen) return;
+				root.classList.add('is-loading');
+				// Failsafe: never trap the page behind the loader if the island fails to boot.
+				setTimeout(function () {
+					root.classList.remove('is-loading');
+				}, 10000);
+			})();
+		</script>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
@@ -70,6 +86,9 @@ const person = {
 		{!noindex && <script type="application/ld+json" set:html={JSON.stringify(person)} />}
 	</head>
 	<body class="min-h-screen font-sans text-ink antialiased">
+		<div class="page-loader" aria-hidden="true">
+			<PageLoader client:only="react" />
+		</div>
 		<slot />
 	</body>
 </html>

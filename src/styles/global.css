@@ -149,3 +149,35 @@
 		transition: none;
 	}
 }
+
+/* Page loader: shown only while <html> has .is-loading (set by the inline head script, first visit per session).
+   Without JS the class is never set, so the page is never covered. */
+.page-loader {
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	background-color: var(--color-ground);
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition:
+		opacity 0.6s var(--ease-curtain),
+		visibility 0s linear 0.6s;
+}
+.is-loading .page-loader {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transition: none;
+}
+.is-loading body {
+	overflow: hidden;
+}
+/* Keep the covered page out of the tab order and the accessibility tree; layout is untouched. */
+.is-loading body > :not(.page-loader) {
+	visibility: hidden;
+}
+/* Hold the curtain entrance until the loader lifts, so it plays in view. */
+.is-loading .curtain-letter {
+	animation-play-state: paused;
+}
