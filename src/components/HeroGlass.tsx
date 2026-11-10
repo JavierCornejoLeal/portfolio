@@ -66,13 +66,11 @@ export function GlassCta({ href, children }: { href: string; children: React.Rea
 export interface LatestWorkProps {
   title: string
   context: string
-  year: string
   summary: string
-  stack: string[]
   href: string
 }
 
-export function LatestWork({ title, context, year, summary, stack, href }: LatestWorkProps) {
+export function LatestWork({ title, context, summary, href }: LatestWorkProps) {
   return (
     <a
       href={href}
@@ -84,22 +82,13 @@ export function LatestWork({ title, context, year, summary, stack, href }: Lates
       {/* Each half stays whole and wraps as a unit on narrow cards. */}
       <span className="legend flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-ink-muted">
         <span className="whitespace-nowrap text-harlequin-300">Latest work</span>
-        <span className="whitespace-nowrap">
-          {context} · {year}
-        </span>
+        <span className="whitespace-nowrap">{context}</span>
       </span>
       <span className="mt-3 flex items-center justify-between gap-4">
         <span className="font-display text-2xl font-medium tracking-[-0.02em]">{title}</span>
         <ArrowUpRight aria-hidden="true" className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none" />
       </span>
-      <span className="mt-2 line-clamp-2 block text-sm leading-relaxed text-ink-muted">{summary}</span>
-      <span className="mt-4 flex flex-wrap gap-1.5">
-        {stack.map((item) => (
-          <span key={item} className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-ink/80">
-            {item}
-          </span>
-        ))}
-      </span>
+      <span className="mt-2 line-clamp-3 block text-sm leading-relaxed text-ink-muted">{summary}</span>
       <span className="sr-only"> (opens in a new tab)</span>
     </a>
   )

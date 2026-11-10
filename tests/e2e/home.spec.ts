@@ -13,9 +13,12 @@ test.describe('home page', () => {
 		await expect(page).toHaveTitle('Javier Cornejo');
 		const name = page.getByRole('heading', { level: 1, name: 'Javier Cornejo' });
 		await expect(name).toBeVisible();
-		await expect(name).toHaveCSS('font-family', /Boxing/);
-		await expect(page.locator('main p', { hasText: 'Full stack developer' })).toBeVisible();
-		await expect(page.locator('main p', { hasText: 'Code you can see through: clear, honest software' })).toBeVisible();
+		await expect(name).toHaveCSS('font-family', /Anton/);
+		const slogan = page.locator('main p', { hasText: 'Code you can see through: clear, honest software' });
+		await expect(slogan).toBeVisible();
+		// Just the slogan: no quote mark, no role line under it.
+		await expect(slogan).not.toContainText('“');
+		await expect(page.getByText('Full stack developer', { exact: true })).toHaveCount(0);
 	});
 
 	test('keeps the hero inside the viewport once the glass canvas mounts', async ({ page }) => {
@@ -54,8 +57,27 @@ test.describe('home page', () => {
 		// Latest work bottom left, call to action bottom right.
 		expect(work.x).toBeLessThan(viewport.width * 0.1);
 		expect(work.y).toBeGreaterThan(name.y + name.height);
-		expect(cta.x + cta.width).toBeGreaterThan(viewport.width * 0.9);
-		expect(cta.y + cta.height).toBeGreaterThan(viewport.height * 0.85);
+		expect(cta.x + cta.width).toBeGreaterThan(viewport.width * 0.85);
+		expect(cta.y + cta.height).toBeGreaterThan(viewport.height * 0.8);
+		// Held in from the corner rather than pushed into it.
+		expect(viewport.width - (cta.x + cta.width)).toBeGreaterThanOrEqual(56);
+		expect(viewport.height - (cta.y + cta.height)).toBeGreaterThanOrEqual(56);
+	});
+
+	test('stacks the name on two big lines on phones', async ({ browser }) => {
+		const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+		const page = await phone.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+
+		const name = page.getByRole('heading', { level: 1, name: 'Javier Cornejo' });
+		const fontSize = parseFloat(await name.evaluate(element => getComputedStyle(element).fontSize));
+		const box = (await name.boundingBox())!;
+		expect(fontSize).toBeGreaterThan(80);
+		expect(box.height).toBeGreaterThan(fontSize * 1.5);
+		expect(box.x + box.width).toBeLessThanOrEqual(390);
+		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+		await phone.close();
 	});
 
 	test('shows the latest project in a card that opens its live site', async ({ page }) => {
@@ -65,7 +87,11 @@ test.describe('home page', () => {
 		await expect(card).toHaveAttribute('href', 'https://ocaive.com/');
 		await expect(card).toHaveAttribute('target', '_blank');
 		await expect(card).toContainText('ÒCAIVE');
-		await expect(card).toContainText('2025–2026');
+		await expect(card).toContainText('A tech and creative studio with 200+ end-to-end projects');
+		// No date, no stack chips, no office list.
+		await expect(card).not.toContainText('2025');
+		await expect(card).not.toContainText('Next.js');
+		await expect(card).not.toContainText('València');
 		await expect(card).toHaveAccessibleName(/\(opens in a new tab\)$/);
 	});
 

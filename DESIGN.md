@@ -6,11 +6,11 @@ Design tokens for the portfolio. Source of truth in code: `src/styles/global.css
 
 | Role    | Family                         | Token            | Use                                         |
 | ------- | ------------------------------ | ---------------- | ------------------------------------------- |
-| Poster  | Boxing (`/fonts/boxing.woff2`) | `--font-poster`  | Monumental display headlines                |
+| Poster  | Anton                          | `--font-poster`  | Monumental condensed display headlines      |
 | Display | Unbounded Variable             | `--font-display` | Uppercase labels and survey legends         |
 | Sans    | DM Sans Variable               | `--font-sans`    | Reading text (body default)                 |
 
-Fallbacks: Boxing → Unbounded → sans-serif. Unbounded and DM Sans load from `@fontsource-variable`.
+Fallbacks: Anton → Unbounded → sans-serif. Anton loads from `@fontsource/anton`; Unbounded and DM Sans from `@fontsource-variable`.
 
 **Legend style** (`.legend`): Unbounded, `0.6875rem`, weight 500, `letter-spacing: 0.18em`, uppercase.
 

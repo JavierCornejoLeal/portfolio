@@ -29,8 +29,9 @@ export const projects: Project[] = [
 		context: 'At Huming',
 		year: '2025–2026',
 		role: 'Sole developer, empty repository to production',
+		// From ocaive.com: "+200 proyectos end-to-end"; custom platforms, audiovisual production and a 360 music agency.
 		summary:
-			'Corporate site for a technology and creative agency with offices in València, Madrid and Barcelona, in Spanish, Catalan and English.',
+			'A tech and creative studio with 200+ end-to-end projects, from custom platforms to film and music production.',
 		highlights: [
 			'GSAP scrollytelling, including a hero driven by a frame sequence',
 			'Video library cut from 15+ GB to under 1 GB with no visible quality loss',

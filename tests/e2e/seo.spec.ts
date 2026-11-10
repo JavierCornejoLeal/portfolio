@@ -38,6 +38,9 @@ test.describe('SEO', () => {
 			.locator('link[rel="icon"], link[rel="apple-touch-icon"], link[rel="manifest"]')
 			.evaluateAll(links => links.map(link => link.getAttribute('href')!));
 		expect(hrefs).toEqual(['/favicon.ico', '/favicon-32x32.png', '/apple-touch-icon.png', '/site.webmanifest']);
+		const manifest = await (await request.get('/site.webmanifest')).json();
+		expect(manifest.theme_color).toBe('#070907');
+		expect(manifest.background_color).toBe('#070907');
 		for (const path of [...hrefs, '/icon-192.png', '/icon-512.png', '/og-image.png']) {
 			const response = await request.get(path);
 			expect(response.status(), path).toBe(200);
