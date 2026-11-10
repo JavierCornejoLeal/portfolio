@@ -35,9 +35,6 @@
 	--color-harlequin-900: #165c0b;
 	--color-harlequin-950: #063400;
 
-	/* Coming-soon page accent, kept until the new home lands. */
-	--color-silk: #c9c3d6;
-
 	--ease-curtain: cubic-bezier(0.16, 1, 0.3, 1);
 	--ease-survey: cubic-bezier(0.65, 0, 0.35, 1);
 }
@@ -71,11 +68,11 @@
 	}
 }
 
-/* Keeps text legible over the brightest Silk sheen: never fully transparent. */
-.silk-scrim {
+/* Keeps hero text legible over the brightest liquid behind the fluted glass: never fully transparent. */
+.hero-scrim {
 	background:
-		linear-gradient(to bottom, rgb(9 9 11 / 0.7), transparent 22%, transparent 72%, rgb(9 9 11 / 0.78)),
-		radial-gradient(ellipse at 50% 50%, rgb(9 9 11 / 0.72), rgb(9 9 11 / 0.4) 60%, rgb(9 9 11 / 0.35));
+		linear-gradient(to bottom, rgb(7 9 7 / 0.7), transparent 22%, transparent 72%, rgb(7 9 7 / 0.8)),
+		radial-gradient(ellipse at 50% 50%, rgb(7 9 7 / 0.72), rgb(7 9 7 / 0.4) 60%, rgb(7 9 7 / 0.35));
 }
 
 /* Survey legend: small uppercase Unbounded with open tracking. */
