@@ -6,11 +6,11 @@ test.describe('SEO', () => {
 	test('home exposes title, description, canonical and social cards', async ({ page }) => {
 		await page.goto('/');
 
-		await expect(page).toHaveTitle('Javier Cornejo');
+		await expect(page).toHaveTitle('Javier Cornejo · Full stack developer');
 		const meta = (selector: string) => page.locator(selector).getAttribute('content');
 		expect(await meta('meta[name="description"]')).toContain('Javier Cornejo, full stack developer');
 		await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${SITE}/`);
-		expect(await meta('meta[property="og:title"]')).toBe('Javier Cornejo');
+		expect(await meta('meta[property="og:title"]')).toBe('Javier Cornejo · Full stack developer');
 		expect(await meta('meta[property="og:url"]')).toBe(`${SITE}/`);
 		expect(await meta('meta[property="og:image"]')).toBe(`${SITE}/og-image.png`);
 		expect(await meta('meta[name="twitter:card"]')).toBe('summary_large_image');
