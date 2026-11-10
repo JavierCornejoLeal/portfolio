@@ -190,15 +190,78 @@ test.describe('home page', () => {
 			ext.restoreContext();
 		});
 
-		// Autoplay keeps the surface moving, so a live renderer never shows the same frame twice.
+		// A live renderer keeps moving (liquid stirred by the pointer, animated grain), so it never shows the same frame twice.
 		await expect
 			.poll(async () => {
+				for (let i = 0; i < 10; i++) await page.mouse.move(300 + i * 60, 300 + i * 20);
 				const first = await canvas.screenshot();
 				await page.waitForTimeout(300);
 				return first.equals(await canvas.screenshot());
 			}, { timeout: 8000 })
 			.toBe(false);
 		expect(errors).toEqual([]);
+	});
+
+	test('keeps the glass dark for a mouse and autoplays it for touch', async ({ page, browser }) => {
+		const glass = page.locator('main [data-autoplay]');
+		await page.goto('/');
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+		await page.mouse.move(400, 300);
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+
+		const phone = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+		const mobile = await phone.newPage();
+		await mobile.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await mobile.goto('/');
+		await expect(mobile.locator('main [data-autoplay]')).toHaveAttribute('data-autoplay', 'on');
+		await phone.close();
+	});
+
+	test('switches autoplay with the pointer in use on hybrid touch-and-mouse devices', async ({ browser }) => {
+		const hybrid = await browser.newContext({ hasTouch: true });
+		const page = await hybrid.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		const glass = page.locator('main [data-autoplay]');
+		// Touch emulation reports no hovering pointer at all, so before any input it guesses touch.
+		await expect(glass).toHaveAttribute('data-autoplay', 'on');
+
+		// The media query says "no hover", but a mouse is what is actually in use: stay dark.
+		await page.mouse.move(500, 320);
+		await page.mouse.move(520, 340);
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+
+		await page.touchscreen.tap(400, 300);
+		await expect(glass).toHaveAttribute('data-autoplay', 'on');
+		await hybrid.close();
+	});
+
+	test('treats a hovering pen like a mouse and a contact-only pen like a finger', async ({ browser }) => {
+		const tablet = await browser.newContext({ hasTouch: true });
+		const page = await tablet.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		const glass = page.locator('main [data-autoplay]');
+		const pen = (type: string, buttons: number) =>
+			page.evaluate(
+				([type, buttons]) =>
+					window.dispatchEvent(new PointerEvent(type as string, { pointerType: 'pen', buttons: buttons as number, clientX: 400, clientY: 300 })),
+				[type, buttons]
+			);
+
+		// A pen that touches down before it is ever seen hovering behaves like a finger.
+		await pen('pointerdown', 1);
+		await pen('pointermove', 1);
+		await expect(glass).toHaveAttribute('data-autoplay', 'on');
+
+		// Moving without contact proves it hovers: keep the surface dark like a mouse.
+		await pen('pointermove', 0);
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+
+		// Touching down again does not take that back.
+		await pen('pointerdown', 1);
+		await expect(glass).toHaveAttribute('data-autoplay', 'off');
+		await tablet.close();
 	});
 
 	test('shows the copyright footer', async ({ page }) => {
