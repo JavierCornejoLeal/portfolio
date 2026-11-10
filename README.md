@@ -28,7 +28,6 @@ The visual language and its tokens are documented in `DESIGN.md`; the audience a
 - **Three typefaces with fixed roles.** Boxing for monumental display, Unbounded for uppercase labels, DM Sans for reading text.
 - **Curtain text.** Headlines rise glyph by glyph from behind a clip edge. Each glyph gets its own start time, while screen readers receive the plain sentence instead of the split letters.
 - **Silk background.** The hero backdrop is a fragment shader that simulates draped fabric. It reacts to the pointer and freezes as soon as the visitor turns on reduced motion.
-- **Glass loader.** On the first visit of a session, a liquid glass tile refracts a "J" mark built on a block grid before the page appears. It runs in a bounded canvas, is skipped without JavaScript, and lifts after at most a few seconds even on devices without a GPU.
 - **Progressive enhancement.** Animations are gated behind a `js` class and `prefers-reduced-motion`, so content stays visible and usable when scripts are disabled or motion is reduced.
 
 ## Run locally
@@ -64,7 +63,7 @@ pnpm exec playwright install chromium   # first time only
 pnpm test:e2e
 ```
 
-They cover the home hero, the Silk background canvas, the page loader, SEO metadata and the 404 page. CI runners have no GPU, so every WebGL test also passes under software rendering.
+They cover the home hero, the Silk background canvas, SEO metadata and the 404 page. CI runners have no GPU, so every WebGL test also passes under software rendering.
 
 ## Deployment
 
