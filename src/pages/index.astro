@@ -4,6 +4,7 @@ import FlutedGlass from '@/components/FlutedGlass';
 import { DockMenu, GlassCta, MobileDock } from '@/components/HeroGlass';
 import Statement from '@/components/Statement';
 import LivingGradient from '@/components/LivingGradient';
+import ProjectsCarousel from '@/components/ProjectsCarousel';
 ---
 
 <Layout>
@@ -65,8 +66,8 @@ import LivingGradient from '@/components/LivingGradient';
 
 		<Statement client:load />
 
-		<!-- Black screen kept for the next section. -->
-		<div class="h-dvh bg-ground" data-next-section aria-hidden="true"></div>
+		<!-- Hydrates ahead of arrival so the covers are ready to rise in when the section scrolls into view. -->
+		<ProjectsCarousel client:visible={{ rootMargin: '600px' }} />
 
 		<!-- On phones the menu is a dock pinned to the bottom of the screen, always there. It runs its own entrance
 		     inside the fixed nav: an animated ancestor would become its containing block and unpin it. -->

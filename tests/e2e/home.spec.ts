@@ -273,7 +273,7 @@ test.describe('home page', () => {
 		await page.goto('/');
 		const dock = page.getByRole('navigation', { name: 'Main' });
 
-		for (const target of ['[data-statement]', '[data-next-section]']) {
+		for (const target of ['[data-statement]']) {
 			await page.locator(target).evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY + 200, behavior: 'instant' }));
 			const box = (await dock.boundingBox())!;
 			// Whatever is painted at the dock's centre belongs to the dock.
@@ -520,7 +520,7 @@ test.describe('home page', () => {
 	test('flips the highlighted word in the statement title', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
-		const title = page.getByRole('heading', { level: 2 });
+		const title = page.locator('[data-statement]').getByRole('heading', { level: 2 });
 		await expect(title).toHaveAccessibleName('I build websites, platforms, dashboards and APIs');
 
 		const word = title.locator('[aria-hidden="true"] span.relative span');
@@ -551,20 +551,6 @@ test.describe('home page', () => {
 		await expect(page.locator('[data-statement]')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 		await expect(page.locator('[data-hero-bg]')).toHaveCSS('mask-image', /linear-gradient/);
 		await expect(page.locator('.hero-scrim')).toHaveCSS('mask-image', /linear-gradient/);
-	});
-
-	test('reserves a black screen after the statement', async ({ page }) => {
-		await page.goto('/');
-		const viewport = page.viewportSize()!;
-		const next = page.locator('[data-next-section]');
-		await expect(next).toHaveCSS('background-color', 'rgb(7, 9, 7)');
-		expect(await next.evaluate(element => element.getBoundingClientRect().height)).toBe(viewport.height);
-		const after = await page.evaluate(() => {
-			const statement = document.querySelector('[data-statement]')!;
-			const reserved = document.querySelector('[data-next-section]')!;
-			return Boolean(statement.compareDocumentPosition(reserved) & Node.DOCUMENT_POSITION_FOLLOWING);
-		});
-		expect(after).toBe(true);
 	});
 
 	test('mounts the fluted glass canvas behind the hero', async ({ page }) => {
