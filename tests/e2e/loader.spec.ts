@@ -43,8 +43,8 @@ test.describe('page loader', () => {
 
 	test('keeps the covered links out of keyboard reach until the loader lifts', async ({ page }) => {
 		await page.goto('/');
-		// Located by CSS: while hidden the link is out of the accessibility tree, so a role query finds nothing.
-		const firstLink = page.locator('footer a[href*="instagram"]');
+		// Located by CSS: while hidden the button is out of the accessibility tree, so a role query finds nothing.
+		const firstLink = page.locator('button[aria-controls="dock-menu"]');
 
 		await page.keyboard.press('Tab');
 		await expect(firstLink).not.toBeFocused();
@@ -61,7 +61,7 @@ test.describe('page loader', () => {
 		await page.goto('/');
 
 		await expect(page.locator('.page-loader')).toBeHidden();
-		await expect(page.getByRole('heading', { level: 1, name: 'Incoming' })).toBeVisible();
+		await expect(page.getByRole('heading', { level: 1, name: 'Javier Cornejo' })).toBeVisible();
 		await context.close();
 	});
 
