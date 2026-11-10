@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('home page', () => {
+	// These cover the page itself, so start as a returning visitor who already saw the loader.
+	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+	});
+
 	test('renders the incoming headline and tagline', async ({ page }) => {
 		const response = await page.goto('/');
 
