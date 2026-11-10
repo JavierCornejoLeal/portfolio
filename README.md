@@ -28,6 +28,8 @@ The visual language and its tokens are documented in `DESIGN.md`; the audience a
 - **Three typefaces with fixed roles.** Boxing for monumental display, Unbounded for uppercase labels, DM Sans for reading text.
 - **Curtain text.** Headlines rise glyph by glyph from behind a clip edge. Each glyph gets its own start time, while screen readers receive the plain sentence instead of the split letters.
 - **Fluted glass hero.** The hero backdrop is coloured liquid seen through a pane of reeded glass: a small fluid simulation the pointer stirs, refracted flute by flute with colour split at the seams. It is written from scratch in WebGL2, stays black until the cursor stirs it, autoplays along a slow path on touch screens, and freezes on a still frame under reduced motion. It is the same material as the loader, a nod to transparent code.
+- **Liquid glass controls.** The menu button, the dock it opens and the call to action bend whatever sits behind them through an SVG displacement map used as a `backdrop-filter` (Aceternity's Liquid Glass), finished with layered rim highlights. Chromium refracts; Safari and Firefox fall back to frosted glass, and reduced transparency to an opaque surface. The dock body is smoked so white icons stay legible over white type.
+- **Dock menu.** The `=` button turns into a cross and opens a glass dock to its left with the sections and social profiles, labelled on hover and focus. It closes with Escape, an outside click or a followed link, and hands focus back to the button.
 - **Glass loader.** On the first visit of a session, a liquid glass tile refracts a "J" mark built on a block grid before the page appears. It runs in a bounded canvas, is skipped without JavaScript, and lifts after at most a few seconds even on devices without a GPU.
 - **Progressive enhancement.** Animations are gated behind a `js` class and `prefers-reduced-motion`, so content stays visible and usable when scripts are disabled or motion is reduced.
 
@@ -64,7 +66,7 @@ pnpm exec playwright install chromium   # first time only
 pnpm test:e2e
 ```
 
-They cover the home hero, the fluted glass background, the page loader, SEO metadata and the 404 page. CI runners have no GPU, so every WebGL test also passes under software rendering.
+They cover the home hero and its dock menu, the fluted glass background, the page loader, SEO metadata and the 404 page. CI runners have no GPU, so every WebGL test also passes under software rendering.
 
 ## Deployment
 

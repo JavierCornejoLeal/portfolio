@@ -6,119 +6,153 @@ test.describe('home page', () => {
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 	});
 
-	test('renders the incoming headline and tagline', async ({ page }) => {
+	test('names Javier in the main heading and says what he does', async ({ page }) => {
 		const response = await page.goto('/');
 
 		expect(response?.status()).toBe(200);
 		await expect(page).toHaveTitle('Javier Cornejo');
-		await expect(page.getByRole('heading', { level: 1, name: 'Incoming' })).toBeVisible();
-		await expect(page.locator('main p', { hasText: 'Something big is on its way.' })).toBeVisible();
+		const name = page.getByRole('heading', { level: 1, name: 'Javier Cornejo' });
+		await expect(name).toBeVisible();
+		await expect(name).toHaveCSS('font-family', /Boxing/);
+		await expect(page.locator('main p', { hasText: 'Full stack developer' })).toBeVisible();
+		await expect(page.locator('main p', { hasText: 'Code you can see through.' })).toBeVisible();
 	});
 
 	test('keeps the hero inside the viewport once the glass canvas mounts', async ({ page }) => {
 		await page.goto('/');
 		await expect(page.locator('main canvas')).toBeAttached();
 
-		const heading = page.getByRole('heading', { level: 1, name: 'Incoming' });
-		await expect(heading).toBeInViewport();
+		await expect(page.getByRole('heading', { level: 1, name: 'Javier Cornejo' })).toBeInViewport();
+		await expect(page.getByRole('link', { name: "Let's talk" })).toBeInViewport();
+		await expect(page.getByRole('button', { name: 'Open menu' })).toBeInViewport();
 		const box = await page.locator('main section').boundingBox();
 		expect(box?.y).toBe(0);
 	});
 
-	test('centers the headline and tagline', async ({ page }) => {
+	test('puts the name top left and the menu button top right', async ({ page }) => {
 		await page.goto('/');
 
+		const name = (await page.getByRole('heading', { level: 1 }).boundingBox())!;
+		const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!;
 		const viewport = page.viewportSize()!;
-		for (const block of [
-			page.getByRole('heading', { level: 1, name: 'Incoming' }),
-			page.locator('main p', { hasText: 'Something big is on its way.' })
-		]) {
-			const box = (await block.boundingBox())!;
-			expect(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThan(2);
-			await expect(block).toHaveCSS('text-align', 'center');
-		}
+		expect(name.y).toBeLessThan(viewport.height * 0.2);
+		expect(menu.y).toBeLessThan(viewport.height * 0.2);
+		expect(menu.x).toBeGreaterThan(viewport.width * 0.8);
+		// The name never runs under the menu button.
+		expect(name.x + name.width).toBeLessThanOrEqual(menu.x);
 	});
 
-	test('drops the header, email and phone', async ({ page }) => {
+	test('sends the call to action to the contact section', async ({ page }) => {
 		await page.goto('/');
 
-		await expect(page.locator('main header')).toHaveCount(0);
-		await expect(page.getByText('Full stack developer')).toHaveCount(0);
+		const cta = page.getByRole('link', { name: "Let's talk" });
+		await expect(cta).toHaveAttribute('href', '#contact');
+		await expect(cta).toHaveCSS('pointer-events', 'auto');
+	});
+
+	test('drops the old coming-soon copy, email and phone', async ({ page }) => {
+		await page.goto('/');
+
+		await expect(page.getByText('Incoming')).toHaveCount(0);
+		await expect(page.getByText('Something big is on its way')).toHaveCount(0);
 		await expect(page.locator('a[href^="mailto:"], a[href^="tel:"]')).toHaveCount(0);
 	});
 
-	test('links to every social profile from the footer', async ({ page }) => {
+	test('opens the glass dock from the menu button and turns it into a close button', async ({ page }) => {
 		await page.goto('/');
 
-		const links = page.locator('footer').getByRole('list', { name: 'Social links' }).getByRole('link');
-		await expect(links).toHaveCount(3);
-		await expect(page.getByRole('link', { name: /Instagram/ })).toHaveAttribute('href', 'https://www.instagram.com/javiiicornejo/');
-		await expect(page.getByRole('link', { name: /LinkedIn/ })).toHaveAttribute('href', 'https://www.linkedin.com/in/cornejolealjavier/');
-		await expect(page.getByRole('link', { name: /GitHub/ })).toHaveAttribute('href', 'https://github.com/JavierCornejoLeal');
-		await expect(page.getByRole('link', { name: /Instagram/ })).toHaveCSS('pointer-events', 'auto');
+		const menu = page.getByRole('button', { name: 'Open menu' });
+		await expect(menu).toHaveAttribute('aria-expanded', 'false');
+		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
+
+		await menu.click();
+		const close = page.getByRole('button', { name: 'Close menu' });
+		await expect(close).toHaveAttribute('aria-expanded', 'true');
+		const dock = page.getByRole('navigation', { name: 'Main' });
+		await expect(dock).toBeVisible();
+
+		for (const [name, href] of [['About', '#about'], ['Projects', '#projects'], ['Stack', '#stack'], ['Contact', '#contact']]) {
+			await expect(dock.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
+		}
+		// Opens to the left of the button.
+		const dockBox = (await dock.boundingBox())!;
+		const buttonBox = (await close.boundingBox())!;
+		expect(dockBox.x + dockBox.width).toBeLessThanOrEqual(buttonBox.x);
+
+		await close.click();
+		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
+		await expect(page.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false');
 	});
 
-	test('keeps every contact link reachable on short viewports', async ({ page }) => {
-		await page.setViewportSize({ width: 844, height: 390 });
+	test('links every social profile from the dock and announces new tabs', async ({ page }) => {
 		await page.goto('/');
+		await page.getByRole('button', { name: 'Open menu' }).click();
+		const dock = page.getByRole('navigation', { name: 'Main' });
 
-		const footer = page.locator('footer p', { hasText: 'Designed and built by Javier Cornejo.' });
-		await footer.scrollIntoViewIfNeeded();
-		await expect(footer).toBeInViewport();
-		await expect(page.getByRole('link', { name: /GitHub/ })).toBeInViewport();
-	});
-
-	test('announces external links that open in a new tab', async ({ page }) => {
-		await page.goto('/');
-
-		for (const name of ['Instagram', 'LinkedIn', 'GitHub']) {
-			const link = page.getByRole('link', { name: new RegExp(name) });
+		for (const [name, href] of [
+			['GitHub', 'https://github.com/JavierCornejoLeal'],
+			['LinkedIn', 'https://www.linkedin.com/in/cornejolealjavier/'],
+			['Instagram', 'https://www.instagram.com/javiiicornejo/']
+		]) {
+			const link = dock.getByRole('link', { name: new RegExp(`^${name}`) });
+			await expect(link).toHaveAttribute('href', href);
 			await expect(link).toHaveAttribute('target', '_blank');
-			await expect(link).toHaveAccessibleName(/\(opens in a new tab\)$/);
+			await expect(link).toHaveAccessibleName(`${name} (opens in a new tab)`);
 		}
 	});
 
-	test('shows a social link as soon as it takes keyboard focus', async ({ page }) => {
-		await page.emulateMedia({ reducedMotion: 'no-preference' });
+	test('closes the dock with Escape and gives focus back to the menu button', async ({ page }) => {
 		await page.goto('/');
+		await page.getByRole('button', { name: 'Open menu' }).click();
+		await page.keyboard.press('Tab');
+		await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link').first()).toBeFocused();
 
-		// Read the glyphs right after focusing, while their entrance delay is still running
-		const animations = await page.evaluate(() => {
-			const link = document.querySelector<HTMLAnchorElement>('ul[aria-label="Social links"] a');
-			link?.focus();
-			return [...link!.querySelectorAll('.curtain-letter')].map(glyph => getComputedStyle(glyph).animationName);
-		});
-		expect(animations.length).toBeGreaterThan(0);
-		expect(new Set(animations)).toEqual(new Set(['none']));
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
+		await expect(page.getByRole('button', { name: 'Open menu' })).toBeFocused();
 	});
 
-	test('reveals every piece of text with the curtain effect', async ({ page }) => {
+	test('closes the dock when clicking outside it or following a link', async ({ page }) => {
+		await page.goto('/');
+		await page.getByRole('button', { name: 'Open menu' }).click();
+		await page.mouse.click(200, 500);
+		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
+
+		await page.getByRole('button', { name: 'Open menu' }).click();
+		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Projects', exact: true }).click();
+		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
+		await expect(page).toHaveURL(/#projects$/);
+	});
+
+	test('fits the dock on narrow phones without horizontal scroll', async ({ browser }) => {
+		const phone = await browser.newContext({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true });
+		const page = await phone.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		await page.getByRole('button', { name: 'Open menu' }).tap();
+
+		const dock = (await page.getByRole('navigation', { name: 'Main' }).boundingBox())!;
+		expect(dock.x).toBeGreaterThanOrEqual(0);
+		expect(dock.x + dock.width).toBeLessThanOrEqual(320);
+		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+		await phone.close();
+	});
+
+	test('reveals the name and the slogan with the curtain effect', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
 
-		for (const block of ['main h1', 'main section > div > p', 'footer a', 'footer p']) {
+		for (const block of ['main h1', 'main section p']) {
 			const glyphs = page.locator(`${block} .curtain-letter`);
 			expect(await glyphs.count(), block).toBeGreaterThan(0);
 			await expect(glyphs.first()).toHaveCSS('animation-name', 'curtain-rise');
 		}
 		// Glyphs start one after another, never all at once
 		const starts = await page
-			.locator('main section > div > p .curtain-letter')
+			.locator('main h1 .curtain-letter')
 			.evaluateAll(glyphs => glyphs.map(glyph => parseFloat(getComputedStyle(glyph).animationDelay)));
 		expect(starts).toEqual([...starts].sort((a, b) => a - b));
 		expect(starts.at(-1)!).toBeGreaterThan(starts[0]);
-	});
-
-	test('runs the footer curtain one glyph after another without overlaps', async ({ page }) => {
-		await page.emulateMedia({ reducedMotion: 'no-preference' });
-		await page.goto('/');
-
-		const starts = await page
-			.locator('footer .curtain-letter')
-			.evaluateAll(glyphs => glyphs.map(glyph => parseFloat(getComputedStyle(glyph).animationDelay)));
-		for (let i = 1; i < starts.length; i++) {
-			expect(starts[i], `glyph ${i} starts after glyph ${i - 1}`).toBeGreaterThan(starts[i - 1]);
-		}
 	});
 
 	test('freezes the glass background as soon as reduced motion turns on', async ({ page }) => {
@@ -262,17 +296,6 @@ test.describe('home page', () => {
 		await pen('pointerdown', 1);
 		await expect(glass).toHaveAttribute('data-autoplay', 'off');
 		await tablet.close();
-	});
-
-	test('shows the copyright footer', async ({ page }) => {
-		await page.goto('/');
-
-		const year = new Date().getFullYear();
-		const footer = page.locator('footer p');
-		await expect(footer).toBeVisible();
-		await expect(footer.locator('.sr-only')).toHaveText(
-			`© ${year} Javier Cornejo. All rights reserved. Designed and built by Javier Cornejo.`
-		);
 	});
 
 	test('mounts the fluted glass canvas behind the hero', async ({ page }) => {
