@@ -1,11 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import FlutedGlass from '@/components/FlutedGlass';
-import { DockMenu, GlassCta, LatestWork } from '@/components/HeroGlass';
-import { projects } from '@/data/portfolio';
-
-// Projects are listed newest first.
-const latest = projects[0];
+import { DockMenu, GlassCta, MobileDock } from '@/components/HeroGlass';
 ---
 
 <Layout>
@@ -42,26 +38,21 @@ const latest = projects[0];
 					class="place-in hero-name font-poster text-center leading-[0.9] uppercase max-sm:[word-spacing:100vw] sm:whitespace-nowrap"
 					style="--place-delay: 0.45s"
 				>
-					<!-- Stretched on an inner span: the entrance animation owns the h1's transform. The stretch takes no
-					     layout room; the size formula in .hero leaves space for it. -->
-					<span class="name-fade inline-block origin-center scale-y-[1.3]">Javier Cornejo</span>
+					<!-- Stretched on an inner span (wider and taller, like a cover): the entrance animation owns the h1's
+					     transform. The stretch takes no layout room; the size formula in .hero leaves space for it. -->
+					<span class="name-fade name-stretch inline-block origin-center">Javier Cornejo</span>
 				</h1>
 			</div>
 
-			<div class="flex flex-col items-stretch gap-6 sm:flex-row sm:items-end sm:justify-between">
-				<div class="place-in pointer-events-auto w-full sm:max-w-sm" style="--place-delay: 0.8s">
-					<LatestWork
-						client:load
-						title={latest.title}
-						context={latest.context}
-						summary={latest.summary}
-						href={latest.links[0].href}
-					/>
-				</div>
-				<div class="place-in pointer-events-auto shrink-0 self-end" style="--place-delay: 0.95s">
+			<div class="flex justify-end">
+				<div class="place-in pointer-events-auto shrink-0" style="--place-delay: 0.8s">
 					<GlassCta client:load href="#contact">Let's talk</GlassCta>
 				</div>
 			</div>
 		</section>
+		<!-- On phones the menu is a dock pinned to the bottom of the screen, always there. -->
+		<div class="place-in sm:hidden" style="--place-delay: 0.95s">
+			<MobileDock client:load />
+		</div>
 	</main>
 </Layout>
