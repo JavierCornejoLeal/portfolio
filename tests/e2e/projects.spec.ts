@@ -202,6 +202,38 @@ test.describe('projects carousel', () => {
 		await expect(page.locator(stageSelector)).toHaveAttribute('data-running', 'false');
 	});
 
+	test('draws nothing while the strip stands still', async ({ page }) => {
+		// Count draw calls on the carousel's own canvas only.
+		await page.addInitScript(() => {
+			const counted = new WeakSet<WebGL2RenderingContext>();
+			(window as unknown as { carouselDraws: number }).carouselDraws = 0;
+			const original = WebGL2RenderingContext.prototype.drawElements;
+			WebGL2RenderingContext.prototype.drawElements = function (this: WebGL2RenderingContext, ...args: Parameters<typeof original>) {
+				if (counted.has(this) || (this.canvas as HTMLCanvasElement).closest?.('[data-projects-stage]')) {
+					counted.add(this);
+					(window as unknown as { carouselDraws: number }).carouselDraws++;
+				}
+				return original.apply(this, args);
+			};
+		});
+		await openSection(page);
+		const draws = () => page.evaluate(() => (window as unknown as { carouselDraws: number }).carouselDraws);
+		expect(await draws()).toBeGreaterThan(0);
+
+		// Hovering pauses the idle drift; once the strip has settled, frames keep ticking but nothing is drawn.
+		const box = (await page.locator(stageSelector).boundingBox())!;
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.85);
+		await page.waitForTimeout(1500);
+		const before = await draws();
+		await page.waitForTimeout(600);
+		expect(await draws()).toBe(before);
+
+		// Moving draws again.
+		await page.locator(stageSelector).focus();
+		await page.keyboard.press('ArrowRight');
+		await expect.poll(draws).toBeGreaterThan(before);
+	});
+
 	test('moves at once with reduced motion', async ({ browser }) => {
 		const context = await browser.newContext({ reducedMotion: 'reduce' });
 		const page = await context.newPage();
