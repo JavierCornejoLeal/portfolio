@@ -156,6 +156,8 @@
 	position: fixed;
 	inset: 0;
 	z-index: 100;
+	display: grid;
+	place-items: center;
 	background-color: var(--color-ground);
 	opacity: 0;
 	visibility: hidden;
