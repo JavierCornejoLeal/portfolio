@@ -86,8 +86,11 @@ const person = {
 		{!noindex && <script type="application/ld+json" set:html={JSON.stringify(person)} />}
 	</head>
 	<body class="min-h-screen font-sans text-ink antialiased">
-		<div class="page-loader" aria-hidden="true">
-			<PageLoader client:only="react" />
+		<div class="page-loader">
+			<div aria-hidden="true">
+				<PageLoader client:only="react" />
+			</div>
+			<p class="sr-only" role="status">Loading</p>
 		</div>
 		<slot />
 	</body>
