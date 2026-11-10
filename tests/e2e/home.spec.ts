@@ -51,7 +51,7 @@ test.describe('home page', () => {
 		expect(menu.y).toBeLessThan(viewport.height * 0.15);
 		// Name centred on one line, spanning most of the width.
 		expect(Math.abs(name.x + name.width / 2 - viewport.width / 2)).toBeLessThan(4);
-		expect(name.width).toBeGreaterThan(viewport.width * 0.85);
+		expect(name.width).toBeGreaterThan(viewport.width * 0.8);
 		expect(name.height).toBeLessThan(viewport.height * 0.25);
 		expect(name.y).toBeGreaterThan(slogan.y + slogan.height);
 		// Latest work bottom left, call to action bottom right.
@@ -62,6 +62,32 @@ test.describe('home page', () => {
 		// Held in from the corner rather than pushed into it.
 		expect(viewport.width - (cta.x + cta.width)).toBeGreaterThanOrEqual(56);
 		expect(viewport.height - (cta.y + cta.height)).toBeGreaterThanOrEqual(56);
+	});
+
+	test('gives the content generous room from the edges while the menu stays in its corner', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+		const viewport = page.viewportSize()!;
+		const insets = async (locator: import('@playwright/test').Locator) => {
+			const box = (await locator.boundingBox())!;
+			return { left: box.x, top: box.y, right: viewport.width - box.x - box.width, bottom: viewport.height - box.y - box.height };
+		};
+
+		const slogan = await insets(page.locator('main p', { hasText: 'Code you can see through' }));
+		const work = await insets(page.getByRole('link', { name: /Latest work/ }));
+		const cta = await insets(page.getByRole('link', { name: "Let's talk" }));
+		const name = await insets(page.getByRole('heading', { level: 1 }));
+		const menu = await insets(page.getByRole('button', { name: 'Open menu' }));
+
+		expect(slogan.left).toBeGreaterThanOrEqual(64);
+		expect(slogan.top).toBeGreaterThanOrEqual(56);
+		expect(work.left).toBeGreaterThanOrEqual(64);
+		expect(work.bottom).toBeGreaterThanOrEqual(56);
+		expect(cta.right).toBeGreaterThanOrEqual(64);
+		expect(cta.bottom).toBeGreaterThanOrEqual(56);
+		expect(Math.min(name.left, name.right)).toBeGreaterThanOrEqual(64);
+		expect(menu.top).toBeLessThanOrEqual(48);
+		expect(menu.right).toBeLessThanOrEqual(48);
 	});
 
 	test('stacks the name on two big lines on phones', async ({ browser }) => {
