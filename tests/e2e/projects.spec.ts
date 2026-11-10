@@ -220,18 +220,53 @@ test.describe('projects carousel', () => {
 		const draws = () => page.evaluate(() => (window as unknown as { carouselDraws: number }).carouselDraws);
 		expect(await draws()).toBeGreaterThan(0);
 
-		// Hovering pauses the idle drift; once the strip has settled, frames keep ticking but nothing is drawn.
+		// Hovering pauses the idle drift. Once the strip settles (sooner or later, depending on the machine's
+		// frame rate), a half-second passes with frames ticking but nothing drawn.
 		const box = (await page.locator(stageSelector).boundingBox())!;
 		await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.85);
-		await page.waitForTimeout(1500);
+		await expect
+			.poll(
+				async () => {
+					const start = await draws();
+					await page.waitForTimeout(500);
+					return (await draws()) - start;
+				},
+				{ timeout: 20_000 }
+			)
+			.toBe(0);
 		const before = await draws();
-		await page.waitForTimeout(600);
-		expect(await draws()).toBe(before);
 
 		// Moving draws again.
 		await page.locator(stageSelector).focus();
 		await page.keyboard.press('ArrowRight');
 		await expect.poll(draws).toBeGreaterThan(before);
+	});
+
+	test('stops drifting under a pointer that was already resting there when the section arrived', async ({ page }) => {
+		// The pointer waits mid-screen while the page scrolls the section under it: the browser reports it as
+		// already inside, so the carousel never sees it enter.
+		await page.goto('/');
+		const viewport = page.viewportSize()!;
+		await page.mouse.move(viewport.width / 2, viewport.height * 0.85);
+		const stage = page.locator(stageSelector);
+		await stage.evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY, behavior: 'instant' }));
+		await expect(stage).toHaveAttribute('data-running', 'true');
+		await page.waitForTimeout(2200);
+		await page.mouse.move(viewport.width / 2 + 4, viewport.height * 0.85);
+
+		// Hovering holds the strip still: the middle card stays exactly where it is.
+		const middle = page.locator('[data-project-anchor]').first();
+		const left = () => middle.evaluate(element => Math.round(element.getBoundingClientRect().left));
+		await expect
+			.poll(
+				async () => {
+					const start = await left();
+					await page.waitForTimeout(700);
+					return (await left()) - start;
+				},
+				{ timeout: 15_000 }
+			)
+			.toBe(0);
 	});
 
 	test('moves at once with reduced motion', async ({ browser }) => {

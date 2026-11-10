@@ -596,7 +596,14 @@ export class LensCarousel {
       event.preventDefault()
     })
 
-    on(stage, "pointerenter", () => (this.hovered = true))
+    // Hover is read, not only waited for: a pointer resting where the section scrolls in was "entered" before
+    // these listeners existed (the section hydrates on arrival), so pointerenter would never come.
+    this.hovered = stage.matches(":hover")
+    const hover = (event: PointerEvent) => {
+      if (event.pointerType !== "touch") this.hovered = true
+    }
+    on(stage, "pointerenter", hover)
+    on(stage, "pointermove", hover)
     on(stage, "pointerleave", () => (this.hovered = false))
     on(stage, "focusin", () => (this.focused = true))
     on(stage, "focusout", (event: FocusEvent) => {
