@@ -173,6 +173,34 @@ test.describe('home page', () => {
 		expect(after - before).toBe(0);
 	});
 
+	test('resumes the glass background after the WebGL context is lost and restored', async ({ page }) => {
+		const errors: string[] = [];
+		page.on('pageerror', error => errors.push(error.message));
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+		const canvas = page.locator('main canvas');
+		await expect(canvas).toBeAttached();
+		// Compare the background alone: the hero text and its scrim animate on their own.
+		await page.addStyleTag({ content: 'main section, .hero-scrim { visibility: hidden !important; }' });
+
+		await canvas.evaluate(async element => {
+			const ext = (element as HTMLCanvasElement).getContext('webgl2')!.getExtension('WEBGL_lose_context')!;
+			ext.loseContext();
+			await new Promise(resolve => setTimeout(resolve, 200));
+			ext.restoreContext();
+		});
+
+		// Autoplay keeps the surface moving, so a live renderer never shows the same frame twice.
+		await expect
+			.poll(async () => {
+				const first = await canvas.screenshot();
+				await page.waitForTimeout(300);
+				return first.equals(await canvas.screenshot());
+			}, { timeout: 8000 })
+			.toBe(false);
+		expect(errors).toEqual([]);
+	});
+
 	test('shows the copyright footer', async ({ page }) => {
 		await page.goto('/');
 

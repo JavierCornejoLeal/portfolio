@@ -370,7 +370,6 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
     canvas.remove()
     return null
   }
-  const floatTargets = !!(gl.getExtension("EXT_color_buffer_float") || gl.getExtension("EXT_color_buffer_half_float"))
 
   const compile = (type: number, src: string) => {
     const sh = gl.createShader(type)!
@@ -379,8 +378,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
     if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh) || "FlutedGlass: shader")
     return sh
   }
-  const vert = compile(gl.VERTEX_SHADER, VERT)
-  const program = (src: string) => {
+  const program = (vert: WebGLShader, src: string) => {
     const prog = gl.createProgram()!
     gl.attachShader(prog, vert)
     gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, src))
@@ -394,25 +392,35 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
     }
     return { prog, u: uniforms }
   }
-  const P = {
-    advect: program(ADVECT),
-    splat: program(SPLAT),
-    scale: program(SCALE),
-    curl: program(CURL),
-    vorticity: program(VORTICITY),
-    divergence: program(DIVERGENCE),
-    pressure: program(PRESSURE),
-    gradient: program(GRADIENT),
-    scene: program(SCENE),
-    glass: program(GLASS),
+  // Everything that lives on the GPU. Rebuilt from scratch when a lost context is restored.
+  function buildPrograms() {
+    const vert = compile(gl!.VERTEX_SHADER, VERT)
+    return {
+      advect: program(vert, ADVECT),
+      splat: program(vert, SPLAT),
+      scale: program(vert, SCALE),
+      curl: program(vert, CURL),
+      vorticity: program(vert, VORTICITY),
+      divergence: program(vert, DIVERGENCE),
+      pressure: program(vert, PRESSURE),
+      gradient: program(vert, GRADIENT),
+      scene: program(vert, SCENE),
+      glass: program(vert, GLASS),
+    }
   }
+  function buildGeometry() {
+    gl!.bindVertexArray(gl!.createVertexArray())
+    gl!.bindBuffer(gl!.ARRAY_BUFFER, gl!.createBuffer())
+    gl!.bufferData(gl!.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl!.STATIC_DRAW)
+    gl!.enableVertexAttribArray(0)
+    gl!.vertexAttribPointer(0, 2, gl!.FLOAT, false, 0, 0)
+  }
+  // Extensions are lost with the context, so they are requested again on restore.
+  const hasFloatTargets = () => !!(gl!.getExtension("EXT_color_buffer_float") || gl!.getExtension("EXT_color_buffer_half_float"))
 
-  const vao = gl.createVertexArray()
-  gl.bindVertexArray(vao)
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
-  gl.enableVertexAttribArray(0)
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
+  let floatTargets = hasFloatTargets()
+  let P = buildPrograms()
+  buildGeometry()
 
   const created: Target[] = []
   function target(w: number, h: number, float: boolean): Target {
@@ -563,6 +571,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   }
 
   function render() {
+    if (lost) return
     const S = live.current
     const transparent = S.backgroundColor === "transparent"
     const bg = transparent ? [0, 0, 0] : hexToRgb(S.backgroundColor)
@@ -656,6 +665,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   }
 
   function resize() {
+    if (lost) return false
     const dpr = Math.min(window.devicePixelRatio || 1, live.current.dpr)
     const w = Math.max(1, Math.round(canvas.clientWidth * dpr))
     const h = Math.max(1, Math.round(canvas.clientHeight * dpr))
@@ -722,7 +732,25 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   motionQuery.addEventListener("change", onMotion)
   document.addEventListener("visibilitychange", onVisibility)
   window.addEventListener("pointermove", onPointerMove, { passive: true })
+  const onRestored = () => {
+    try {
+      // The old textures and framebuffers died with the context: forget them, never delete them.
+      created.length = 0
+      size = { w: 0, h: 0 }
+      floatTargets = hasFloatTargets()
+      P = buildPrograms()
+      buildGeometry()
+      lost = false
+      resize()
+      render()
+      kick()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   canvas.addEventListener("webglcontextlost", onLost)
+  canvas.addEventListener("webglcontextrestored", onRestored)
 
   resize()
   render()
@@ -746,6 +774,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
       document.removeEventListener("visibilitychange", onVisibility)
       window.removeEventListener("pointermove", onPointerMove)
       canvas.removeEventListener("webglcontextlost", onLost)
+      canvas.removeEventListener("webglcontextrestored", onRestored)
       freeTargets()
       gl.getExtension("WEBGL_lose_context")?.loseContext()
       canvas.remove()
