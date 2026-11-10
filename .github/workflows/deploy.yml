@@ -64,5 +64,15 @@ jobs:
 
       - name: Alias PRE domain
         if: github.ref_name == 'develop' && vars.PRE_DOMAIN != ''
-        # alias does not read the linked project's team, so pass it explicitly (team tokens fail with "User not found")
-        run: vercel alias set "${{ steps.deploy.outputs.url }}" "${{ vars.PRE_DOMAIN }}" --scope="$VERCEL_ORG_ID" --token=${{ secrets.VERCEL_TOKEN }}
+        # Uses the REST API directly: `vercel alias set` first loads the token's user, which fails with
+        # "User not found" for team-scoped tokens even with --scope. The endpoint takes the deployment URL.
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          PRE_DOMAIN: ${{ vars.PRE_DOMAIN }}
+        run: |
+          curl --fail-with-body -sS -X POST \
+            "https://api.vercel.com/v2/deployments/${DEPLOY_URL#https://}/aliases?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"alias\":\"${PRE_DOMAIN}\"}"
