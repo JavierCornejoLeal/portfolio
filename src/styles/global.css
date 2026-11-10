@@ -1,32 +1,99 @@
 @import "tailwindcss";
 @import "@fontsource-variable/unbounded";
-@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/dm-sans";
+
+@font-face {
+	font-family: "Boxing";
+	src: url("/fonts/boxing.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
 
 @theme {
-	--font-display: "Unbounded Variable", "Space Grotesk Variable", sans-serif;
-	--font-sans: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
-	--color-silk: #c9c3d6;
+	/* Boxing: monumental display. Unbounded: uppercase labels and survey legends. DM Sans: reading text. */
+	--font-poster: "Boxing", "Unbounded Variable", sans-serif;
+	--font-display: "Unbounded Variable", ui-sans-serif, sans-serif;
+	--font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+
+	/* Survey ground: near-black with a faint green cast, never pure black. */
+	--color-ground: #070907;
+	--color-ground-raised: #0d110c;
+	--color-rule: #1c2619;
+	--color-ink: #e9efe6;
+	--color-ink-muted: #9aa894;
+
+	--color-harlequin-50: #ecffe4;
+	--color-harlequin-100: #d4ffc4;
+	--color-harlequin-200: #abff90;
+	--color-harlequin-300: #78ff50;
+	--color-harlequin-400: #5bff2e;
+	--color-harlequin-500: #2ee600;
+	--color-harlequin-600: #21b800;
+	--color-harlequin-700: #178b00;
+	--color-harlequin-800: #176d07;
+	--color-harlequin-900: #165c0b;
+	--color-harlequin-950: #063400;
+
 	--ease-curtain: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-survey: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @layer base {
+	html {
+		scroll-behavior: smooth;
+		background-color: var(--color-ground);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		html {
+			scroll-behavior: auto;
+		}
+	}
+
+	html {
+		scrollbar-color: var(--color-harlequin-800) var(--color-ground);
+		caret-color: var(--color-harlequin-400);
+	}
+
 	::selection {
-		background-color: var(--color-silk);
-		color: var(--color-zinc-950);
+		background-color: var(--color-harlequin-500);
+		color: var(--color-ground);
 	}
 
 	:focus-visible {
-		outline: 2px solid var(--color-silk);
+		outline: 2px solid var(--color-harlequin-400);
 		outline-offset: 4px;
 		border-radius: 2px;
 	}
 }
 
-/* Keeps text legible over the brightest Silk sheen: never fully transparent. */
-.silk-scrim {
+/* Keeps text legible over the brightest contour bands. */
+.topo-scrim {
 	background:
-		linear-gradient(to bottom, rgb(9 9 11 / 0.7), transparent 22%, transparent 72%, rgb(9 9 11 / 0.78)),
-		radial-gradient(ellipse at 50% 50%, rgb(9 9 11 / 0.72), rgb(9 9 11 / 0.4) 60%, rgb(9 9 11 / 0.35));
+		linear-gradient(to bottom, rgb(7 9 7 / 0.55), transparent 30%, transparent 65%, rgb(7 9 7 / 0.9)),
+		radial-gradient(ellipse at 25% 55%, rgb(7 9 7 / 0.7), rgb(7 9 7 / 0.2) 70%);
+}
+
+/* Survey legend: small uppercase Unbounded with open tracking. */
+.legend {
+	font-family: var(--font-display);
+	font-size: 0.6875rem;
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+}
+
+/* Line states, drawn by stroke pattern rather than hue. */
+.rail {
+	height: 0;
+	border-top: 1px solid currentColor;
+}
+.rail-dashed {
+	border-top-style: dashed;
+}
+.rail-double {
+	border-top: 4px double currentColor;
 }
 
 /* Curtain reveal: each glyph rises from behind a clip edge at its own --start (see CurtainText). */
@@ -55,8 +122,27 @@
 	}
 }
 
+/* Sections below the fold rise once as they enter (see the observer in index.astro).
+   Gated on .js so content stays visible when scripts never run. */
+.js .reveal {
+	opacity: 0;
+	transform: translateY(2rem);
+	transition:
+		opacity 0.9s var(--ease-curtain),
+		transform 0.9s var(--ease-curtain);
+}
+.js .reveal.is-in {
+	opacity: 1;
+	transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.curtain-letter {
 		animation: none;
+	}
+	.js .reveal {
+		opacity: 1;
+		transform: none;
+		transition: none;
 	}
 }
