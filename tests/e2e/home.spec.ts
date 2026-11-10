@@ -52,7 +52,7 @@ test.describe('home page', () => {
 		// Name centred on one line, spanning most of the width.
 		expect(Math.abs(name.x + name.width / 2 - viewport.width / 2)).toBeLessThan(4);
 		expect(name.width).toBeGreaterThan(viewport.width * 0.8);
-		expect(name.height).toBeLessThan(viewport.height * 0.25);
+		expect(name.height).toBeLessThan(viewport.height * 0.35);
 		expect(name.y).toBeGreaterThan(slogan.y + slogan.height);
 		// Latest work bottom left, call to action bottom right.
 		expect(work.x).toBeLessThan(viewport.width * 0.1);
@@ -85,9 +85,24 @@ test.describe('home page', () => {
 		expect(work.bottom).toBeGreaterThanOrEqual(56);
 		expect(cta.right).toBeGreaterThanOrEqual(64);
 		expect(cta.bottom).toBeGreaterThanOrEqual(56);
-		expect(Math.min(name.left, name.right)).toBeGreaterThanOrEqual(64);
+		// The name is the exception: it runs edge to edge.
+		expect(Math.max(name.left, name.right)).toBeLessThanOrEqual(48);
 		expect(menu.top).toBeLessThanOrEqual(48);
 		expect(menu.right).toBeLessThanOrEqual(48);
+	});
+
+	test('draws the name as stretched glass lettering the background shows through', async ({ page }) => {
+		await page.goto('/');
+
+		const letters = page.getByRole('heading', { level: 1, name: 'Javier Cornejo' }).locator('.glass-type');
+		await expect(letters).toHaveCSS('-webkit-text-fill-color', 'rgba(0, 0, 0, 0)');
+		await expect(letters).toHaveCSS('background-clip', 'text');
+		const stroke = await letters.evaluate(element => getComputedStyle(element).webkitTextStrokeWidth);
+		expect(parseFloat(stroke)).toBeGreaterThan(0);
+		// Stretched taller than its natural line.
+		// Tailwind's scale-y-* sets the individual `scale` property: "1 1.3".
+		const scaleY = await letters.evaluate(element => parseFloat(getComputedStyle(element).scale.split(' ')[1] ?? '1'));
+		expect(scaleY).toBeGreaterThan(1.2);
 	});
 
 	test('stacks the name on two big lines on phones', async ({ browser }) => {
