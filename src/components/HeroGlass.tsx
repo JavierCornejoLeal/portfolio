@@ -241,15 +241,14 @@ export function MobileDock() {
       className="fixed inset-x-0 z-30 flex justify-center px-3 sm:hidden"
       style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
     >
-      <div className="relative isolate w-full max-w-sm rounded-[1.75rem]">
+      {/* The entrance runs here, inside the fixed nav: on an ancestor, a transform animation would become the nav's
+          containing block and unpin it from the screen. */}
+      <div className="place-in relative isolate w-full max-w-xs rounded-[1.75rem]" style={{ "--place-delay": "0.95s" } as React.CSSProperties}>
         <GlassLayer radius={28} smoked className="-z-10" />
-        <ul className="flex h-16 items-center justify-between px-2">
+        {/* Sections only: the social profiles stay on the desktop dock so this one stays short. */}
+        <ul className="flex h-16 items-center justify-around px-3">
           {SECTIONS.map((link, i) => (
             <DockItem key={link.href} link={link} index={i} onNavigate={() => {}} tooltip={false} />
-          ))}
-          <li aria-hidden="true" className="mx-0.5 h-8 w-px bg-white/20" />
-          {SOCIALS.map((link, i) => (
-            <DockItem key={link.href} link={link} index={SECTIONS.length + i} onNavigate={() => {}} tooltip={false} />
           ))}
         </ul>
       </div>
