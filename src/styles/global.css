@@ -1,18 +1,11 @@
 @import "tailwindcss";
+@import "@fontsource/anton";
 @import "@fontsource-variable/unbounded";
 @import "@fontsource-variable/dm-sans";
 
-@font-face {
-	font-family: "Boxing";
-	src: url("/fonts/boxing.woff2") format("woff2");
-	font-weight: 400;
-	font-style: normal;
-	font-display: swap;
-}
-
 @theme {
-	/* Boxing: monumental display. Unbounded: uppercase labels and survey legends. DM Sans: reading text. */
-	--font-poster: "Boxing", "Unbounded Variable", sans-serif;
+	/* Anton: monumental condensed display. Unbounded: uppercase labels and survey legends. DM Sans: reading text. */
+	--font-poster: "Anton", "Unbounded Variable", sans-serif;
 	--font-display: "Unbounded Variable", ui-sans-serif, sans-serif;
 	--font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
 
