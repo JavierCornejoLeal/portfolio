@@ -110,12 +110,12 @@ function ProjectDialogBody({ project }: { project: Project }) {
 
 function StaticStrip() {
   return (
-    <div data-projects-static className="flex h-full snap-x snap-mandatory items-center gap-2.5 overflow-x-auto px-[18vw] sm:gap-3.5">
+    <div data-projects-static className="flex h-full snap-x snap-mandatory items-center gap-2.5 overflow-x-auto px-[10vw] sm:gap-3.5">
       {projects.map((project) => (
         <MorphingDialog key={project.url} transition={DIALOG_TRANSITION}>
           <MorphingDialogTrigger
             aria-label={`Open ${project.name}`}
-            className="w-[64vw] shrink-0 snap-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300 sm:w-[min(20.5vw,470px)]"
+            className="w-[80vw] shrink-0 snap-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300 sm:w-[min(30vw,760px)]"
             style={{ borderRadius: 3 }}
           >
             <MorphingDialogImage

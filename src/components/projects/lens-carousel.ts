@@ -170,7 +170,8 @@ const frameEase = (share: number, frames: number) => 1 - Math.pow(1 - share, fra
 
 export function cardLayout(viewportWidth: number) {
   const phone = viewportWidth < 640
-  const width = phone ? viewportWidth * 0.64 : Math.min(viewportWidth * 0.205, 470)
+  // Large covers: the middle card and its neighbours still sit inside the lens's undistorted core.
+  const width = phone ? viewportWidth * 0.8 : Math.min(viewportWidth * 0.3, 760)
   return { width, height: width / COVER_ASPECT, gap: phone ? 10 : 14 }
 }
 

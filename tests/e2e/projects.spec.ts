@@ -36,6 +36,21 @@ test.describe('projects carousel', () => {
 		await expect(stage).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 	});
 
+	test('sizes the covers large: 30% of the width on desktop, 80% on phones', async ({ page, browser }) => {
+		await openSection(page);
+		const width = page.viewportSize()!.width;
+		const middle = page.locator('[data-project-anchor]').first();
+		expect((await middle.boundingBox())!.width).toBeCloseTo(width * 0.3, 0);
+		expect((await middle.boundingBox())!.height).toBeCloseTo((width * 0.3) / 1.509, 0);
+
+		const phone = await browser.newContext({ viewport: { width: 393, height: 852 }, hasTouch: true, isMobile: true });
+		const phonePage = await phone.newPage();
+		await phonePage.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await openSection(phonePage);
+		expect((await phonePage.locator('[data-project-anchor]').first().boundingBox())!.width).toBeCloseTo(393 * 0.8, 0);
+		await phone.close();
+	});
+
 	test('steps with the arrow keys and returns home', async ({ page }) => {
 		await openSection(page);
 		const stage = page.locator(stageSelector);
@@ -122,7 +137,8 @@ test.describe('projects carousel', () => {
 		const box = (await stage.boundingBox())!;
 		const before = await stage.getAttribute('data-active');
 
-		await page.mouse.click(box.x + box.width * 0.92, box.y + box.height / 2);
+		// The far edge: past the crisp neighbour, on the card that bends through the rim.
+		await page.mouse.click(box.x + box.width * 0.98, box.y + box.height / 2);
 		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(stage).not.toHaveAttribute('data-active', before!);
 	});
