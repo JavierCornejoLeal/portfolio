@@ -314,10 +314,12 @@ void main() {
   alpha = max(alpha, spec * (1.0 - uLightSurface));
 
   float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
-  col += (hash(gl_FragCoord.xy + fract(uTime) * 61.0) - 0.5) * uGrain * (1.0 - lum);
+  float grain = (hash(gl_FragCoord.xy + fract(uTime) * 61.0) - 0.5) * uGrain * (1.0 - lum);
 
-  if (uTransparent > 0.5) outColor = vec4(col * alpha, alpha);
-  else outColor = vec4(col, 1.0);
+  // Over a transparent backdrop the scene is already premultiplied (colour x coverage), so it is output as is,
+  // and grain only touches what is actually there instead of speckling the page behind.
+  if (uTransparent > 0.5) outColor = vec4(col + grain * alpha, alpha);
+  else outColor = vec4(col + grain, 1.0);
 }`
 
 /* ------------------------------------------------------------------ *
