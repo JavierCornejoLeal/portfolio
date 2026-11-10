@@ -15,7 +15,7 @@ test.describe('home page', () => {
 		await expect(name).toBeVisible();
 		await expect(name).toHaveCSS('font-family', /Boxing/);
 		await expect(page.locator('main p', { hasText: 'Full stack developer' })).toBeVisible();
-		await expect(page.locator('main p', { hasText: 'Code you can see through.' })).toBeVisible();
+		await expect(page.locator('main p', { hasText: 'Code you can see through: clear, honest software' })).toBeVisible();
 	});
 
 	test('keeps the hero inside the viewport once the glass canvas mounts', async ({ page }) => {
@@ -29,17 +29,44 @@ test.describe('home page', () => {
 		expect(box?.y).toBe(0);
 	});
 
-	test('puts the name top left and the menu button top right', async ({ page }) => {
+	test('lays the hero out like a poster: slogan and menu on top, name centred, work and contact below', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+		const viewport = page.viewportSize()!;
+		const box = async (locator: import('@playwright/test').Locator) => (await locator.boundingBox())!;
+
+		const slogan = await box(page.locator('main p', { hasText: 'Code you can see through' }));
+		const menu = await box(page.getByRole('button', { name: 'Open menu' }));
+		const name = await box(page.getByRole('heading', { level: 1 }));
+		const work = await box(page.getByRole('link', { name: /Latest work/ }));
+		const cta = await box(page.getByRole('link', { name: "Let's talk" }));
+
+		// Slogan top left, menu top right.
+		expect(slogan.x).toBeLessThan(viewport.width * 0.1);
+		expect(slogan.y).toBeLessThan(viewport.height * 0.25);
+		expect(menu.x + menu.width).toBeGreaterThan(viewport.width * 0.9);
+		expect(menu.y).toBeLessThan(viewport.height * 0.15);
+		// Name centred on one line, spanning most of the width.
+		expect(Math.abs(name.x + name.width / 2 - viewport.width / 2)).toBeLessThan(4);
+		expect(name.width).toBeGreaterThan(viewport.width * 0.85);
+		expect(name.height).toBeLessThan(viewport.height * 0.25);
+		expect(name.y).toBeGreaterThan(slogan.y + slogan.height);
+		// Latest work bottom left, call to action bottom right.
+		expect(work.x).toBeLessThan(viewport.width * 0.1);
+		expect(work.y).toBeGreaterThan(name.y + name.height);
+		expect(cta.x + cta.width).toBeGreaterThan(viewport.width * 0.9);
+		expect(cta.y + cta.height).toBeGreaterThan(viewport.height * 0.85);
+	});
+
+	test('shows the latest project in a card that opens its live site', async ({ page }) => {
 		await page.goto('/');
 
-		const name = (await page.getByRole('heading', { level: 1 }).boundingBox())!;
-		const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!;
-		const viewport = page.viewportSize()!;
-		expect(name.y).toBeLessThan(viewport.height * 0.2);
-		expect(menu.y).toBeLessThan(viewport.height * 0.2);
-		expect(menu.x).toBeGreaterThan(viewport.width * 0.8);
-		// The name never runs under the menu button.
-		expect(name.x + name.width).toBeLessThanOrEqual(menu.x);
+		const card = page.getByRole('link', { name: /Latest work/ });
+		await expect(card).toHaveAttribute('href', 'https://ocaive.com/');
+		await expect(card).toHaveAttribute('target', '_blank');
+		await expect(card).toContainText('ÒCAIVE');
+		await expect(card).toContainText('2025–2026');
+		await expect(card).toHaveAccessibleName(/\(opens in a new tab\)$/);
 	});
 
 	test('sends the call to action to the contact section', async ({ page }) => {
@@ -138,21 +165,36 @@ test.describe('home page', () => {
 		await phone.close();
 	});
 
-	test('reveals the name and the slogan with the curtain effect', async ({ page }) => {
+	test('places each hero element one after another, as if set down by hand', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
 
-		for (const block of ['main h1', 'main section p']) {
-			const glyphs = page.locator(`${block} .curtain-letter`);
-			expect(await glyphs.count(), block).toBeGreaterThan(0);
-			await expect(glyphs.first()).toHaveCSS('animation-name', 'curtain-rise');
-		}
-		// Glyphs start one after another, never all at once
-		const starts = await page
-			.locator('main h1 .curtain-letter')
-			.evaluateAll(glyphs => glyphs.map(glyph => parseFloat(getComputedStyle(glyph).animationDelay)));
-		expect(starts).toEqual([...starts].sort((a, b) => a - b));
-		expect(starts.at(-1)!).toBeGreaterThan(starts[0]);
+		const delayOf = (locator: import('@playwright/test').Locator) =>
+			locator.evaluate(element => {
+				const placed = element.closest('.place-in')!;
+				const style = getComputedStyle(placed);
+				return { name: style.animationName, delay: parseFloat(style.animationDelay) };
+			});
+		const order = [
+			await delayOf(page.locator('main p', { hasText: 'Code you can see through' })),
+			await delayOf(page.getByRole('heading', { level: 1 })),
+			await delayOf(page.getByRole('link', { name: /Latest work/ })),
+			await delayOf(page.getByRole('link', { name: "Let's talk" })),
+			await delayOf(page.getByRole('button', { name: 'Open menu' }))
+		];
+		for (const step of order) expect(step.name).toBe('place-in');
+		const delays = order.map(step => step.delay);
+		expect(delays).toEqual([...delays].sort((a, b) => a - b));
+		expect(new Set(delays).size).toBe(delays.length);
+	});
+
+	test('places everything at once under reduced motion', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		await page.goto('/');
+
+		const names = await page.locator('.place-in').evaluateAll(elements => elements.map(element => getComputedStyle(element).animationName));
+		expect(names.length).toBeGreaterThan(0);
+		expect(new Set(names)).toEqual(new Set(['none']));
 	});
 
 	test('freezes the glass background as soon as reduced motion turns on', async ({ page }) => {
