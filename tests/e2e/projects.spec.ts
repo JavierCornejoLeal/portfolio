@@ -76,18 +76,21 @@ test.describe('projects carousel', () => {
 		await phone.close();
 	});
 
-	test('sizes the covers large: 30% of the width on desktop, 80% on phones', async ({ page, browser }) => {
+	// One WebGL page per test: two at once starve a CI runner that renders WebGL in software.
+	test('sizes the covers at 30% of the width on desktop', async ({ page }) => {
 		await openSection(page);
 		const width = page.viewportSize()!.width;
-		const middle = page.locator('[data-project-anchor]').first();
-		expect((await middle.boundingBox())!.width).toBeCloseTo(width * 0.3, 0);
-		expect((await middle.boundingBox())!.height).toBeCloseTo((width * 0.3) / 1.509, 0);
+		const middle = (await page.locator('[data-project-anchor]').first().boundingBox())!;
+		expect(middle.width).toBeCloseTo(width * 0.3, 0);
+		expect(middle.height).toBeCloseTo((width * 0.3) / 1.509, 0);
+	});
 
+	test('sizes the covers at 80% of the width on phones', async ({ browser }) => {
 		const phone = await browser.newContext({ viewport: { width: 393, height: 852 }, hasTouch: true, isMobile: true });
-		const phonePage = await phone.newPage();
-		await phonePage.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
-		await openSection(phonePage);
-		expect((await phonePage.locator('[data-project-anchor]').first().boundingBox())!.width).toBeCloseTo(393 * 0.8, 0);
+		const page = await phone.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await openSection(page);
+		expect((await page.locator('[data-project-anchor]').first().boundingBox())!.width).toBeCloseTo(393 * 0.8, 0);
 		await phone.close();
 	});
 
