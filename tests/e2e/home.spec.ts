@@ -23,18 +23,18 @@ test.describe('home page', () => {
 
 	test('keeps the hero inside the viewport once the glass canvas mounts', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.locator('main canvas')).toBeAttached();
+		await expect(page.locator('[data-hero-bg] canvas')).toBeAttached();
 
 		await expect(page.getByRole('heading', { level: 1, name: 'Javier Cornejo' })).toBeInViewport();
 		await expect(page.getByRole('link', { name: "Let's talk" })).toBeInViewport();
 		await expect(page.getByRole('button', { name: 'Open menu' })).toBeInViewport();
-		const box = await page.locator('main section').boundingBox();
+		const box = await page.locator('section.hero').boundingBox();
 		expect(box?.y).toBe(0);
 	});
 
 	test('lays the hero out like a cover: slogan and menu on top, name centred, contact below', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+		await expect(page.locator('section.hero .place-in').last()).toHaveCSS('opacity', '1');
 		const viewport = page.viewportSize()!;
 		const box = async (locator: import('@playwright/test').Locator) => (await locator.boundingBox())!;
 
@@ -65,7 +65,7 @@ test.describe('home page', () => {
 
 	test('gives the content generous room from the edges while the menu stays in its corner', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+		await expect(page.locator('section.hero .place-in').last()).toHaveCSS('opacity', '1');
 		const viewport = page.viewportSize()!;
 		const insets = async (locator: import('@playwright/test').Locator) => {
 			const box = (await locator.boundingBox())!;
@@ -92,14 +92,15 @@ test.describe('home page', () => {
 		const page = await laptop.newPage();
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await page.goto('/');
-		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+		await expect(page.locator('section.hero .place-in').last()).toHaveCSS('opacity', '1');
 
 		const name = (await page.locator('h1 .name-fade').boundingBox())!;
 		const slogan = (await page.locator('main p', { hasText: 'Code you can see through' }).boundingBox())!;
 		const cta = (await page.getByRole('link', { name: "Let's talk" }).boundingBox())!;
 		expect(name.y - (slogan.y + slogan.height)).toBeGreaterThanOrEqual(40);
 		expect(cta.y - (name.y + name.height)).toBeGreaterThanOrEqual(40);
-		expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(783);
+		// The hero itself fits the screen; the page goes on below it.
+		expect((await page.locator('section.hero').boundingBox())!.height).toBe(783);
 		await laptop.close();
 	});
 
@@ -108,7 +109,7 @@ test.describe('home page', () => {
 		const page = await monitor.newPage();
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await page.goto('/');
-		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+		await expect(page.locator('section.hero .place-in').last()).toHaveCSS('opacity', '1');
 
 		const name = (await page.locator('h1 .name-fade').boundingBox())!;
 		const slogan = (await page.locator('main p', { hasText: 'Code you can see through' }).boundingBox())!;
@@ -249,7 +250,9 @@ test.describe('home page', () => {
 			for (const [name, href] of [['About', '#about'], ['Projects', '#projects'], ['Stack', '#stack'], ['Contact', '#contact']]) {
 				await expect(dock.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
 			}
-			await expect(dock.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('target', '_blank');
+			// Sections only: the social profiles stay on the desktop dock.
+			await expect(dock.getByRole('link')).toHaveCount(4);
+			await expect(dock.getByRole('link', { name: /GitHub|LinkedIn|Instagram/ })).toHaveCount(0);
 
 			const box = (await dock.boundingBox())!;
 			expect(box.x).toBeGreaterThanOrEqual(0);
@@ -261,6 +264,26 @@ test.describe('home page', () => {
 			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
 			await phone.close();
 		}
+	});
+
+	test('keeps the phone dock on top of every section while scrolling', async ({ browser }) => {
+		const phone = await browser.newContext({ viewport: { width: 393, height: 659 }, hasTouch: true, isMobile: true });
+		const page = await phone.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		const dock = page.getByRole('navigation', { name: 'Main' });
+
+		for (const target of ['[data-statement]', '[data-next-section]']) {
+			await page.locator(target).evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY + 200, behavior: 'instant' }));
+			const box = (await dock.boundingBox())!;
+			// Whatever is painted at the dock's centre belongs to the dock.
+			const onTop = await dock.evaluate((nav, point) => nav.contains(document.elementFromPoint(point.x, point.y)), {
+				x: box.x + box.width / 2,
+				y: box.y + box.height / 2
+			});
+			expect(onTop, target).toBe(true);
+		}
+		await phone.close();
 	});
 
 	test('keeps the glass dark when the browser falls back to frosted glass, whatever the OS colour scheme', async ({ browser }) => {
@@ -278,11 +301,11 @@ test.describe('home page', () => {
 		const glass = page.locator('[data-refract]');
 		await expect(glass.first()).toBeAttached();
 		// The fallback kicks in on the component's first effect, so wait for every surface to settle on it.
+		const backgrounds = () => glass.evaluateAll(elements => elements.map(element => getComputedStyle(element).backgroundColor));
 		await expect
-			.poll(() => glass.evaluateAll(elements => elements.map(element => getComputedStyle(element).backgroundColor)))
-			.toEqual(expect.arrayContaining([expect.stringMatching(/^rgba\(7, 9, 7, 0\.5\d*\)$/)]));
-		const backgrounds = await glass.evaluateAll(elements => elements.map(element => getComputedStyle(element).backgroundColor));
-		for (const background of backgrounds) expect(background).toMatch(/^rgba\(7, 9, 7, 0\.5\d*\)$/);
+			.poll(async () => (await backgrounds()).every(background => /^rgba\(7, 9, 7, 0\.5\d*\)$/.test(background)))
+			.toBe(true);
+		expect((await backgrounds()).length).toBeGreaterThan(0);
 		await context.close();
 	});
 
@@ -321,7 +344,7 @@ test.describe('home page', () => {
 	test('freezes the glass background as soon as reduced motion turns on', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
-		const canvas = page.locator('main canvas');
+		const canvas = page.locator('[data-hero-bg] canvas');
 		await expect(canvas).toBeAttached();
 		await page.mouse.move(640, 360);
 		await page.mouse.down();
@@ -348,7 +371,7 @@ test.describe('home page', () => {
 				});
 		});
 		await page.goto('/');
-		await expect(page.locator('main canvas')).toBeAttached();
+		await expect(page.locator('[data-hero-bg] canvas')).toBeAttached();
 		const frames = () => page.evaluate(() => (window as unknown as { glassFrames: number }).glassFrames);
 		// Wait for startup renders (resize, visibility) to finish so only pointer work is measured
 		let settled = -1;
@@ -375,7 +398,7 @@ test.describe('home page', () => {
 		page.on('pageerror', error => errors.push(error.message));
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
-		const canvas = page.locator('main canvas');
+		const canvas = page.locator('[data-hero-bg] canvas');
 		await expect(canvas).toBeAttached();
 		// Compare the background alone: the hero text and its scrim animate on their own.
 		await page.addStyleTag({ content: 'main section, .hero-scrim { visibility: hidden !important; }' });
@@ -462,10 +485,75 @@ test.describe('home page', () => {
 		await tablet.close();
 	});
 
+	test('pins the statement over its living gradient while the paragraph reveals word by word', async ({ page }) => {
+		await page.goto('/');
+		const section = page.locator('[data-statement]');
+		const pinned = section.locator(':scope > div');
+		const words = section.locator('p > span');
+		const metrics = await section.evaluate(element => ({ top: element.getBoundingClientRect().top + scrollY, height: element.offsetHeight }));
+		const viewport = page.viewportSize()!;
+		const scrollTo = (fraction: number) =>
+			page.evaluate(y => window.scrollTo({ top: y, behavior: 'instant' }), metrics.top + (metrics.height - viewport.height) * fraction);
+		const opacities = () => words.evaluateAll(elements => elements.map(element => Number(getComputedStyle(element).opacity)));
+
+		// Entering: every word is still translucent.
+		await scrollTo(0);
+		await expect.poll(async () => Math.max(...(await opacities()))).toBeLessThan(0.3);
+
+		// Halfway: the start of the paragraph is white, the end is not, and the content has not moved.
+		await scrollTo(0.4);
+		await expect.poll(async () => (await opacities())[0]).toBeGreaterThan(0.95);
+		expect((await opacities()).at(-1)!).toBeLessThan(0.3);
+		expect(await pinned.evaluate(element => element.getBoundingClientRect().top)).toBe(0);
+
+		// Revealed: every word is white while the section still holds the screen.
+		await scrollTo(0.86);
+		await expect.poll(async () => Math.min(...(await opacities()))).toBeGreaterThan(0.95);
+		expect(await pinned.evaluate(element => element.getBoundingClientRect().top)).toBe(0);
+
+		// Only then does it scroll away.
+		await scrollTo(1.2);
+		await expect.poll(() => pinned.evaluate(element => element.getBoundingClientRect().top)).toBeLessThan(0);
+	});
+
+	test('flips the highlighted word in the statement title', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+		const title = page.getByRole('heading', { level: 2 });
+		await expect(title).toHaveAccessibleName('I build websites, web platforms, admin panels and internal tools');
+
+		const word = title.locator('[aria-hidden="true"] span.relative span');
+		const first = await word.first().textContent();
+		await expect.poll(() => word.last().textContent(), { timeout: 8000 }).not.toBe(first);
+	});
+
+	test('fills the screen with the living gradient behind the statement, then a black screen follows', async ({ page }) => {
+		await page.goto('/');
+		const viewport = page.viewportSize()!;
+		const gradient = page.locator('[data-statement] [data-living-gradient] canvas');
+		await expect(gradient).toBeAttached();
+		const box = await page.locator('[data-statement] [data-living-gradient]').evaluate(element => {
+			const rect = element.getBoundingClientRect();
+			return { width: rect.width, height: rect.height };
+		});
+		expect(box).toEqual({ width: viewport.width, height: viewport.height });
+
+		// Statement renders inside an island wrapper, so find the reserved screen by its own marker and order.
+		const next = page.locator('[data-next-section]');
+		const after = await page.evaluate(() => {
+			const statement = document.querySelector('[data-statement]')!;
+			const reserved = document.querySelector('[data-next-section]')!;
+			return Boolean(statement.compareDocumentPosition(reserved) & Node.DOCUMENT_POSITION_FOLLOWING);
+		});
+		expect(after).toBe(true);
+		await expect(next).toHaveCSS('background-color', 'rgb(7, 9, 7)');
+		expect(await next.evaluate(element => element.getBoundingClientRect().height)).toBe(viewport.height);
+	});
+
 	test('mounts the fluted glass canvas behind the hero', async ({ page }) => {
 		await page.goto('/');
 
-		const canvas = page.locator('main canvas');
+		const canvas = page.locator('[data-hero-bg] canvas');
 		await expect(canvas).toBeAttached();
 		const viewport = page.viewportSize();
 		// The canvas is sized asynchronously, so retry until it fills the viewport
@@ -480,7 +568,7 @@ test.describe('home page', () => {
 	test('keeps the hero text from blocking pointer events on the background', async ({ page }) => {
 		await page.goto('/');
 
-		const section = page.locator('main section');
+		const section = page.locator('section.hero');
 		await expect(section).toHaveCSS('pointer-events', 'none');
 	});
 
@@ -489,7 +577,7 @@ test.describe('home page', () => {
 		page.on('pageerror', error => errors.push(error.message));
 
 		await page.goto('/');
-		await expect(page.locator('main canvas')).toBeAttached();
+		await expect(page.locator('[data-hero-bg] canvas')).toBeAttached();
 
 		expect(errors).toEqual([]);
 	});
