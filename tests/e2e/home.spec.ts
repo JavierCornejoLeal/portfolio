@@ -51,7 +51,8 @@ test.describe('home page', () => {
 		expect(menu.y).toBeLessThan(viewport.height * 0.15);
 		// Name centred on one line, spanning most of the width.
 		expect(Math.abs(name.x + name.width / 2 - viewport.width / 2)).toBeLessThan(4);
-		expect(name.width).toBeGreaterThan(viewport.width * 0.8);
+		// On a short 720px screen the name gives up width for breathing room; tall screens run it edge to edge.
+		expect(name.width).toBeGreaterThan(viewport.width * 0.7);
 		expect(name.height).toBeLessThan(viewport.height * 0.35);
 		expect(name.y).toBeGreaterThan(slogan.y + slogan.height);
 		// Latest work bottom left, call to action bottom right.
@@ -85,20 +86,55 @@ test.describe('home page', () => {
 		expect(work.bottom).toBeGreaterThanOrEqual(56);
 		expect(cta.right).toBeGreaterThanOrEqual(64);
 		expect(cta.bottom).toBeGreaterThanOrEqual(56);
-		// The name is the exception: it runs edge to edge.
-		expect(Math.max(name.left, name.right)).toBeLessThanOrEqual(48);
+		// The name leaves breathing room above and below on a laptop-height screen.
+		expect(name.top).toBeGreaterThan(slogan.top);
 		expect(menu.top).toBeLessThanOrEqual(48);
 		expect(menu.right).toBeLessThanOrEqual(48);
 	});
 
-	test('draws the name as stretched glass lettering the background shows through', async ({ page }) => {
+	test('keeps at least 40px of air around the name on a laptop screen', async ({ browser }) => {
+		const laptop = await browser.newContext({ viewport: { width: 1512, height: 783 } });
+		const page = await laptop.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+
+		const name = (await page.locator('h1 .name-fade').boundingBox())!;
+		const slogan = (await page.locator('main p', { hasText: 'Code you can see through' }).boundingBox())!;
+		const work = (await page.getByRole('link', { name: /Latest work/ }).boundingBox())!;
+		expect(name.y - (slogan.y + slogan.height)).toBeGreaterThanOrEqual(40);
+		expect(work.y - (name.y + name.height)).toBeGreaterThanOrEqual(40);
+		expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(783);
+		await laptop.close();
+	});
+
+	test('runs the name edge to edge and widens the insets on large screens', async ({ browser }) => {
+		const monitor = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+		const page = await monitor.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		await expect(page.locator('.place-in').last()).toHaveCSS('opacity', '1');
+
+		const name = (await page.locator('h1 .name-fade').boundingBox())!;
+		const slogan = (await page.locator('main p', { hasText: 'Code you can see through' }).boundingBox())!;
+		const cta = (await page.getByRole('link', { name: "Let's talk" }).boundingBox())!;
+		expect(name.width).toBeGreaterThan(1920 * 0.95);
+		expect(slogan.x).toBeGreaterThanOrEqual(120);
+		expect(1920 - (cta.x + cta.width)).toBeGreaterThanOrEqual(120);
+		await monitor.close();
+	});
+
+	test('draws the name in white fading to transparent towards its foot, with no rim', async ({ page }) => {
 		await page.goto('/');
 
-		const letters = page.getByRole('heading', { level: 1, name: 'Javier Cornejo' }).locator('.glass-type');
+		const letters = page.getByRole('heading', { level: 1, name: 'Javier Cornejo' }).locator('.name-fade');
 		await expect(letters).toHaveCSS('-webkit-text-fill-color', 'rgba(0, 0, 0, 0)');
 		await expect(letters).toHaveCSS('background-clip', 'text');
+		const gradient = await letters.evaluate(element => getComputedStyle(element).backgroundImage);
+		expect(gradient).toContain('linear-gradient');
+		expect(gradient).toMatch(/rgba\(233, 239, 230, 0\.3\)/);
 		const stroke = await letters.evaluate(element => getComputedStyle(element).webkitTextStrokeWidth);
-		expect(parseFloat(stroke)).toBeGreaterThan(0);
+		expect(parseFloat(stroke)).toBe(0);
 		// Stretched taller than its natural line.
 		// Tailwind's scale-y-* sets the individual `scale` property: "1 1.3".
 		const scaleY = await letters.evaluate(element => parseFloat(getComputedStyle(element).scale.split(' ')[1] ?? '1'));
@@ -232,7 +268,7 @@ test.describe('home page', () => {
 		await phone.close();
 	});
 
-	test('places each hero element one after another, as if set down by hand', async ({ page }) => {
+	test('brings the hero elements in from top to bottom', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
 
@@ -242,12 +278,13 @@ test.describe('home page', () => {
 				const style = getComputedStyle(placed);
 				return { name: style.animationName, delay: parseFloat(style.animationDelay) };
 			});
+		// Ordered by how high each element sits: menu, slogan, name, latest work, call to action.
 		const order = [
+			await delayOf(page.getByRole('button', { name: 'Open menu' })),
 			await delayOf(page.locator('main p', { hasText: 'Code you can see through' })),
 			await delayOf(page.getByRole('heading', { level: 1 })),
 			await delayOf(page.getByRole('link', { name: /Latest work/ })),
-			await delayOf(page.getByRole('link', { name: "Let's talk" })),
-			await delayOf(page.getByRole('button', { name: 'Open menu' }))
+			await delayOf(page.getByRole('link', { name: "Let's talk" }))
 		];
 		for (const step of order) expect(step.name).toBe('place-in');
 		const delays = order.map(step => step.delay);

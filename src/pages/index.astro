@@ -20,16 +20,14 @@ const latest = projects[0];
 			/>
 		</div>
 		<div class="hero-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
-		<section
-			class="pointer-events-none relative z-10 flex min-h-dvh flex-col gap-8 px-8 py-10 sm:px-16 sm:py-14 lg:px-24 lg:py-16"
-		>
-			<!-- Each element is placed by hand, one after another: see .place-in in global.css.
-			     Content keeps generous room from the edges; only the menu sits close to its corner. -->
-			<div class="place-in pointer-events-auto absolute top-6 right-6 z-20 sm:top-8 sm:right-10" style="--place-delay: 1.05s; --place-tilt: 6deg">
+		<!-- Geometry (insets and the name's size) lives in .hero in global.css, so it can follow the screen's height. -->
+		<section class="hero pointer-events-none relative z-10 flex min-h-dvh flex-col gap-8">
+			<!-- Elements arrive top to bottom: see .place-in in global.css. Only the menu sits close to its corner. -->
+			<div class="place-in pointer-events-auto absolute top-6 right-6 z-20 sm:top-8 sm:right-10" style="--place-delay: 0.1s">
 				<DockMenu client:load />
 			</div>
 			<header class="pr-16 sm:pr-20">
-				<div class="place-in max-w-md" style="--place-delay: 0.15s; --place-tilt: -2.5deg">
+				<div class="place-in max-w-md" style="--place-delay: 0.2s">
 					<p
 						class="font-display text-lg leading-[1.2] font-semibold tracking-[-0.01em] text-balance uppercase sm:text-2xl"
 					>
@@ -38,20 +36,20 @@ const latest = projects[0];
 				</div>
 			</header>
 
-			<!-- The name is the one piece that runs edge to edge, past the content insets. -->
-			<div class="-mx-8 flex flex-1 items-center justify-center sm:-mx-16 lg:-mx-24">
+			<!-- The name runs edge to edge, past the content insets, when the screen is tall enough for it. -->
+			<div class="hero-bleed flex flex-1 items-center justify-center">
 				<h1
-					class="place-in font-poster text-center leading-[0.9] uppercase max-sm:[word-spacing:100vw] text-[min(calc((100vw-1.5rem)/3.4),20dvh)] sm:whitespace-nowrap sm:text-[min(calc((100vw-2rem)/6.15),30dvh)]"
-					style="--place-delay: 0.4s; --place-tilt: -1.5deg"
+					class="place-in hero-name font-poster text-center leading-[0.9] uppercase max-sm:[word-spacing:100vw] sm:whitespace-nowrap"
+					style="--place-delay: 0.45s"
 				>
 					<!-- Stretched on an inner span: the entrance animation owns the h1's transform. The stretch takes no
-					     layout room, so the name keeps its full width and the extra height spills into the gaps. -->
-					<span class="glass-type inline-block origin-center scale-y-[1.3]">Javier Cornejo</span>
+					     layout room; the size formula in .hero leaves space for it. -->
+					<span class="name-fade inline-block origin-center scale-y-[1.3]">Javier Cornejo</span>
 				</h1>
 			</div>
 
 			<div class="flex flex-col items-stretch gap-6 sm:flex-row sm:items-end sm:justify-between">
-				<div class="place-in pointer-events-auto w-full sm:max-w-sm" style="--place-delay: 0.7s; --place-tilt: 3deg">
+				<div class="place-in pointer-events-auto w-full sm:max-w-sm" style="--place-delay: 0.8s">
 					<LatestWork
 						client:load
 						title={latest.title}
@@ -60,7 +58,7 @@ const latest = projects[0];
 						href={latest.links[0].href}
 					/>
 				</div>
-				<div class="place-in pointer-events-auto shrink-0 self-end" style="--place-delay: 0.9s; --place-tilt: -4deg">
+				<div class="place-in pointer-events-auto shrink-0 self-end" style="--place-delay: 0.95s">
 					<GlassCta client:load href="#contact">Let's talk</GlassCta>
 				</div>
 			</div>
