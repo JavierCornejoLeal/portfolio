@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
  * - `className` props let the page size the text; the defaults are the source's sizes.
  * - Under reduced motion the word swaps with a plain fade instead of sliding through a blur.
  * - The interval restarts when `words` or `duration` change (the source's effect had no dependencies).
+ * - The unused default `React` import is dropped.
  */
 export const LayoutTextFlip = ({
   text = "Build Amazing",

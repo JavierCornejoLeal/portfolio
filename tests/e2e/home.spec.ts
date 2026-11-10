@@ -490,7 +490,7 @@ test.describe('home page', () => {
 		const section = page.locator('[data-statement]');
 		const pinned = section.locator(':scope > div');
 		const words = section.locator('p > span');
-		const metrics = await section.evaluate(element => ({ top: element.getBoundingClientRect().top + scrollY, height: element.offsetHeight }));
+		const metrics = await section.evaluate(element => ({ top: element.getBoundingClientRect().top + scrollY, height: (element as HTMLElement).offsetHeight }));
 		const viewport = page.viewportSize()!;
 		const scrollTo = (fraction: number) =>
 			page.evaluate(y => window.scrollTo({ top: y, behavior: 'instant' }), metrics.top + (metrics.height - viewport.height) * fraction);
