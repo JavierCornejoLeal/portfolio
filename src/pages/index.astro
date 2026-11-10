@@ -3,18 +3,26 @@ import Layout from '@/layouts/Layout.astro';
 import FlutedGlass from '@/components/FlutedGlass';
 import { DockMenu, GlassCta, MobileDock } from '@/components/HeroGlass';
 import Statement from '@/components/Statement';
+import LivingGradient from '@/components/LivingGradient';
 ---
 
 <Layout>
+	<!-- One living backdrop behind the whole page, so sections flow into each other with no seam. It is
+	     subtle behind the hero and grows to full brightness over the first screen of scroll. -->
+	<div class="fixed inset-0 -z-10" aria-hidden="true">
+		<LivingGradient client:only="react" className="size-full" scrollIntensity={[0.5, 1]} />
+	</div>
 	<main class="relative overflow-x-clip">
 		<!-- The hero owns its backdrop: the fluted glass covers this first screen only. -->
 		<div class="relative">
-		<div class="absolute inset-0" data-hero-bg>
+		<!-- The glass fades out towards the hero's foot, so its flutes melt into the living backdrop below. -->
+		<div class="hero-glass-fade absolute inset-0" data-hero-bg>
 			<FlutedGlass
 				client:only="react"
 				className="size-full"
 				colors={['#2ee600', '#abff90']}
-				backgroundColor="#070907"
+				backgroundColor="transparent"
+				texture={0}
 				autoplay="touch"
 			/>
 		</div>

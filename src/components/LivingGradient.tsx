@@ -3,11 +3,14 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /*
- * Living Gradient: soft green light drifting over the near-black ground, from 3D simplex noise (the third
- * dimension is time), with a vignette and film grain. Written for this site.
+ * Living Gradient: ribbons of green light flowing over the near-black ground like a livelier aurora, one
+ * continuous wave. Simplex noise warps the space twice, sinusoidal bands run through the warped space with a
+ * bright core and a soft body, and a broad noise mask lets them fade into black between them. Written for
+ * this site.
  *
- * It is blurry by nature, so it renders at half resolution and lets the browser scale it up. It draws only
- * while on screen, in a visible tab, and not under the page loader; under reduced motion it holds a still frame.
+ * It is the page's single backdrop, so it can grow with the scroll (`scrollIntensity`): subtle behind the hero,
+ * full once the next section takes the screen. It is soft by nature, so it renders at half resolution. It draws
+ * only while on screen, in a visible tab, and not under the page loader; under reduced motion it holds a still frame.
  */
 
 export interface LivingGradientProps {
@@ -17,10 +20,12 @@ export interface LivingGradientProps {
   speed?: number
   /** Film grain strength. */
   grain?: number
+  /** Brightness at the top of the page and once scrolled one screen down; it eases between the two. */
+  scrollIntensity?: [number, number]
   className?: string
 }
 
-const DEFAULT_COLORS: [string, string, string, string] = ["#050705", "#063400", "#176d07", "#21b800"]
+const DEFAULT_COLORS: [string, string, string, string] = ["#070907", "#0e4a05", "#2ee600", "#abff90"]
 
 /** Render scale relative to the CSS size: the gradient has no detail worth full resolution. */
 const RENDER_SCALE = 0.5
@@ -86,6 +91,7 @@ out vec4 outColor;
 uniform vec2 uRes;
 uniform float uTime;
 uniform float uGrain;
+uniform float uIntensity;
 uniform vec3 uGround;
 uniform vec3 uDeep;
 uniform vec3 uMid;
@@ -95,24 +101,29 @@ float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.545
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uRes;
-  vec2 p = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
-  float t = uTime * 0.06;
+  vec2 p = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0) * 1.5;
+  float t = uTime * 0.1;
 
-  // Large slow shapes, a finer layer that bends them, and a third that decides where the glow gathers.
-  float broad = snoise(vec3(p * 0.85, t));
-  float detail = snoise(vec3(p * 1.7 + 4.0, t * 1.3));
-  float gather = snoise(vec3(p * 0.6 - 7.0, t * 0.7));
-  float field = 0.62 * broad + 0.28 * detail;
+  // Flow: warp the space twice so straight bands bend into ribbons that keep folding.
+  vec2 q = p + 0.55 * vec2(snoise(vec3(p * 0.55, t)), snoise(vec3(p * 0.55 + 5.2, t)));
+  q += 0.3 * vec2(snoise(vec3(q * 1.1 + 1.7, t * 1.35)), snoise(vec3(q * 1.1 + 9.1, t * 1.35)));
+
+  // Ribbons: one continuous wave running through the warped space.
+  float phase = q.x * 1.15 + 0.4 * q.y + 0.7 * snoise(vec3(q * 0.45, t * 0.6));
+  float wave = sin(phase * 2.2 - t * 2.4);
+  float body = smoothstep(-0.15, 1.0, wave);
+  float core = pow(max(wave, 0.0), 6.0);
+
+  // Where the ribbons live: broad pools, with black in between.
+  float mask = smoothstep(-0.3, 0.6, snoise(vec3(p * 0.4 - 3.0, t * 0.5)));
 
   vec3 col = uGround;
-  // High thresholds keep most of the surface dark, so the light gathers in a few separate pools.
-  col = mix(col, uDeep, smoothstep(-0.35, 0.3, field));
-  col = mix(col, uMid, smoothstep(0.18, 0.72, field + 0.25 * gather));
-  col = mix(col, uGlow, 0.8 * smoothstep(0.5, 1.05, field + 0.35 * gather));
+  col = mix(col, uDeep, body * mask);
+  col = mix(col, uMid, smoothstep(0.45, 1.0, wave) * mask * 0.85);
+  col = mix(col, uGlow, core * mask * 0.7);
 
-  // Vignette: the light lives in the middle and dies towards the edges.
-  float vignette = smoothstep(1.0, 0.15, length(p * vec2(0.8, 1.0)));
-  col *= mix(0.2, 1.0, vignette);
+  float vignette = smoothstep(1.35, 0.3, length((uv - 0.5) * vec2(1.4, 1.2)));
+  col = mix(uGround, col, uIntensity * mix(0.45, 1.0, vignette));
 
   col += (hash(gl_FragCoord.xy + fract(uTime) * 91.0) - 0.5) * uGrain;
   outColor = vec4(col, 1.0);
@@ -129,6 +140,7 @@ interface Settings {
   colors: [string, string, string, string]
   speed: number
   grain: number
+  scrollIntensity: [number, number]
 }
 
 function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
@@ -158,7 +170,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) || "LivingGradient: program")
     gl.useProgram(program)
     u = {}
-    for (const name of ["uRes", "uTime", "uGrain", "uGround", "uDeep", "uMid", "uGlow"]) u[name] = gl.getUniformLocation(program, name)
+    for (const name of ["uRes", "uTime", "uGrain", "uIntensity", "uGround", "uDeep", "uMid", "uGlow"]) u[name] = gl.getUniformLocation(program, name)
     gl.bindVertexArray(gl.createVertexArray())
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
@@ -201,6 +213,10 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
     gl.uniform2f(u.uRes, canvas.width, canvas.height)
     gl.uniform1f(u.uTime, time)
     gl.uniform1f(u.uGrain, S.grain)
+    // Ease from the resting brightness to full over the first screen of scroll.
+    const k = Math.min(1, Math.max(0, window.scrollY / Math.max(1, window.innerHeight)))
+    const eased = k * k * (3 - 2 * k)
+    gl.uniform1f(u.uIntensity, S.scrollIntensity[0] + (S.scrollIntensity[1] - S.scrollIntensity[0]) * eased)
     gl.uniform3fv(u.uGround, ground)
     gl.uniform3fv(u.uDeep, deep)
     gl.uniform3fv(u.uMid, mid)
@@ -262,6 +278,10 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
       console.error(err)
     }
   }
+  const onScroll = () => {
+    if (!running()) render()
+  }
+  window.addEventListener("scroll", onScroll, { passive: true })
   motionQuery.addEventListener("change", onMotion)
   document.addEventListener("visibilitychange", onVisibility)
   canvas.addEventListener("webglcontextlost", onLost)
@@ -275,6 +295,7 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
       stop()
       io.disconnect()
       ro.disconnect()
+      window.removeEventListener("scroll", onScroll)
       motionQuery.removeEventListener("change", onMotion)
       document.removeEventListener("visibilitychange", onVisibility)
       canvas.removeEventListener("webglcontextlost", onLost)
@@ -285,10 +306,16 @@ function startEngine(root: HTMLDivElement, live: React.RefObject<Settings>) {
   }
 }
 
-export default function LivingGradient({ colors = DEFAULT_COLORS, speed = 1, grain = 0.035, className }: LivingGradientProps) {
+export default function LivingGradient({
+  colors = DEFAULT_COLORS,
+  speed = 1,
+  grain = 0.03,
+  scrollIntensity = [1, 1],
+  className,
+}: LivingGradientProps) {
   const rootRef = React.useRef<HTMLDivElement>(null)
   const engineRef = React.useRef<ReturnType<typeof startEngine>>(null)
-  const settings: Settings = { colors, speed, grain }
+  const settings: Settings = { colors, speed, grain, scrollIntensity }
   const live = React.useRef<Settings>(settings)
   live.current = settings
   const key = JSON.stringify(settings)

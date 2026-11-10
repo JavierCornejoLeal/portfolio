@@ -1,17 +1,16 @@
 import * as React from "react"
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react"
 
-import LivingGradient from "@/components/LivingGradient"
 import { LayoutTextFlip } from "@/components/ui/layout-text-flip"
 
 /*
  * Statement: the section after the hero. It is several screens tall, but its content is pinned (sticky) to
- * the viewport over the living gradient, so scrolling reveals the paragraph word by word instead of moving
- * the page. Only once the last word is white does the section scroll away.
+ * the viewport over the page's living backdrop, so scrolling reveals the paragraph word by word instead of
+ * moving the page. Only once the last word is white does the section scroll away.
  */
 
-/** The kinds of work in the CV: corporate websites, platforms, admin panels, internal tools. */
-const WORDS = ["websites", "web platforms", "admin panels", "internal tools"]
+/** One word each, from the CV: corporate websites, platforms, admin dashboards, REST APIs. */
+const WORDS = ["websites", "platforms", "dashboards", "APIs"]
 
 const COPY =
   "From the first sketch to production, I design and build the whole product: interfaces people enjoy using, the backend and data that keep them running, and the tools your team needs to manage it on its own. Clear code, honest timelines, and software you can actually see through."
@@ -41,7 +40,6 @@ export default function Statement() {
   return (
     <section ref={sectionRef} data-statement aria-labelledby="statement-title" className="relative h-[320vh]">
       <div className="sticky top-0 h-dvh overflow-hidden">
-        <LivingGradient className="absolute inset-0" />
         <div className="relative z-10 mx-auto flex h-full max-w-5xl flex-col items-center justify-center gap-10 px-8 pb-24 text-center sm:gap-14 sm:px-16 sm:pb-0">
           <h2 id="statement-title">
             <span className="sr-only">I build {WORDS.slice(0, -1).join(", ")} and {WORDS.at(-1)}</span>

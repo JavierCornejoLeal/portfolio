@@ -400,8 +400,9 @@ test.describe('home page', () => {
 		await page.goto('/');
 		const canvas = page.locator('[data-hero-bg] canvas');
 		await expect(canvas).toBeAttached();
-		// Compare the background alone: the hero text and its scrim animate on their own.
-		await page.addStyleTag({ content: 'main section, .hero-scrim { visibility: hidden !important; }' });
+		// Compare the glass alone: the hero text, its scrim and the living page backdrop behind the transparent
+		// glass all move on their own.
+		await page.addStyleTag({ content: 'main section, .hero-scrim, [data-living-gradient] { visibility: hidden !important; }' });
 
 		await canvas.evaluate(async element => {
 			const ext = (element as HTMLCanvasElement).getContext('webgl2')!.getExtension('WEBGL_lose_context')!;
@@ -520,34 +521,50 @@ test.describe('home page', () => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
 		const title = page.getByRole('heading', { level: 2 });
-		await expect(title).toHaveAccessibleName('I build websites, web platforms, admin panels and internal tools');
+		await expect(title).toHaveAccessibleName('I build websites, platforms, dashboards and APIs');
 
 		const word = title.locator('[aria-hidden="true"] span.relative span');
 		const first = await word.first().textContent();
 		await expect.poll(() => word.last().textContent(), { timeout: 8000 }).not.toBe(first);
 	});
 
-	test('fills the screen with the living gradient behind the statement, then a black screen follows', async ({ page }) => {
+	test('runs one living backdrop behind the whole page, which the hero melts into', async ({ page }) => {
 		await page.goto('/');
 		const viewport = page.viewportSize()!;
-		const gradient = page.locator('[data-statement] [data-living-gradient] canvas');
-		await expect(gradient).toBeAttached();
-		const box = await page.locator('[data-statement] [data-living-gradient]').evaluate(element => {
+		const backdrop = page.locator('[data-living-gradient]');
+		await expect(backdrop).toHaveCount(1);
+		await expect(backdrop.locator('canvas')).toBeAttached();
+		// Fixed behind everything, filling the screen wherever the page is scrolled.
+		// The island wrapper sits in between, so find the holder by what it contains.
+		const holder = page.locator('div.fixed', { has: backdrop });
+		await expect(holder).toHaveCSS('position', 'fixed');
+		await expect(holder).toHaveCSS('z-index', '-10');
+		await page.locator('[data-statement]').evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY + 300, behavior: 'instant' }));
+		const box = await backdrop.evaluate(element => {
 			const rect = element.getBoundingClientRect();
-			return { width: rect.width, height: rect.height };
+			return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
 		});
-		expect(box).toEqual({ width: viewport.width, height: viewport.height });
+		expect(box).toEqual({ x: 0, y: 0, width: viewport.width, height: viewport.height });
 
-		// Statement renders inside an island wrapper, so find the reserved screen by its own marker and order.
+		// No seam: the statement has no backdrop of its own, the hero's glass is transparent and fades out at its foot.
+		await expect(page.locator('[data-statement] canvas')).toHaveCount(0);
+		await expect(page.locator('[data-statement]')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+		await expect(page.locator('[data-hero-bg]')).toHaveCSS('mask-image', /linear-gradient/);
+		await expect(page.locator('.hero-scrim')).toHaveCSS('mask-image', /linear-gradient/);
+	});
+
+	test('reserves a black screen after the statement', async ({ page }) => {
+		await page.goto('/');
+		const viewport = page.viewportSize()!;
 		const next = page.locator('[data-next-section]');
+		await expect(next).toHaveCSS('background-color', 'rgb(7, 9, 7)');
+		expect(await next.evaluate(element => element.getBoundingClientRect().height)).toBe(viewport.height);
 		const after = await page.evaluate(() => {
 			const statement = document.querySelector('[data-statement]')!;
 			const reserved = document.querySelector('[data-next-section]')!;
 			return Boolean(statement.compareDocumentPosition(reserved) & Node.DOCUMENT_POSITION_FOLLOWING);
 		});
 		expect(after).toBe(true);
-		await expect(next).toHaveCSS('background-color', 'rgb(7, 9, 7)');
-		expect(await next.evaluate(element => element.getBoundingClientRect().height)).toBe(viewport.height);
 	});
 
 	test('mounts the fluted glass canvas behind the hero', async ({ page }) => {
