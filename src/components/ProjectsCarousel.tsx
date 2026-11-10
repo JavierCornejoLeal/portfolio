@@ -257,12 +257,20 @@ export default function ProjectsCarousel() {
                     className="block size-full outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300"
                     style={{ borderRadius: 3 }}
                   >
-                    <MorphingDialogImage
-                      src={project.cover}
-                      alt=""
-                      className={cn("block size-full object-cover", revealed === index ? "opacity-100" : "opacity-0")}
-                      style={{ borderRadius: 3 }}
-                    />
+                    {/* The veil, not the image, carries the visibility: Motion writes an inline opacity on
+                        layoutId elements, which would override a class on the image and leave a flat copy
+                        of the cover floating over the lens. */}
+                    <span
+                      data-trigger-veil
+                      className={cn("block size-full", revealed === index ? "opacity-100" : "opacity-0")}
+                    >
+                      <MorphingDialogImage
+                        src={project.cover}
+                        alt=""
+                        className="block size-full object-cover"
+                        style={{ borderRadius: 3 }}
+                      />
+                    </span>
                   </MorphingDialogTrigger>
                   <ProjectDialogBody project={project} />
                 </MorphingDialog>

@@ -95,6 +95,27 @@ test.describe('projects carousel', () => {
 		await expect(page.getByRole('button', { name: 'Open Eduardo Calabuig' })).toBeFocused();
 	});
 
+	test('never shows the flat trigger copies over the lens, before or after a dialog', async ({ page }) => {
+		// Opacity multiplies down the tree: what the eye sees of a trigger's cover is the product along its ancestors.
+		const shown = () =>
+			page.locator('[data-project-anchor] img').evaluateAll(images =>
+				images.map(image => {
+					let opacity = 1;
+					for (let node: Element | null = image; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+					return opacity;
+				})
+			);
+		await openSection(page);
+		expect(await shown()).toEqual([0, 0, 0]);
+
+		const box = (await page.locator(stageSelector).boundingBox())!;
+		await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+		await expect(page.getByRole('dialog')).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('dialog')).toHaveCount(0);
+		await expect.poll(shown).toEqual([0, 0, 0]);
+	});
+
 	test('brings a bent edge card to the middle instead of opening it', async ({ page }) => {
 		await openSection(page);
 		const stage = page.locator(stageSelector);
