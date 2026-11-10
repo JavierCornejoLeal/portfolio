@@ -34,7 +34,7 @@ test.describe('page loader', () => {
 
 	test('holds the headline entrance until the loader lifts', async ({ page }) => {
 		await page.goto('/');
-		const glyph = page.locator('h1 .curtain-letter').first();
+		const glyph = page.locator('main h1');
 
 		await expect(glyph).toHaveCSS('animation-play-state', 'paused');
 		await expectLifted(page);

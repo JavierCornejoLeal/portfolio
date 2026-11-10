@@ -96,29 +96,34 @@
 	border-top: 4px double currentColor;
 }
 
-/* Curtain reveal: each glyph rises from behind a clip edge at its own --start (see CurtainText). */
-.curtain-letter {
-	display: inline-block;
-	clip-path: inset(0 0 0 0);
-	animation: curtain-rise 1.4s var(--ease-curtain) both;
-	animation-delay: var(--start, 0s);
+/* Pick-and-place entrance: each element arrives a little above its spot, larger, tilted and casting a deep
+   shadow, as if held by a hand, then is set down with a small settle. Elements set --place-delay to land one
+   after another and --place-tilt for the angle they are held at. The last frame is filter: none and opacity 1,
+   so nothing is left that would cut the glass controls off from the backdrop they refract. */
+.place-in {
+	animation: place-in 0.95s cubic-bezier(0.25, 0.9, 0.3, 1) both;
+	animation-delay: var(--place-delay, 0s);
 }
 
-/* Never hide a link that holds keyboard focus mid-entrance. */
-.curtain-group:focus-within .curtain-letter {
-	animation: none;
-}
-
-@keyframes curtain-rise {
+@keyframes place-in {
 	from {
-		clip-path: inset(0 0 100% 0);
-		transform: translateY(0.55em);
-		filter: blur(6px);
+		opacity: 0;
+		transform: translate3d(0, -2.25rem, 0) scale(1.06) rotate(var(--place-tilt, -2deg));
+		filter: drop-shadow(0 28px 22px rgb(0 0 0 / 0.55));
+	}
+	55% {
+		opacity: 1;
+		transform: translate3d(0, 0.3rem, 0) scale(0.995) rotate(0deg);
+		filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.35));
+	}
+	78% {
+		transform: translate3d(0, -0.08rem, 0) scale(1.002) rotate(0deg);
+		filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.2));
 	}
 	to {
-		clip-path: inset(0 0 0 0);
-		transform: translateY(0);
-		filter: blur(0);
+		opacity: 1;
+		transform: none;
+		filter: none;
 	}
 }
 
@@ -137,7 +142,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.curtain-letter {
+	.place-in {
 		animation: none;
 	}
 	.js .reveal {
@@ -176,7 +181,7 @@
 .is-loading body > :not(.page-loader) {
 	visibility: hidden;
 }
-/* Hold the curtain entrance until the loader lifts, so it plays in view. */
-.is-loading .curtain-letter {
+/* Hold the entrance until the loader lifts, so it plays in view. */
+.is-loading .place-in {
 	animation-play-state: paused;
 }
