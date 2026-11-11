@@ -38,7 +38,7 @@ export default function Statement() {
   const step = (REVEAL_END - REVEAL_START) / words.length
 
   return (
-    <section ref={sectionRef} data-statement aria-labelledby="statement-title" className="relative h-[320vh]">
+    <section ref={sectionRef} data-statement aria-labelledby="statement-title" className="relative h-[200vh]">
       <div className="sticky top-0 h-dvh overflow-hidden">
         <div className="relative z-10 mx-auto flex h-full max-w-5xl flex-col items-center justify-center gap-10 px-8 pb-24 text-center sm:gap-14 sm:px-16 sm:pb-0">
           <h2 id="statement-title">

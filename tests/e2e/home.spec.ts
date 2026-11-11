@@ -587,6 +587,15 @@ test.describe('home page', () => {
 		await expect.poll(() => pinned.evaluate(element => element.getBoundingClientRect().top)).toBeLessThan(0);
 	});
 
+	test('reveals the statement within about a screen of scroll', async ({ page }) => {
+		await page.goto('/');
+		const viewport = page.viewportSize()!;
+		// How long the paragraph stays pinned: the section's height beyond one screen.
+		const pinnedFor = await page.locator('[data-statement]').evaluate(element => (element as HTMLElement).offsetHeight - innerHeight);
+		expect(pinnedFor).toBeLessThanOrEqual(viewport.height * 1.05);
+		expect(pinnedFor).toBeGreaterThanOrEqual(viewport.height * 0.8);
+	});
+
 	test('flips the highlighted word in the statement title', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
