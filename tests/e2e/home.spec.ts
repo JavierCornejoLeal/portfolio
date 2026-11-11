@@ -18,7 +18,7 @@ test.describe('home page', () => {
 		await expect(slogan).toBeVisible();
 		await expect(slogan).not.toContainText('“');
 		// No role line: the name stands alone.
-		await expect(page.getByText('Full Stack Developer')).toHaveCount(0);
+		await expect(page.locator('section.hero').getByText('Full Stack Developer')).toHaveCount(0);
 	});
 
 	test('keeps the hero inside the viewport once the glass canvas mounts', async ({ page }) => {
@@ -229,12 +229,13 @@ test.describe('home page', () => {
 		expect(await page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top))).toBe(0);
 	});
 
-	test('drops the old coming-soon copy, email and phone', async ({ page }) => {
+	test('drops the old coming-soon copy, and keeps email and phone to the footer', async ({ page }) => {
 		await page.goto('/');
 
 		await expect(page.getByText('Incoming')).toHaveCount(0);
 		await expect(page.getByText('Something big is on its way')).toHaveCount(0);
-		await expect(page.locator('a[href^="mailto:"], a[href^="tel:"]')).toHaveCount(0);
+		// The footer is the one place for the email and the phone.
+		await expect(page.locator('a[href^="mailto:"]:not(footer a), a[href^="tel:"]:not(footer a)')).toHaveCount(0);
 	});
 
 	test('opens the glass dock from the menu button and turns it into a close button', async ({ page }) => {
@@ -584,6 +585,15 @@ test.describe('home page', () => {
 		// Only then does it scroll away.
 		await scrollTo(1.2);
 		await expect.poll(() => pinned.evaluate(element => element.getBoundingClientRect().top)).toBeLessThan(0);
+	});
+
+	test('reveals the statement within about a screen of scroll', async ({ page }) => {
+		await page.goto('/');
+		const viewport = page.viewportSize()!;
+		// How long the paragraph stays pinned: the section's height beyond one screen.
+		const pinnedFor = await page.locator('[data-statement]').evaluate(element => (element as HTMLElement).offsetHeight - innerHeight);
+		expect(pinnedFor).toBeLessThanOrEqual(viewport.height * 1.05);
+		expect(pinnedFor).toBeGreaterThanOrEqual(viewport.height * 0.8);
 	});
 
 	test('flips the highlighted word in the statement title', async ({ page }) => {

@@ -236,3 +236,42 @@
 [data-contact] [data-gp-caption] {
 	display: none;
 }
+/* The footer sets its own insets, so the giant name can run edge to edge. It rises with the page, plainly: no
+   fade, and live from the moment it shows. */
+[data-contact] section [data-gp-content] {
+	padding: 0;
+	align-content: stretch;
+	opacity: 1;
+	pointer-events: auto;
+}
+/* It starts to rise only once the camera is through: the portal drops its clip at 78% of the travel, when the green
+   fills the screen, so the footer's top edge enters at the bottom right then, over the same flat green. */
+[data-contact] section[data-gp-motion="on"] [data-gp-content] {
+	margin-top: calc(0.78 * var(--gp-length) * var(--gp-height));
+}
+
+/* The footer's JAVIER, set into the green as if pressed into it: a fill a shade darker than the ground, a lower lip
+   catching a little green light and a shaded upper edge. One line, as large as the room the footer's top block
+   leaves on screen (about 30rem), and never wider than the insets: the advance of JAVIER in Anton is 2.514em. */
+.footer-name {
+	font-family: var(--font-poster);
+	font-size: max(6rem, min(calc((100vw - 5rem) / 2.53), calc((100svh - 30rem) / 0.87)));
+	/* Anton's font box is 1.51em tall but the ink of JAVIER only 0.868em: at 0.87 the line box sits exactly on
+	   the ink, and clipping the rest keeps the font box from stretching the page below the footer. */
+	line-height: 0.87;
+	overflow-y: clip;
+	overflow-clip-margin: 0.02em;
+	white-space: nowrap;
+	text-align: center;
+	text-transform: uppercase;
+	color: #031d02;
+	text-shadow:
+		0 0.006em 0.002em rgb(120 255 80 / 0.09),
+		0 -0.004em 0.004em rgb(0 0 0 / 0.6);
+	user-select: none;
+}
+@media (width < 40rem) {
+	.footer-name {
+		font-size: calc((100vw - 3rem) / 2.53);
+	}
+}

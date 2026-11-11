@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 /* ------------------------------------------------------------------ *
  * Menu: a "=" that turns into a cross and opens a glass dock to its left
  * ------------------------------------------------------------------ */
-interface DockLink {
+export interface DockLink {
   label: string
   href: string
   Icon: LucideIcon | ((props: React.SVGProps<SVGSVGElement>) => React.ReactElement)
@@ -48,7 +48,7 @@ const SECTIONS: DockLink[] = [
   { label: "Contact", href: "#contact", Icon: Mail },
 ]
 
-const SOCIALS: DockLink[] = [
+export const SOCIALS: DockLink[] = [
   { label: "GitHub", href: "https://github.com/JavierCornejoLeal", Icon: GitHubIcon, external: true },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/cornejolealjavier/", Icon: LinkedInIcon, external: true },
   { label: "Instagram", href: "https://www.instagram.com/javiiicornejo/", Icon: InstagramIcon, external: true },
