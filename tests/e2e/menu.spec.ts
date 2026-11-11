@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
+/** The glass marks itself refracting once its displacement map is built: heavy JavaScript that a CI runner, which
+ *  also renders the page's WebGL in software, can take well past the default 5s to finish. */
+const GLASS_READY = 15_000;
+
 const menuButton = (page: Page) => page.getByRole('button', { name: /^(Open|Close) menu$/ });
 const menu = (page: Page) => page.getByRole('navigation', { name: 'Main' });
 
@@ -101,9 +105,9 @@ test.describe('menu', () => {
 				const maps = [...el.querySelectorAll('feDisplacementMap')].map(map => map.getAttribute('scale'));
 				return { body: style.backgroundColor, shadow: style.boxShadow, maps };
 			});
-		await expect(page.locator('button[aria-controls="site-menu"] [data-refract="true"]')).toHaveCount(1);
+		await expect(page.locator('button[aria-controls="site-menu"] [data-refract="true"]')).toHaveCount(1, { timeout: GLASS_READY });
 		await menuButton(page).click();
-		await expect(page.locator('#site-menu [data-refract="true"]')).toHaveCount(1);
+		await expect(page.locator('#site-menu [data-refract="true"]')).toHaveCount(1, { timeout: GLASS_READY });
 		const button = await material('button[aria-controls="site-menu"] [data-refract]');
 		const panel = await material('#site-menu [data-refract]');
 		expect(button).toEqual(panel);
@@ -135,7 +139,7 @@ test.describe('menu', () => {
 		await page.goto('/');
 		await menuButton(page).click();
 		const glass = page.locator('#site-menu [data-refract="true"]');
-		await expect(glass).toHaveCount(1);
+		await expect(glass).toHaveCount(1, { timeout: GLASS_READY });
 		// A strong lens: displacement of at least 48px, split per channel for chromatic aberration.
 		const scales = await page.locator('#site-menu feDisplacementMap').evaluateAll(maps => maps.map(map => Number(map.getAttribute('scale'))));
 		expect(scales.length).toBe(3);
