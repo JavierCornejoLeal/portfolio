@@ -2,10 +2,10 @@
 export interface Project {
   name: string
   url: string
-  /** Bare domain, shown in the dialog. */
+  /** Bare domain, kept for the project pages to come. */
   domain: string
   cover: string
-  /** From each site's own description, in English. */
+  /** From each site's own description, in English; kept for the project pages to come. */
   description: string
 }
 

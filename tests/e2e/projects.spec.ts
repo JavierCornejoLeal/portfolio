@@ -77,20 +77,20 @@ test.describe('projects carousel', () => {
 	});
 
 	// One WebGL page per test: two at once starve a CI runner that renders WebGL in software.
-	test('sizes the covers at 30% of the width on desktop', async ({ page }) => {
+	test('sizes the covers at 45% of the width on desktop', async ({ page }) => {
 		await openSection(page);
 		const width = page.viewportSize()!.width;
 		const middle = (await page.locator('[data-project-anchor]').first().boundingBox())!;
-		expect(middle.width).toBeCloseTo(width * 0.3, 0);
-		expect(middle.height).toBeCloseTo((width * 0.3) / 1.509, 0);
+		expect(middle.width).toBeCloseTo(width * 0.45, 0);
+		expect(middle.height).toBeCloseTo((width * 0.45) / 1.509, 0);
 	});
 
-	test('sizes the covers at 80% of the width on phones', async ({ browser }) => {
+	test('sizes the covers at 90% of the width on phones', async ({ browser }) => {
 		const phone = await browser.newContext({ viewport: { width: 393, height: 852 }, hasTouch: true, isMobile: true });
 		const page = await phone.newPage();
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await openSection(page);
-		expect((await page.locator('[data-project-anchor]').first().boundingBox())!.width).toBeCloseTo(393 * 0.8, 0);
+		expect((await page.locator('[data-project-anchor]').first().boundingBox())!.width).toBeCloseTo(393 * 0.9, 0);
 		await phone.close();
 	});
 
@@ -129,7 +129,7 @@ test.describe('projects carousel', () => {
 		await expect(stage).toHaveAttribute('data-active', '1');
 	});
 
-	test('morphs the middle card into a dialog with visit and more-info actions', async ({ page }) => {
+	test('morphs the middle card into a dialog whose only action is visiting the site', async ({ page }) => {
 		await openSection(page);
 		const box = (await page.locator(stageSelector).boundingBox())!;
 		await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -142,11 +142,9 @@ test.describe('projects carousel', () => {
 		await expect(visit).toHaveAttribute('target', '_blank');
 		await expect(visit).toHaveCSS('background-color', 'rgb(91, 255, 46)');
 
-		const more = dialog.getByRole('button', { name: 'More info' });
-		await expect(more).toHaveAttribute('aria-expanded', 'false');
-		await more.click();
-		await expect(more).toHaveAttribute('aria-expanded', 'true');
-		await expect(dialog.getByText('Interior design studio in Dénia')).toBeVisible();
+		// No more-info panel: each project will get its own page instead.
+		await expect(dialog.getByRole('button', { name: 'More info' })).toHaveCount(0);
+		await expect(dialog.getByText('Interior design studio in Dénia')).toHaveCount(0);
 
 		await page.keyboard.press('Escape');
 		await expect(dialog).toHaveCount(0);

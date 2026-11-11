@@ -1,5 +1,5 @@
 import * as React from "react"
-import { AnimatePresence, motion } from "motion/react"
+import { motion } from "motion/react"
 import { ArrowUpRight, XIcon } from "lucide-react"
 
 import { projects, type Project } from "@/data/projects"
@@ -33,9 +33,6 @@ const REVEAL_VARIANTS = {
 }
 
 function ProjectDialogBody({ project }: { project: Project }) {
-  const [info, setInfo] = React.useState(false)
-  const infoId = React.useId()
-
   return (
     <MorphingDialogContainer>
       <MorphingDialogContent
@@ -49,24 +46,6 @@ function ProjectDialogBody({ project }: { project: Project }) {
           className="block aspect-[1.509] h-auto w-full object-cover"
           style={{ borderRadius: 4 }}
         />
-
-        <AnimatePresence>
-          {info && (
-            <motion.div
-              id={infoId}
-              key="info"
-              className="absolute inset-0 flex flex-col justify-end gap-2 overflow-y-auto bg-linear-to-t from-ground/95 via-ground/85 to-ground/40 p-5 pb-20 sm:gap-3 sm:p-10 sm:pb-28"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <p className="text-xs font-medium tracking-[0.18em] text-harlequin-200 uppercase">{project.domain}</p>
-              <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-ink sm:text-4xl">{project.name}</h3>
-              <p className="max-w-2xl text-sm leading-relaxed text-ink/85 sm:text-lg">{project.description}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <motion.div
           className="absolute inset-x-0 bottom-0 flex justify-center gap-2 p-3 sm:gap-3 sm:p-6"
@@ -84,15 +63,6 @@ function ProjectDialogBody({ project }: { project: Project }) {
             Visit site
             <ArrowUpRight aria-hidden="true" className="size-4" />
           </a>
-          <button
-            type="button"
-            aria-expanded={info}
-            aria-controls={infoId}
-            onClick={() => setInfo((open) => !open)}
-            className="inline-flex h-10 cursor-pointer items-center rounded-full bg-ink px-4 font-display text-[0.7rem] font-semibold tracking-[0.12em] text-ground uppercase transition-transform duration-200 hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:h-12 sm:px-6 sm:text-xs motion-reduce:transition-none"
-          >
-            More info
-          </button>
         </motion.div>
       </MorphingDialogContent>
       <MorphingDialogClose
@@ -116,7 +86,7 @@ function StaticStrip() {
         <MorphingDialog key={project.url} transition={DIALOG_TRANSITION}>
           <MorphingDialogTrigger
             aria-label={`Open ${project.name}`}
-            className="w-[80vw] shrink-0 snap-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300 sm:w-[min(30vw,760px)]"
+            className="w-[90vw] shrink-0 snap-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300 sm:w-[min(45vw,1100px)]"
             style={{ borderRadius: 3 }}
           >
             <MorphingDialogImage
