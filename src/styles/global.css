@@ -223,3 +223,10 @@
 .is-loading .place-in {
 	animation-play-state: paused;
 }
+
+/* Process belts: dashes 14 units apart run one gap per cycle toward the next station. */
+@keyframes conveyor {
+	to {
+		stroke-dashoffset: -14;
+	}
+}
