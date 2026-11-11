@@ -398,3 +398,31 @@ html[data-cursor-ready] [data-cursor] * {
 		transition-duration: 0s;
 	}
 }
+
+/* Project pages ([slug].astro): each letter of the name rises out of its own clipped window, one after another, and
+   settles with a soft brake. A line box of 1em holds Anton's capitals whole (their ink sits 0.065em below its top),
+   so the mask never trims a letter once it has landed. */
+.letter-mask {
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: bottom;
+	line-height: 1;
+}
+.letter {
+	display: inline-block;
+	animation: letter-rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: calc(0.15s + var(--i, 0) * 0.045s);
+}
+@keyframes letter-rise {
+	from {
+		transform: translateY(105%);
+	}
+	to {
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.letter {
+		animation: none;
+	}
+}

@@ -17,16 +17,14 @@ import { cn } from "@/lib/utils"
 export interface MenuLink {
   label: string
   href: string
-  /** Where to head while `href` does not exist yet: a section that mounts its content on approach. */
-  via?: string
 }
 
 /** Sections of the page. Contact glides to the footer, where every way to get in touch is in view. */
 export const SECTIONS: MenuLink[] = [
   { label: "About", href: "/about" },
   { label: "Projects", href: "#projects" },
-  // The footer lives in the contact portal, which mounts on approach: head for the portal and the footer appears.
-  { label: "Contact", href: "#contact-inside", via: "#contact" },
+  // The footer mounts with the contact portal on approach; the page's link handling finds its way (lib/glide.ts).
+  { label: "Contact", href: "#contact-inside" },
 ]
 
 /** Social profiles, shared with the footer. */
@@ -58,37 +56,6 @@ function MenuGlass({ radius, className }: { radius: number; className?: string }
   )
 }
 
-/**
- * Follows a link whose target may not be mounted yet: glide towards `via` (which mounts it on approach), then on to
- * the target once it has appeared and settled, as one continuous scroll. A target already there is left to the browser.
- */
-function followVia(event: React.MouseEvent, link: MenuLink) {
-  if (!link.via || document.querySelector(link.href)) return
-  const via = document.querySelector(link.via)
-  if (!via) return
-  event.preventDefault()
-  via.scrollIntoView()
-  const started = performance.now()
-  // The target can still move right after it mounts (the section lays itself out), so aim only once its place in
-  // the page has held for a few frames.
-  let last = Number.NaN
-  let still = 0
-  const arrive = () => {
-    const target = document.querySelector(link.href)
-    if (target) {
-      const top = target.getBoundingClientRect().top + window.scrollY
-      still = Math.abs(top - last) < 1 ? still + 1 : 0
-      last = top
-      if (still >= 3) {
-        target.scrollIntoView({ block: (target as HTMLElement).dataset.scrollAlign === "end" ? "end" : "start" })
-        return
-      }
-    }
-    if (performance.now() - started < 8000) requestAnimationFrame(arrive)
-  }
-  requestAnimationFrame(arrive)
-}
-
 /** A menu link whose letters roll on hover or keyboard focus, every time; the plain word is what screen readers get. */
 function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; onNavigate: () => void }) {
   const reduce = useReducedMotion()
@@ -103,10 +70,7 @@ function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; 
       <a
         href={link.href}
         {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-        onClick={(event) => {
-          onNavigate()
-          followVia(event, link)
-        }}
+        onClick={onNavigate}
         onPointerEnter={play}
         onFocus={play}
         className="menu-item block w-fit"
@@ -136,7 +100,11 @@ function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; 
   )
 }
 
-export default function SiteMenu() {
+/**
+ * `home` is where the page's sections live. On the home page it is "" and the links glide in place; elsewhere (a
+ * project's page) it is "/", so Projects and Contact lead back home, which glides on to them (lib/glide.ts).
+ */
+export default function SiteMenu({ home = "" }: { home?: string }) {
   const [open, setOpen] = React.useState(false)
   const rootRef = React.useRef<HTMLDivElement>(null)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
@@ -195,7 +163,12 @@ export default function SiteMenu() {
         <div className="menu-reveal relative flex h-full flex-col justify-between gap-10 px-8 pt-28 pb-12 sm:justify-start sm:gap-12 sm:px-10 sm:pt-28 sm:pb-10">
           <ul className="flex flex-col gap-2 text-6xl leading-[1.05] font-medium tracking-[-0.03em] sm:text-[3.25rem]">
             {SECTIONS.map((link, index) => (
-              <RollLink key={link.href} link={link} index={index} onNavigate={() => close(false)} />
+              <RollLink
+                key={link.href}
+                link={link.href.startsWith("#") ? { ...link, href: home + link.href } : link}
+                index={index}
+                onNavigate={() => close(false)}
+              />
             ))}
           </ul>
           <ul className="flex flex-col gap-1.5 text-3xl leading-snug font-medium tracking-[-0.01em] text-ink/80 sm:text-2xl">

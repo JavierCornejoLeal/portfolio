@@ -1,6 +1,8 @@
 /** Projects shown in the home carousel. Covers are 1920×1272 screenshots of each live site (aspect ≈ 1.509). */
 export interface Project {
   name: string
+  /** The project's page: /projects/<slug>. */
+  slug: string
   url: string
   /** Bare domain, kept for the project pages to come. */
   domain: string
@@ -12,6 +14,7 @@ export interface Project {
 export const projects: Project[] = [
   {
     name: "Eduardo Calabuig",
+    slug: "eduardo-calabuig",
     url: "https://eduardocalabuig.com",
     domain: "eduardocalabuig.com",
     cover: "/projects/eduardocalabuig.webp",
@@ -20,6 +23,7 @@ export const projects: Project[] = [
   },
   {
     name: "ÒCAIVE",
+    slug: "ocaive",
     url: "https://ocaive.com",
     domain: "ocaive.com",
     cover: "/projects/ocaive.webp",
@@ -28,6 +32,7 @@ export const projects: Project[] = [
   },
   {
     name: "Hub Cultural Cabanyal",
+    slug: "hub-cultural-cabanyal",
     url: "https://culturacabanyal.com",
     domain: "culturacabanyal.com",
     cover: "/projects/culturacabanyal.webp",

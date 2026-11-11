@@ -28,7 +28,8 @@ test.describe('projects carousel', () => {
 		await expect(stage).toHaveAttribute('aria-roledescription', 'carousel');
 		await expect(stage.locator('canvas')).toBeAttached();
 		for (const name of ['Eduardo Calabuig', 'ÒCAIVE', 'Hub Cultural Cabanyal']) {
-			await expect(page.getByRole('button', { name: `Open ${name}` })).toHaveCount(1);
+			// Links now: each opens its project's page.
+			await expect(page.getByRole('link', { name: `Open ${name}` })).toHaveCount(1);
 		}
 		await expect(page.getByText('Drag or swipe to explore')).toBeVisible();
 		// Over the living backdrop: the section paints no stage colour of its own.
@@ -129,47 +130,22 @@ test.describe('projects carousel', () => {
 		await expect(stage).toHaveAttribute('data-active', '1');
 	});
 
-	test('morphs the middle card into a dialog whose only action is visiting the site', async ({ page }) => {
+	test('opens the middle card\'s own page, with no preview on the way', async ({ page }) => {
 		await openSection(page);
 		const box = (await page.locator(stageSelector).boundingBox())!;
 		await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-
-		const dialog = page.getByRole('dialog', { name: 'Eduardo Calabuig' });
-		await expect(dialog).toBeVisible();
-		await expect(dialog.getByRole('img', { name: 'Eduardo Calabuig website' })).toBeVisible();
-		const visit = dialog.getByRole('link', { name: 'Visit site' });
-		await expect(visit).toHaveAttribute('href', 'https://eduardocalabuig.com');
-		await expect(visit).toHaveAttribute('target', '_blank');
-		await expect(visit).toHaveCSS('background-color', 'rgb(91, 255, 46)');
-
-		// No more-info panel: each project will get its own page instead.
-		await expect(dialog.getByRole('button', { name: 'More info' })).toHaveCount(0);
-		await expect(dialog.getByText('Interior design studio in Dénia')).toHaveCount(0);
-
-		await page.keyboard.press('Escape');
-		await expect(dialog).toHaveCount(0);
-		await expect(page.getByRole('button', { name: 'Open Eduardo Calabuig' })).toBeFocused();
+		await expect(page).toHaveURL(/\/projects\/eduardo-calabuig\/?$/);
+		await expect(page.getByRole('heading', { level: 1, name: 'Eduardo Calabuig' })).toBeVisible();
 	});
 
-	test('never shows the flat trigger copies over the lens, before or after a dialog', async ({ page }) => {
-		// Opacity multiplies down the tree: what the eye sees of a trigger's cover is the product along its ancestors.
-		const shown = () =>
-			page.locator('[data-project-anchor] img').evaluateAll(images =>
-				images.map(image => {
-					let opacity = 1;
-					for (let node: Element | null = image; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
-					return opacity;
-				})
-			);
+	test('keeps one invisible link per project over its card, with no flat copy of the cover', async ({ page }) => {
 		await openSection(page);
-		expect(await shown()).toEqual([0, 0, 0]);
-
-		const box = (await page.locator(stageSelector).boundingBox())!;
-		await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-		await expect(page.getByRole('dialog')).toBeVisible();
-		await page.keyboard.press('Escape');
-		await expect(page.getByRole('dialog')).toHaveCount(0);
-		await expect.poll(shown).toEqual([0, 0, 0]);
+		const anchors = page.locator('[data-project-anchor]');
+		await expect(anchors).toHaveCount(3);
+		await expect(anchors.locator('img')).toHaveCount(0);
+		for (const [name, slug] of [['Eduardo Calabuig', 'eduardo-calabuig'], ['ÒCAIVE', 'ocaive'], ['Hub Cultural Cabanyal', 'hub-cultural-cabanyal']]) {
+			await expect(page.getByRole('link', { name: `Open ${name}` })).toHaveAttribute('href', `/projects/${slug}`);
+		}
 	});
 
 	test('brings a bent edge card to the middle instead of opening it', async ({ page }) => {
@@ -180,18 +156,17 @@ test.describe('projects carousel', () => {
 
 		// The far edge: past the crisp neighbour, on the card that bends through the rim.
 		await page.mouse.click(box.x + box.width * 0.98, box.y + box.height / 2);
-		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(stage).not.toHaveAttribute('data-active', before!);
+		expect(new URL(page.url()).pathname).toBe('/');
 	});
 
 	test('opens a project from the keyboard', async ({ page }) => {
 		await openSection(page);
-		await page.getByRole('button', { name: 'Open ÒCAIVE' }).focus();
+		await page.getByRole('link', { name: 'Open ÒCAIVE' }).focus();
 		await expect(page.locator(stageSelector)).toHaveAttribute('data-active', '1');
 		await page.waitForTimeout(800);
 		await page.keyboard.press('Enter');
-		await expect(page.getByRole('dialog', { name: 'ÒCAIVE' })).toBeVisible();
-		await expect(page.getByRole('link', { name: 'Visit site' })).toHaveAttribute('href', 'https://ocaive.com');
+		await expect(page).toHaveURL(/\/projects\/ocaive\/?$/);
 	});
 
 	test('stops its animation loop once scrolled away', async ({ page }) => {
@@ -296,7 +271,7 @@ test.describe('projects carousel', () => {
 		await expect(strip.getByRole('img')).toHaveCount(3);
 		await expect(page.locator(`${stageSelector} canvas`)).toHaveCount(0);
 
-		await strip.getByRole('button', { name: 'Open Hub Cultural Cabanyal' }).click();
-		await expect(page.getByRole('dialog', { name: 'Hub Cultural Cabanyal' })).toBeVisible();
+		await strip.getByRole('link', { name: 'Open Hub Cultural Cabanyal' }).click();
+		await expect(page).toHaveURL(/\/projects\/hub-cultural-cabanyal\/?$/);
 	});
 });
