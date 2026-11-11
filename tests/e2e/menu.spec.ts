@@ -81,9 +81,10 @@ test.describe('menu', () => {
 		await page.locator('#site-menu .menu-reveal').first().evaluate(element => element.getAnimations().forEach(animation => animation.play()));
 		// Then it settles as the whole panel, with soft corners.
 		await expect.poll(async () => (await reveal(page)).width, { timeout: 3_000 }).toBeCloseTo(panel.width, 0);
+		// Settled: wait out the transition's last fraction (a slow runner can read 28.0028px) rather than demand 28 exactly.
+		await expect.poll(async () => (await reveal(page)).radius, { timeout: 3_000 }).toBeCloseTo(28, 1);
 		const open = await reveal(page);
 		expect(open.height).toBeCloseTo(panel.height, 0);
-		expect(open.radius).toBe(28);
 
 		// The button sits in the panel's top right corner, and the panel is roomy.
 		expect(Math.abs(panel.x + panel.width - (buttonBox.x + buttonBox.width))).toBeLessThan(2);
