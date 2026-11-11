@@ -72,26 +72,28 @@
 }
 
 /* Hero geometry. Insets grow with the screen. The name is stretched like a cover (--name-sx wider,
-   --name-sy taller) and sized by whichever runs out first: the width (Anton measures 6.05em for the full
-   name, times the horizontal stretch) or the height left once the slogan, the call to action, the insets
-   and ~40px of air on each side are taken (17rem). On screen it is 0.9 x --name-sy times its font size tall. */
+   --name-sy taller) and sized by whichever runs out first: the width, so the ink of the outer letters just
+   grazes the screen's edges (the ink of the full name measures 5.998em in Anton, times the horizontal
+   stretch; 6.01em leaves about a pixel each side so nothing is cut), or the height left once the insets, the foot's slogan and link and ~40px of air above and below
+   the centred name are taken (12rem). On screen it is 0.9 x --name-sy times its font size tall. */
 .hero {
 	--inset-x: clamp(2rem, 7vw, 10rem);
 	--inset-y: clamp(3rem, 8dvh, 6.5rem);
 	--name-sx: 1.12;
 	--name-sy: 1.9;
-	--name-size: max(3rem, min(calc((100vw - 2rem) / 6.9), calc((100dvh - 2 * var(--inset-y) - 17rem) / (0.9 * var(--name-sy)))));
+	--name-size: max(3rem, min(calc(100vw / (6.01 * var(--name-sx))), calc((100dvh - 2 * var(--inset-y) - 12rem) / (0.9 * var(--name-sy)))));
 	padding: var(--inset-y) var(--inset-x);
 }
 @media (width < 40rem) {
 	.hero {
-		/* Phones: two stacked lines (CORNEJO measures 3.3em), a taller stretch, and room kept at the bottom for
-		   the pinned dock and the home indicator. Both stretched lines count against the height (2 x 0.9 x 1.5). */
+		/* Phones: two stacked lines (the ink of CORNEJO measures 3.237em; 3.25em grazes the edges), a taller stretch,
+		   and room kept at the bottom for the pinned dock and the home indicator. Both stretched lines count
+		   against the height (2 x 0.9 x sy). */
 		--inset-y: clamp(1.5rem, 4dvh, 3rem);
 		--name-sx: 1;
 		--name-sy: 1.5;
 		--dock-room: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-		--name-size: max(2.5rem, min(calc((100vw - 1.5rem) / 3.4), calc((100dvh - 2 * var(--inset-y) - var(--dock-room) - 15rem) / 2.7)));
+		--name-size: max(2.5rem, min(calc(100vw / (3.25 * var(--name-sx))), calc((100dvh - 2 * var(--inset-y) - var(--dock-room) - 15rem) / (1.8 * var(--name-sy)))));
 		padding-bottom: calc(var(--inset-y) + var(--dock-room));
 	}
 }
@@ -108,26 +110,13 @@
 .name-stretch {
 	scale: var(--name-sx) var(--name-sy);
 }
-/* The role sits above the name, clear of the (sy - 1) / 2 of its 0.9em line that the stretch hangs above the h1's
-   box. From sm up it leaves the flow (so the name alone is centred) and lines up with the stretched letters' left
-   edge, which the horizontal stretch pushes (sx - 1) / 2 of the name's 6.05em width past the box. */
-.hero-role {
-	/* Phones stack the name on two lines, so the stretch hangs twice as far above. */
-	margin-bottom: calc(var(--name-size) * 0.9 * (var(--name-sy) - 1) + 0.5rem);
-	/* In line with the left edge of CORNEJO, the wider line (3.3em), centred on the screen. */
-	margin-left: calc((100vw - var(--name-size) * 3.3) / 2);
-}
+/* Anton gives the O more side bearing than the J (0.031em against 0.019em), so a box centred on screen leaves
+   the ink a hair to the left. Nudge it right by half the difference, stretched, so both edges graze evenly. */
 @media (width >= 40rem) {
-	.hero-role {
-		position: absolute;
-		bottom: 100%;
-		margin-bottom: calc(var(--name-size) * 0.45 * (var(--name-sy) - 1) + 0.5rem);
-		left: calc(var(--name-size) * -6.05 * (var(--name-sx) - 1) / 2);
-		margin-left: 0;
-		white-space: nowrap;
+	.name-stretch {
+		translate: calc(0.0063em * var(--name-sx)) 0;
 	}
 }
-
 /* The name in white, fading to more transparent towards its foot so the background shows through. */
 .name-fade {
 	color: transparent;
