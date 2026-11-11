@@ -5,6 +5,9 @@ const visibleLine = '[data-process-line]:visible';
 async function openSection(page: Page) {
 	await page.goto('/');
 	await page.locator('[data-process]').evaluate(section => window.scrollTo({ top: section.getBoundingClientRect().top + scrollY, behavior: 'instant' }));
+	// The section hydrates on arrival (client:visible): Astro drops the island's `ssr` attribute once it has.
+	// A loaded CI runner can take a while, so this wait is generous and every later one can stay short.
+	await expect(page.locator('astro-island:has([data-process])')).not.toHaveAttribute('ssr', /.*/, { timeout: 15_000 });
 }
 
 test.describe('process section', () => {
@@ -95,17 +98,22 @@ test.describe('process section', () => {
 		// (pathLength 1), so there are no dots along it.
 		const links = line.locator('[data-link]');
 		await expect(links).toHaveCount(10);
+		// Generous wait: it spans hydration on arrival plus the staggered draw-in, slow on a loaded CI runner.
+		// Each entry reads "<dash> of <length>", so a failure shows what was actually drawn.
 		await expect
-			.poll(() =>
-				links.evaluateAll(paths =>
-					paths.every(path => {
-						const total = Number(path.getAttribute('pathLength') ?? (path as SVGPathElement).getTotalLength());
-						const dasharray = getComputedStyle(path).strokeDasharray;
-						return dasharray === 'none' || parseFloat(dasharray) >= total;
-					})
-				)
+			.poll(
+				() =>
+					links.evaluateAll(paths =>
+						paths.map(path => {
+							const total = Number(path.getAttribute('pathLength') ?? (path as SVGPathElement).getTotalLength());
+							const dasharray = getComputedStyle(path).strokeDasharray;
+							const dash = dasharray === 'none' ? total : parseFloat(dasharray);
+							return dash >= total ? 'solid' : `${dash} of ${total}`;
+						})
+					),
+				{ timeout: 15_000 }
 			)
-			.toBe(true);
+			.toEqual(Array(10).fill('solid'));
 
 		// One short stroke per link: a single dash, far shorter than the link it rides.
 		await expect(line).toHaveAttribute('data-moving', 'true');
