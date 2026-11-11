@@ -1,25 +1,9 @@
 import * as React from "react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
-import { ArrowUpRight, FolderGit2, Layers, Mail, User, type LucideIcon } from "lucide-react"
+import { FolderGit2, Layers, Mail, User, type LucideIcon } from "lucide-react"
 
 import { GlassLayer } from "@/components/ui/glass-layer"
 import { cn } from "@/lib/utils"
-
-/* ------------------------------------------------------------------ *
- * Call to action
- * ------------------------------------------------------------------ */
-export function GlassCta({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <a
-      href={href}
-      className="group relative isolate inline-flex h-14 items-center gap-3 rounded-full px-8 text-base font-medium text-ink transition-transform duration-300 hover:scale-105 focus-visible:scale-105 motion-reduce:transition-none motion-reduce:hover:scale-100"
-    >
-      <GlassLayer radius={28} className="-z-10" />
-      <span>{children}</span>
-      <ArrowUpRight aria-hidden="true" className="size-5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none" />
-    </a>
-  )
-}
 
 /* ------------------------------------------------------------------ *
  * Menu: a "=" that turns into a cross and opens a glass dock to its left

@@ -219,7 +219,7 @@ export default function ProjectsCarousel() {
   }
 
   return (
-    <section data-projects aria-labelledby="projects-title" className="relative">
+    <section id="projects" data-projects aria-labelledby="projects-title" className="relative">
       <div
         ref={stageRef}
         data-projects-stage
