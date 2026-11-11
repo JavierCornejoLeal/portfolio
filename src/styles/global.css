@@ -231,3 +231,8 @@
 .is-loading .place-in {
 	animation-play-state: paused;
 }
+
+/* Contact portal (ContactPortal.tsx): the page's own Let's talk replaces the portal's built-in enter caption. */
+[data-contact] [data-gp-caption] {
+	display: none;
+}

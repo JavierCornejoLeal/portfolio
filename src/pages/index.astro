@@ -6,6 +6,7 @@ import { GlassSplitLink } from '@/components/ui/glass-split-link';
 import Statement from '@/components/Statement';
 import LivingGradient from '@/components/LivingGradient';
 import ProjectsCarousel from '@/components/ProjectsCarousel';
+import ContactPortal from '@/components/ContactPortal';
 ---
 
 <Layout>
@@ -68,6 +69,11 @@ import ProjectsCarousel from '@/components/ProjectsCarousel';
 
 		<!-- Hydrates ahead of arrival so the covers are ready to rise in when the section scrolls into view. -->
 		<ProjectsCarousel client:visible={{ rootMargin: '600px' }} />
+
+		<!-- A quiet HELLO the camera flies into; its dark green is where the footer will go. -->
+		<div id="contact" data-contact>
+			<ContactPortal client:visible={{ rootMargin: '600px' }} />
+		</div>
 
 		<!-- On phones the menu is a dock pinned to the bottom of the screen, always there. It runs its own entrance
 		     inside the fixed nav: an animated ancestor would become its containing block and unpin it. -->
