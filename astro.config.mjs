@@ -13,7 +13,13 @@ export default defineConfig({
   site: 'https://javiercornejo.vercel.app',
 
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    // Dev only: pre-bundle every browser dependency at startup. Otherwise Vite discovers some mid-session (after
+    // files are added, removed or the branch changes), re-bundles them under a new hash, and the open page's
+    // requests for the old one fail with "504 Outdated Optimize Dep", leaving the islands unhydrated.
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-dom/client', 'motion/react', 'lucide-react', 'clsx', 'tailwind-merge', 'three']
+    }
   },
 
   // The about and project pages stay out of the sitemap (and noindex) until they have content.
