@@ -3,10 +3,10 @@ import { expect, test, type Page } from '@playwright/test';
 const footer = 'footer#contact-inside';
 
 /** Scrolls through the contact portal to the footer that waits in its green. */
-async function openFooter(page: Page) {
+async function openFooter(page: Page, { ready = 15_000 } = {}) {
 	await page.goto('/');
 	await page.locator('[data-contact]').evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY, behavior: 'instant' }));
-	await expect(page.locator('[data-contact] section')).toHaveAttribute('data-gp-ready', 'true', { timeout: 15_000 });
+	await expect(page.locator('[data-contact] section')).toHaveAttribute('data-gp-ready', 'true', { timeout: ready });
 	await page.locator(footer).evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY, behavior: 'instant' }));
 	await expect(page.locator('[data-contact] section')).toHaveAttribute('data-gp-entered', 'true');
 }
@@ -122,20 +122,23 @@ test.describe('footer', () => {
 		expect(name.y - pillsBottom).toBeGreaterThanOrEqual(48);
 	});
 
-	test('fits the whole footer on one screen, laptop to wide desktop', async ({ browser }) => {
-		for (const [width, height] of [[1512, 783], [1728, 960], [2000, 975]]) {
+	// One WebGL page per test: a CI runner renders WebGL in software, and a wide page takes it a long while to
+	// hydrate, so each screen gets its own test and extra time rather than sharing one 30s budget.
+	for (const [width, height] of [[1512, 783], [1728, 960], [2000, 975]]) {
+		test(`fits the whole footer on one ${width}x${height} screen`, async ({ browser }) => {
+			test.slow();
 			const screen = await browser.newContext({ viewport: { width, height } });
 			const page = await screen.newPage();
 			await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
-			await openFooter(page);
+			await openFooter(page, { ready: 30_000 });
 
 			const box = (await page.locator(footer).boundingBox())!;
-			expect(box.height, `${width}x${height}`).toBeLessThanOrEqual(height);
+			expect(box.height).toBeLessThanOrEqual(height);
 			await expect(page.locator(footer).getByText(/©\d{4} — Javier Cornejo/)).toBeInViewport();
 			await expect(page.locator(`${footer} [data-footer-name]`)).toBeInViewport({ ratio: 1 });
 			await screen.close();
-		}
-	});
+		});
+	}
 
 	test('lists the phone under the profiles, set just like them', async ({ page }) => {
 		await openFooter(page);
