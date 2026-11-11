@@ -1,7 +1,8 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import FlutedGlass from '@/components/FlutedGlass';
-import { DockMenu, GlassCta, MobileDock } from '@/components/HeroGlass';
+import { DockMenu, MobileDock } from '@/components/HeroGlass';
+import { GlassSplitLink } from '@/components/ui/glass-split-link';
 import Statement from '@/components/Statement';
 import LivingGradient from '@/components/LivingGradient';
 import ProjectsCarousel from '@/components/ProjectsCarousel';
@@ -29,36 +30,45 @@ import ProjectsCarousel from '@/components/ProjectsCarousel';
 		</div>
 		<div class="hero-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
 		<!-- Geometry (insets and the name's size) lives in .hero in global.css, so it can follow the screen's height. -->
-		<section class="hero pointer-events-none relative z-10 flex min-h-dvh flex-col gap-8">
+		<section class="hero pointer-events-none relative z-10 flex min-h-dvh flex-col justify-end gap-8">
 			<!-- Elements arrive top to bottom: see .place-in in global.css. Only the menu sits close to its corner. -->
 			<div class="place-in pointer-events-auto absolute top-6 right-6 z-20 sm:top-8 sm:right-10" style="--place-delay: 0.1s">
 				<DockMenu client:load />
 			</div>
-			<header class="pr-16 sm:pr-20">
-				<div class="place-in max-w-md" style="--place-delay: 0.2s">
+			<!-- The name runs edge to edge, past the content insets. From sm up it sits dead centre on the screen,
+			     out of the flow; on phones it takes the room between the top and the foot. -->
+			<div class="hero-bleed flex flex-1 flex-col items-center justify-center sm:absolute sm:inset-0">
+				<div class="relative flex flex-col items-center sm:block sm:w-fit">
+					<!-- Above the name's top left corner, just clear of the stretch: see .hero-role in global.css. -->
 					<p
-						class="font-display text-lg leading-[1.2] font-semibold tracking-[-0.01em] text-balance uppercase sm:text-2xl"
+						class="place-in hero-role self-start font-display text-lg leading-[1.2] font-semibold tracking-[0.08em] text-white uppercase sm:text-2xl"
+						style="--place-delay: 0.3s"
+						data-hero-role
+					>
+						Full Stack Developer
+					</p>
+					<h1
+						class="place-in hero-name font-poster text-center leading-[0.9] uppercase max-sm:[word-spacing:100vw] sm:whitespace-nowrap"
+						style="--place-delay: 0.45s"
+					>
+						<!-- Stretched on an inner span (wider and taller, like a cover): the entrance animation owns the h1's
+						     transform. The stretch takes no layout room; the size formula in .hero leaves space for it. -->
+						<span class="name-fade name-stretch inline-block origin-center">Javier Cornejo</span>
+					</h1>
+				</div>
+			</div>
+
+			<!-- Foot of the cover: the slogan as one long line bottom left, the way into the work bottom right. -->
+			<div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-12">
+				<div class="place-in max-w-3xl" style="--place-delay: 0.8s">
+					<p
+						class="font-display text-lg leading-[1.25] font-semibold tracking-[-0.01em] text-pretty uppercase sm:text-xl"
 					>
 						Code you can see through: clear, honest software, from the database to the last pixel.
 					</p>
 				</div>
-			</header>
-
-			<!-- The name runs edge to edge, past the content insets, when the screen is tall enough for it. -->
-			<div class="hero-bleed flex flex-1 items-center justify-center">
-				<h1
-					class="place-in hero-name font-poster text-center leading-[0.9] uppercase max-sm:[word-spacing:100vw] sm:whitespace-nowrap"
-					style="--place-delay: 0.45s"
-				>
-					<!-- Stretched on an inner span (wider and taller, like a cover): the entrance animation owns the h1's
-					     transform. The stretch takes no layout room; the size formula in .hero leaves space for it. -->
-					<span class="name-fade name-stretch inline-block origin-center">Javier Cornejo</span>
-				</h1>
-			</div>
-
-			<div class="flex justify-end">
-				<div class="place-in pointer-events-auto shrink-0" style="--place-delay: 0.8s">
-					<GlassCta client:load href="#contact">Let's talk</GlassCta>
+				<div class="place-in pointer-events-auto shrink-0" style="--place-delay: 0.95s">
+					<GlassSplitLink client:load href="#projects">Discover works</GlassSplitLink>
 				</div>
 			</div>
 		</section>

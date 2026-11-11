@@ -79,8 +79,8 @@
 	--inset-x: clamp(2rem, 7vw, 10rem);
 	--inset-y: clamp(3rem, 8dvh, 6.5rem);
 	--name-sx: 1.12;
-	--name-sy: 1.5;
-	--name-size: max(3rem, min(calc((100vw - 2rem) / 6.9), calc((100dvh - 2 * var(--inset-y) - 17rem) / 1.35)));
+	--name-sy: 1.9;
+	--name-size: max(3rem, min(calc((100vw - 2rem) / 6.9), calc((100dvh - 2 * var(--inset-y) - 17rem) / (0.9 * var(--name-sy)))));
 	padding: var(--inset-y) var(--inset-x);
 }
 @media (width < 40rem) {
@@ -107,6 +107,25 @@
 }
 .name-stretch {
 	scale: var(--name-sx) var(--name-sy);
+}
+/* The role sits above the name, clear of the (sy - 1) / 2 of its 0.9em line that the stretch hangs above the h1's
+   box. From sm up it leaves the flow (so the name alone is centred) and lines up with the stretched letters' left
+   edge, which the horizontal stretch pushes (sx - 1) / 2 of the name's 6.05em width past the box. */
+.hero-role {
+	/* Phones stack the name on two lines, so the stretch hangs twice as far above. */
+	margin-bottom: calc(var(--name-size) * 0.9 * (var(--name-sy) - 1) + 0.5rem);
+	/* In line with the left edge of CORNEJO, the wider line (3.3em), centred on the screen. */
+	margin-left: calc((100vw - var(--name-size) * 3.3) / 2);
+}
+@media (width >= 40rem) {
+	.hero-role {
+		position: absolute;
+		bottom: 100%;
+		margin-bottom: calc(var(--name-size) * 0.45 * (var(--name-sy) - 1) + 0.5rem);
+		left: calc(var(--name-size) * -6.05 * (var(--name-sx) - 1) / 2);
+		margin-left: 0;
+		white-space: nowrap;
+	}
 }
 
 /* The name in white, fading to more transparent towards its foot so the background shows through. */

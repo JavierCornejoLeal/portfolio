@@ -16,9 +16,12 @@ test.describe('home page', () => {
 		await expect(name).toHaveCSS('font-family', /Anton/);
 		const slogan = page.locator('main p', { hasText: 'Code you can see through: clear, honest software' });
 		await expect(slogan).toBeVisible();
-		// Just the slogan: no quote mark, no role line under it.
 		await expect(slogan).not.toContainText('“');
-		await expect(page.getByText('Full stack developer', { exact: true })).toHaveCount(0);
+		// The role sits in the hero in white.
+		const role = page.locator('[data-hero-role]');
+		await expect(role).toHaveText('Full Stack Developer');
+		await expect(role).toBeVisible();
+		await expect(role).toHaveCSS('color', 'rgb(255, 255, 255)');
 	});
 
 	test('keeps the hero inside the viewport once the glass canvas mounts', async ({ page }) => {
@@ -26,13 +29,14 @@ test.describe('home page', () => {
 		await expect(page.locator('[data-hero-bg] canvas')).toBeAttached();
 
 		await expect(page.getByRole('heading', { level: 1, name: 'Javier Cornejo' })).toBeInViewport();
-		await expect(page.getByRole('link', { name: "Let's talk" })).toBeInViewport();
+		await expect(page.locator('[data-hero-role]')).toBeInViewport();
+		await expect(page.getByRole('link', { name: 'Discover works' })).toBeInViewport();
 		await expect(page.getByRole('button', { name: 'Open menu' })).toBeInViewport();
 		const box = await page.locator('section.hero').boundingBox();
 		expect(box?.y).toBe(0);
 	});
 
-	test('lays the hero out like a cover: slogan and menu on top, name centred, contact below', async ({ page }) => {
+	test('lays the hero out like a cover: menu on top, name centred with the role over it, slogan and link along the foot', async ({ page }) => {
 		await page.goto('/');
 		await expect(page.locator('section.hero .place-in').last()).toHaveCSS('opacity', '1');
 		const viewport = page.viewportSize()!;
@@ -42,25 +46,33 @@ test.describe('home page', () => {
 		const menu = await box(page.getByRole('button', { name: 'Open menu' }));
 		// The visible letters, stretched wider than the h1's own box.
 		const name = await box(page.locator('h1 .name-fade'));
-		const cta = await box(page.getByRole('link', { name: "Let's talk" }));
+		const role = await box(page.locator('[data-hero-role]'));
+		const link = await box(page.getByRole('link', { name: 'Discover works' }));
 
-		// Slogan top left, menu top right.
-		expect(slogan.x).toBeLessThan(viewport.width * 0.1);
-		expect(slogan.y).toBeLessThan(viewport.height * 0.25);
+		// Menu top right.
 		expect(menu.x + menu.width).toBeGreaterThan(viewport.width * 0.9);
 		expect(menu.y).toBeLessThan(viewport.height * 0.15);
 		// Name centred on one line, spanning most of the width.
 		expect(Math.abs(name.x + name.width / 2 - viewport.width / 2)).toBeLessThan(4);
 		expect(name.width).toBeGreaterThan(viewport.width * 0.9);
-		expect(name.height).toBeLessThan(viewport.height * 0.35);
-		expect(name.y).toBeGreaterThan(slogan.y + slogan.height);
-		// Call to action bottom right, below the name.
-		expect(cta.y).toBeGreaterThan(name.y + name.height);
-		expect(cta.x + cta.width).toBeGreaterThan(viewport.width * 0.85);
-		expect(cta.y + cta.height).toBeGreaterThan(viewport.height * 0.8);
-		// Held in from the corner rather than pushed into it.
-		expect(viewport.width - (cta.x + cta.width)).toBeGreaterThanOrEqual(56);
-		expect(viewport.height - (cta.y + cta.height)).toBeGreaterThanOrEqual(56);
+		// Big, but leaving half the screen to everything else.
+		expect(name.height).toBeLessThan(viewport.height * 0.5);
+		// Centred on the screen both ways.
+		expect(Math.abs(name.y + name.height / 2 - viewport.height / 2)).toBeLessThan(4);
+		// The role sits right over the name, lined up with its first letter.
+		expect(role.y + role.height).toBeLessThanOrEqual(name.y);
+		expect(name.y - (role.y + role.height)).toBeLessThan(24);
+		expect(Math.abs(role.x - name.x)).toBeLessThan(8);
+		// Slogan bottom left as one long line of two at most, the link bottom right, both below the name.
+		expect(slogan.y).toBeGreaterThan(name.y + name.height);
+		expect(slogan.x).toBeLessThan(viewport.width * 0.1);
+		expect(slogan.width).toBeGreaterThan(viewport.width * 0.4);
+		expect(slogan.y + slogan.height).toBeGreaterThan(viewport.height * 0.8);
+		expect(link.y).toBeGreaterThan(name.y + name.height);
+		expect(link.x + link.width).toBeGreaterThan(viewport.width * 0.85);
+		// Held in from the corners rather than pushed into them.
+		expect(viewport.width - (link.x + link.width)).toBeGreaterThanOrEqual(56);
+		expect(viewport.height - (link.y + link.height)).toBeGreaterThanOrEqual(56);
 	});
 
 	test('gives the content generous room from the edges while the menu stays in its corner', async ({ page }) => {
@@ -73,16 +85,13 @@ test.describe('home page', () => {
 		};
 
 		const slogan = await insets(page.locator('main p', { hasText: 'Code you can see through' }));
-		const cta = await insets(page.getByRole('link', { name: "Let's talk" }));
-		const name = await insets(page.getByRole('heading', { level: 1 }));
+		const link = await insets(page.getByRole('link', { name: 'Discover works' }));
 		const menu = await insets(page.getByRole('button', { name: 'Open menu' }));
 
 		expect(slogan.left).toBeGreaterThanOrEqual(64);
-		expect(slogan.top).toBeGreaterThanOrEqual(56);
-		expect(cta.right).toBeGreaterThanOrEqual(64);
-		expect(cta.bottom).toBeGreaterThanOrEqual(56);
-		// The name leaves breathing room above and below on a laptop-height screen.
-		expect(name.top).toBeGreaterThan(slogan.top);
+		expect(slogan.bottom).toBeGreaterThanOrEqual(56);
+		expect(link.right).toBeGreaterThanOrEqual(64);
+		expect(link.bottom).toBeGreaterThanOrEqual(56);
 		expect(menu.top).toBeLessThanOrEqual(48);
 		expect(menu.right).toBeLessThanOrEqual(48);
 	});
@@ -96,9 +105,10 @@ test.describe('home page', () => {
 
 		const name = (await page.locator('h1 .name-fade').boundingBox())!;
 		const slogan = (await page.locator('main p', { hasText: 'Code you can see through' }).boundingBox())!;
-		const cta = (await page.getByRole('link', { name: "Let's talk" }).boundingBox())!;
-		expect(name.y - (slogan.y + slogan.height)).toBeGreaterThanOrEqual(40);
-		expect(cta.y - (name.y + name.height)).toBeGreaterThanOrEqual(40);
+		const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!;
+		const role = (await page.locator('[data-hero-role]').boundingBox())!;
+		expect(role.y - (menu.y + menu.height)).toBeGreaterThanOrEqual(40);
+		expect(slogan.y - (name.y + name.height)).toBeGreaterThanOrEqual(40);
 		// The hero itself fits the screen; the page goes on below it.
 		expect((await page.locator('section.hero').boundingBox())!.height).toBe(783);
 		await laptop.close();
@@ -113,10 +123,10 @@ test.describe('home page', () => {
 
 		const name = (await page.locator('h1 .name-fade').boundingBox())!;
 		const slogan = (await page.locator('main p', { hasText: 'Code you can see through' }).boundingBox())!;
-		const cta = (await page.getByRole('link', { name: "Let's talk" }).boundingBox())!;
+		const link = (await page.getByRole('link', { name: 'Discover works' }).boundingBox())!;
 		expect(name.width).toBeGreaterThan(1920 * 0.95);
 		expect(slogan.x).toBeGreaterThanOrEqual(120);
-		expect(1920 - (cta.x + cta.width)).toBeGreaterThanOrEqual(120);
+		expect(1920 - (link.x + link.width)).toBeGreaterThanOrEqual(120);
 		await monitor.close();
 	});
 
@@ -135,7 +145,8 @@ test.describe('home page', () => {
 		// Stretched like a cover through the individual `scale` property: wider and taller.
 		const [scaleX, scaleY] = await letters.evaluate(element => getComputedStyle(element).scale.split(' ').map(parseFloat));
 		expect(scaleX).toBeGreaterThan(1.05);
-		expect(scaleY).toBeGreaterThanOrEqual(1.5);
+		// Taller still on desktop than the 1.5 the phones keep.
+		expect(scaleY).toBeGreaterThanOrEqual(1.85);
 	});
 
 	test('stacks the name on two big lines on phones', async ({ browser }) => {
@@ -150,16 +161,72 @@ test.describe('home page', () => {
 		expect(fontSize).toBeGreaterThan(80);
 		expect(box.height).toBeGreaterThan(fontSize * 1.5);
 		expect(box.x + box.width).toBeLessThanOrEqual(390);
+		// The role sits over the name, clear of its stretched letters, and inside the screen.
+		const role = (await page.locator('[data-hero-role]').boundingBox())!;
+		const letters = (await page.locator('h1 .name-fade').boundingBox())!;
+		expect(role.y + role.height).toBeLessThanOrEqual(letters.y);
+		expect(role.x).toBeGreaterThanOrEqual(12);
 		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 		await phone.close();
 	});
 
-	test('sends the call to action to the contact section', async ({ page }) => {
+	test('has no call to action in the hero and no process section', async ({ page }) => {
 		await page.goto('/');
 
-		const cta = page.getByRole('link', { name: "Let's talk" });
-		await expect(cta).toHaveAttribute('href', '#contact');
-		await expect(cta).toHaveCSS('pointer-events', 'auto');
+		await expect(page.getByRole('link', { name: "Let's talk" })).toHaveCount(0);
+		await expect(page.locator('[data-process]')).toHaveCount(0);
+	});
+
+	test('leads to the projects through a link split in two refracting glass pieces', async ({ page }) => {
+		await page.goto('/');
+
+		const link = page.getByRole('link', { name: 'Discover works' });
+		await expect(link).toHaveAttribute('href', '#projects');
+		await expect(link).toHaveCSS('pointer-events', 'auto');
+		const pieces = link.locator('[data-glass-piece]');
+		await expect(pieces).toHaveCount(2);
+		// Each piece is real glass: it bends the backdrop instead of painting a flat fill.
+		await expect(link.locator('[data-refract="true"]')).toHaveCount(2);
+		// Each piece is shaped as a rounded trapezoid leaning into the other, not cut with a straight polygon.
+		for (const glass of await link.locator('[data-refract]').all()) await expect(glass).toHaveCSS('clip-path', /^path\(/);
+
+		// Each piece answers the pointer on its own: hovering one leaves the other at rest.
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		const [label, key] = await pieces.all();
+		const scaled = (piece: import('@playwright/test').Locator) =>
+			piece.evaluate(element => parseFloat(getComputedStyle(element).scale) || 1);
+		await label.hover();
+		await expect.poll(() => scaled(label)).toBeGreaterThan(1.04);
+		expect(await scaled(key)).toBe(1);
+		await key.hover();
+		await expect.poll(() => scaled(key)).toBeGreaterThan(1.04);
+		await expect.poll(() => scaled(label)).toBe(1);
+
+		await link.click();
+		await expect(page).toHaveURL(/#projects$/);
+	});
+
+	test('glides down to the projects when the link is followed', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/');
+		const target = await page.locator('#projects').evaluate(element => element.getBoundingClientRect().top + scrollY);
+		expect(target).toBeGreaterThan(0);
+
+		await page.getByRole('link', { name: 'Discover works' }).click();
+		// Smooth, not a jump: shortly after the click the page is on its way, not there yet.
+		await page.waitForTimeout(80);
+		const midway = await page.evaluate(() => scrollY);
+		expect(midway).toBeLessThan(target - 1);
+		// It lands with the projects at the top of the screen.
+		await expect.poll(() => page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top))).toBe(0);
+	});
+
+	test('jumps straight to the projects under reduced motion', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		await page.goto('/');
+
+		await page.getByRole('link', { name: 'Discover works' }).click();
+		expect(await page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top))).toBe(0);
 	});
 
 	test('drops the old coming-soon copy, email and phone', async ({ page }) => {
@@ -258,9 +325,9 @@ test.describe('home page', () => {
 			expect(box.x).toBeGreaterThanOrEqual(0);
 			expect(box.x + box.width).toBeLessThanOrEqual(width);
 			expect(height - (box.y + box.height)).toBeLessThanOrEqual(24);
-			// It never covers the call to action, and the page does not scroll sideways.
-			const cta = (await page.getByRole('link', { name: "Let's talk" }).boundingBox())!;
-			expect(cta.y + cta.height).toBeLessThanOrEqual(box.y);
+			// It never covers the link at the foot of the hero, and the page does not scroll sideways.
+			const link = (await page.getByRole('link', { name: 'Discover works' }).boundingBox())!;
+			expect(link.y + link.height).toBeLessThanOrEqual(box.y);
 			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
 			await phone.close();
 		}
@@ -319,12 +386,13 @@ test.describe('home page', () => {
 				const style = getComputedStyle(placed);
 				return { name: style.animationName, delay: parseFloat(style.animationDelay) };
 			});
-		// Ordered by how high each element sits: menu, slogan, name, call to action.
+		// Ordered by how high each element sits: menu, role, name, then the slogan and link along the foot.
 		const order = [
 			await delayOf(page.getByRole('button', { name: 'Open menu' })),
-			await delayOf(page.locator('main p', { hasText: 'Code you can see through' })),
+			await delayOf(page.locator('[data-hero-role]')),
 			await delayOf(page.getByRole('heading', { level: 1 })),
-			await delayOf(page.getByRole('link', { name: "Let's talk" }))
+			await delayOf(page.locator('main p', { hasText: 'Code you can see through' })),
+			await delayOf(page.getByRole('link', { name: 'Discover works' }))
 		];
 		for (const step of order) expect(step.name).toBe('place-in');
 		const delays = order.map(step => step.delay);
