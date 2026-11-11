@@ -16,5 +16,6 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
-  integrations: [react(), sitemap()]
+  // The about page stays out of the sitemap (and noindex) until it has content.
+  integrations: [react(), sitemap({ filter: (page) => !page.includes('/about') })]
 });

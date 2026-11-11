@@ -203,7 +203,9 @@ test.describe('home page', () => {
 		await expect.poll(() => scaled(label)).toBe(1);
 
 		await link.click();
-		await expect(page).toHaveURL(/#projects$/);
+		// It glides there without writing a #fragment into the address.
+		await expect.poll(() => page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top))).toBe(0);
+		expect(new URL(page.url()).hash).toBe('');
 	});
 
 	test('glides down to the projects when the link is followed', async ({ page }) => {
@@ -238,122 +240,6 @@ test.describe('home page', () => {
 		await expect(page.locator('a[href^="mailto:"]:not(footer a), a[href^="tel:"]:not(footer a)')).toHaveCount(0);
 	});
 
-	test('opens the glass dock from the menu button and turns it into a close button', async ({ page }) => {
-		await page.goto('/');
-
-		const menu = page.getByRole('button', { name: 'Open menu' });
-		await expect(menu).toHaveAttribute('aria-expanded', 'false');
-		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
-
-		await menu.click();
-		const close = page.getByRole('button', { name: 'Close menu' });
-		await expect(close).toHaveAttribute('aria-expanded', 'true');
-		const dock = page.getByRole('navigation', { name: 'Main' });
-		await expect(dock).toBeVisible();
-
-		for (const [name, href] of [['About', '#about'], ['Projects', '#projects'], ['Stack', '#stack'], ['Contact', '#contact']]) {
-			await expect(dock.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
-		}
-		// Opens to the left of the button.
-		const dockBox = (await dock.boundingBox())!;
-		const buttonBox = (await close.boundingBox())!;
-		expect(dockBox.x + dockBox.width).toBeLessThanOrEqual(buttonBox.x);
-
-		await close.click();
-		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
-		await expect(page.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false');
-	});
-
-	test('links every social profile from the dock and announces new tabs', async ({ page }) => {
-		await page.goto('/');
-		await page.getByRole('button', { name: 'Open menu' }).click();
-		const dock = page.getByRole('navigation', { name: 'Main' });
-
-		for (const [name, href] of [
-			['GitHub', 'https://github.com/JavierCornejoLeal'],
-			['LinkedIn', 'https://www.linkedin.com/in/cornejolealjavier/'],
-			['Instagram', 'https://www.instagram.com/javiiicornejo/']
-		]) {
-			const link = dock.getByRole('link', { name: new RegExp(`^${name}`) });
-			await expect(link).toHaveAttribute('href', href);
-			await expect(link).toHaveAttribute('target', '_blank');
-			await expect(link).toHaveAccessibleName(`${name} (opens in a new tab)`);
-		}
-	});
-
-	test('closes the dock with Escape and gives focus back to the menu button', async ({ page }) => {
-		await page.goto('/');
-		await page.getByRole('button', { name: 'Open menu' }).click();
-		await page.keyboard.press('Tab');
-		await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link').first()).toBeFocused();
-
-		await page.keyboard.press('Escape');
-		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
-		await expect(page.getByRole('button', { name: 'Open menu' })).toBeFocused();
-	});
-
-	test('closes the dock when clicking outside it or following a link', async ({ page }) => {
-		await page.goto('/');
-		await page.getByRole('button', { name: 'Open menu' }).click();
-		await page.mouse.click(200, 500);
-		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
-
-		await page.getByRole('button', { name: 'Open menu' }).click();
-		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Projects', exact: true }).click();
-		await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
-		await expect(page).toHaveURL(/#projects$/);
-	});
-
-	test('turns the menu into a dock pinned to the bottom on phones, always visible', async ({ browser }) => {
-		for (const [width, height] of [[320, 568], [393, 659]]) {
-			const phone = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true });
-			const page = await phone.newPage();
-			await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
-			await page.goto('/');
-
-			await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden();
-			const dock = page.getByRole('navigation', { name: 'Main' });
-			await expect(dock).toBeVisible();
-			await expect(dock).toHaveCSS('position', 'fixed');
-			for (const [name, href] of [['About', '#about'], ['Projects', '#projects'], ['Stack', '#stack'], ['Contact', '#contact']]) {
-				await expect(dock.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
-			}
-			// Sections only: the social profiles stay on the desktop dock.
-			await expect(dock.getByRole('link')).toHaveCount(4);
-			await expect(dock.getByRole('link', { name: /GitHub|LinkedIn|Instagram/ })).toHaveCount(0);
-
-			const box = (await dock.boundingBox())!;
-			expect(box.x).toBeGreaterThanOrEqual(0);
-			expect(box.x + box.width).toBeLessThanOrEqual(width);
-			expect(height - (box.y + box.height)).toBeLessThanOrEqual(24);
-			// It never covers the link at the foot of the hero, and the page does not scroll sideways.
-			const link = (await page.getByRole('link', { name: 'Discover works' }).boundingBox())!;
-			expect(link.y + link.height).toBeLessThanOrEqual(box.y);
-			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
-			await phone.close();
-		}
-	});
-
-	test('keeps the phone dock on top of every section while scrolling', async ({ browser }) => {
-		const phone = await browser.newContext({ viewport: { width: 393, height: 659 }, hasTouch: true, isMobile: true });
-		const page = await phone.newPage();
-		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
-		await page.goto('/');
-		const dock = page.getByRole('navigation', { name: 'Main' });
-
-		for (const target of ['[data-statement]']) {
-			await page.locator(target).evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY + 200, behavior: 'instant' }));
-			const box = (await dock.boundingBox())!;
-			// Whatever is painted at the dock's centre belongs to the dock.
-			const onTop = await dock.evaluate((nav, point) => nav.contains(document.elementFromPoint(point.x, point.y)), {
-				x: box.x + box.width / 2,
-				y: box.y + box.height / 2
-			});
-			expect(onTop, target).toBe(true);
-		}
-		await phone.close();
-	});
-
 	test('keeps the glass dark when the browser falls back to frosted glass, whatever the OS colour scheme', async ({ browser }) => {
 		// Safari and Firefox cannot refract through an SVG backdrop filter; force that path and a light OS scheme.
 		const context = await browser.newContext({ colorScheme: 'light' });
@@ -371,7 +257,7 @@ test.describe('home page', () => {
 		// The fallback kicks in on the component's first effect, so wait for every surface to settle on it.
 		const backgrounds = () => glass.evaluateAll(elements => elements.map(element => getComputedStyle(element).backgroundColor));
 		await expect
-			.poll(async () => (await backgrounds()).every(background => /^rgba\(7, 9, 7, 0\.5\d*\)$/.test(background)))
+			.poll(async () => (await backgrounds()).every(background => /^rgba\(7, 9, 7, 0\.[5-9]\d*\)$/.test(background)))
 			.toBe(true);
 		expect((await backgrounds()).length).toBeGreaterThan(0);
 		await context.close();

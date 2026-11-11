@@ -216,7 +216,15 @@ test.describe('footer', () => {
 		await expect(page.locator('#top')).toHaveCount(1);
 	});
 
-	test('keeps the bottom line clear of the phone dock and never scrolls sideways', async ({ browser }) => {
+	test('glides back to the top from the footer, leaving the address clean', async ({ page }) => {
+		await openFooter(page);
+		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+		await page.locator(footer).getByRole('navigation', { name: 'Footer' }).getByRole('link', { name: 'Back to top' }).click();
+		await expect.poll(() => page.evaluate(() => scrollY), { timeout: 10_000 }).toBe(0);
+		expect(new URL(page.url()).hash).toBe('');
+	});
+
+	test('ends with the bottom line fully on a phone screen and never scrolls sideways', async ({ browser }) => {
 		const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 		const page = await phone.newPage();
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
@@ -228,8 +236,9 @@ test.describe('footer', () => {
 		const number = page.locator(footer).getByRole('link', { name: '+34 634 44 36 02' });
 		const lineHeight = parseFloat(await number.evaluate(el => getComputedStyle(el).lineHeight));
 		expect((await number.boundingBox())!.height).toBeLessThan(lineHeight * 1.5);
-		const dock = (await page.getByRole('navigation', { name: 'Main' }).boundingBox())!;
-		expect(line.y + line.height).toBeLessThanOrEqual(dock.y);
+		// No dock any more: the line sits at the very end of the page, all of it in view.
+		expect(line.y + line.height).toBeLessThanOrEqual(844);
+		expect(844 - (line.y + line.height)).toBeLessThan(140);
 		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 		await phone.close();
 	});

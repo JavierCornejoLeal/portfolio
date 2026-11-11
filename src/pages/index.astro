@@ -1,7 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import FlutedGlass from '@/components/FlutedGlass';
-import { DockMenu, MobileDock } from '@/components/HeroGlass';
+import SiteMenu from '@/components/SiteMenu';
 import { GlassSplitLink } from '@/components/ui/glass-split-link';
 import Statement from '@/components/Statement';
 import LivingGradient from '@/components/LivingGradient';
@@ -16,6 +16,11 @@ import ContactPortal from '@/components/ContactPortal';
 		<LivingGradient client:only="react" className="size-full" scrollIntensity={[0.5, 1]} />
 	</div>
 	<main class="relative overflow-x-clip">
+		<!-- The menu, pinned top right over every section, and first in the tab order. Only its button runs the entrance (see SiteMenu.tsx). -->
+		<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
+			<SiteMenu client:load />
+		</div>
+
 		<!-- The hero owns its backdrop: the fluted glass covers this first screen only. -->
 		<div class="relative">
 		<!-- The glass fades out towards the hero's foot, so its flutes melt into the living backdrop below. -->
@@ -32,10 +37,8 @@ import ContactPortal from '@/components/ContactPortal';
 		<div class="hero-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
 		<!-- Geometry (insets and the name's size) lives in .hero in global.css, so it can follow the screen's height. -->
 		<section id="top" class="hero pointer-events-none relative z-10 flex min-h-dvh flex-col justify-end gap-8">
-			<!-- Elements arrive top to bottom: see .place-in in global.css. Only the menu sits close to its corner. -->
-			<div class="place-in pointer-events-auto absolute top-6 right-6 z-20 sm:top-8 sm:right-10" style="--place-delay: 0.1s">
-				<DockMenu client:load />
-			</div>
+			<!-- Elements arrive top to bottom: see .place-in in global.css. The menu, first in, is pinned outside the
+			     hero (below) so it stays in its corner on every section. -->
 			<!-- The name runs edge to edge, past the content insets. From sm up it sits dead centre on the screen,
 			     out of the flow; on phones it takes the room between the top and the foot. -->
 			<div class="hero-bleed flex flex-1 items-center justify-center sm:absolute sm:inset-0">
@@ -70,13 +73,12 @@ import ContactPortal from '@/components/ContactPortal';
 		<!-- Hydrates ahead of arrival so the covers are ready to rise in when the section scrolls into view. -->
 		<ProjectsCarousel client:visible={{ rootMargin: '600px' }} />
 
-		<!-- A quiet HELLO the camera flies into; its dark green is where the footer will go. -->
+		<!-- A quiet HELLO the camera flies into, and the footer in its green. Hydrated on approach, not on load: the
+		     portal turns its motion off for good if its first frame comes more than 2.5s after mounting, which a page
+		     still busy with the hero's WebGL can cause. The menu's Contact link finds its way here anyway. -->
 		<div id="contact" data-contact>
 			<ContactPortal client:visible={{ rootMargin: '600px' }} />
 		</div>
 
-		<!-- On phones the menu is a dock pinned to the bottom of the screen, always there. It runs its own entrance
-		     inside the fixed nav: an animated ancestor would become its containing block and unpin it. -->
-		<MobileDock client:load />
 	</main>
 </Layout>

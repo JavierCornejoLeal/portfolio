@@ -87,12 +87,12 @@
 @media (width < 40rem) {
 	.hero {
 		/* Phones: two stacked lines (the ink of CORNEJO measures 3.237em; 3.25em grazes the edges), a taller stretch,
-		   and room kept at the bottom for the pinned dock and the home indicator. Both stretched lines count
+		   and room kept at the bottom for the home indicator. Both stretched lines count
 		   against the height (2 x 0.9 x sy). */
 		--inset-y: clamp(1.5rem, 4dvh, 3rem);
 		--name-sx: 1;
 		--name-sy: 1.5;
-		--dock-room: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+		--dock-room: env(safe-area-inset-bottom, 0px);
 		--name-size: max(2.5rem, min(calc(100vw / (3.25 * var(--name-sx))), calc((100dvh - 2 * var(--inset-y) - var(--dock-room) - 15rem) / (1.8 * var(--name-sy)))));
 		padding-bottom: calc(var(--inset-y) + var(--dock-room));
 	}
@@ -273,5 +273,104 @@
 @media (width < 40rem) {
 	.footer-name {
 		font-size: calc((100vw - 3rem) / 2.53);
+	}
+}
+
+/* Site menu (SiteMenu.tsx). The panel is laid out at its final size; opening it stretches the = button's own circle
+   into the panel, like a drop of water spreading into a puddle. The clip is an inset() with round corners that starts
+   as exactly the button's box (fully round) in the top right corner and grows evenly to the whole panel: a long,
+   soft ease-out on the way in, a quicker ease-in back into the button on the way out. It clips the glass and the
+   links (.menu-reveal), never the nav: a clip-path on an ancestor makes it a backdrop root and the glass would no
+   longer see the page behind it. Desktop: a roomy panel hanging from the button. Phones: the whole screen. */
+#site-menu {
+	/* The button: its size and its inset from the panel's top right corner. */
+	--menu-button: 4rem;
+	--menu-gap: 0px;
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 0;
+	width: min(28rem, calc(100vw - 3rem));
+	border-radius: 28px;
+	visibility: hidden;
+	transition: visibility 0s linear 0.45s;
+}
+#site-menu[data-open] {
+	visibility: visible;
+	transition: visibility 0s;
+}
+#site-menu .menu-reveal {
+	clip-path: inset(
+		var(--menu-gap) var(--menu-gap) calc(100% - var(--menu-gap) - var(--menu-button))
+			calc(100% - var(--menu-gap) - var(--menu-button)) round calc(var(--menu-button) / 2)
+	);
+	transition: clip-path 0.45s cubic-bezier(0.55, 0, 0.75, 0.2);
+}
+#site-menu[data-open] .menu-reveal {
+	clip-path: inset(0px round 28px);
+	/* Slow to leave the button, quick to spread, soft to settle: a drop becoming a puddle. */
+	transition: clip-path 0.95s cubic-bezier(0.5, 0, 0.15, 1);
+}
+/* How dark the menu's glass body is (MenuGlass, both the resting circle and the panel): the rim bends the page, the
+   body keeps the words legible over it. On phones the panel takes the whole screen, so everything sits behind the
+   words: darker. */
+.site-menu {
+	--menu-smoke: 0.65;
+}
+@media (width < 40rem) {
+	.site-menu {
+		--menu-smoke: 0.82;
+	}
+}
+
+/* One piece of glass: at the first frame of opening the panel is exactly the button's circle, so the button's own
+   glass gives way at once and the panel carries on from it. On closing the panel shrinks back into the circle first,
+   and only then (0.45s, the close) does the button's glass return. The cross stays on top throughout. */
+.menu-button-glass {
+	/* Longhands on purpose: a minifier rewrites "opacity 0s linear 0.45s" to "opacity linear 0.45s", which turns
+	   the delay into a duration and fades the glass in instead of bringing it back at the end. */
+	transition-property: opacity;
+	transition-duration: 0s;
+	transition-delay: 0.45s;
+}
+button[aria-controls="site-menu"][aria-expanded="true"] .menu-button-glass {
+	opacity: 0;
+	transition-delay: 0s;
+}
+#site-menu .menu-item {
+	opacity: 0;
+	translate: 0 0.5rem;
+	transition:
+		opacity 0.2s ease-in,
+		translate 0.2s ease-in;
+}
+#site-menu[data-open] .menu-item {
+	opacity: 1;
+	translate: 0 0;
+	transition:
+		opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1) calc(0.12s + var(--menu-index, 0) * 0.04s),
+		translate 0.6s cubic-bezier(0.22, 1, 0.36, 1) calc(0.12s + var(--menu-index, 0) * 0.04s);
+}
+@media (width < 40rem) {
+	#site-menu {
+		/* The 3.5rem button sits 1.5rem in from the screen's top right corner. */
+		--menu-button: 3.5rem;
+		--menu-gap: 1.5rem;
+		position: fixed;
+		inset: 0;
+		width: auto;
+		border-radius: 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	#site-menu,
+	#site-menu[data-open],
+	#site-menu .menu-reveal,
+	#site-menu[data-open] .menu-reveal,
+	#site-menu .menu-item,
+	#site-menu[data-open] .menu-item,
+	.menu-button-glass {
+		transition-duration: 0s;
+		transition-delay: 0s;
 	}
 }
