@@ -186,8 +186,9 @@ const frameEase = (share: number, frames: number) => 1 - Math.pow(1 - share, fra
 
 export function cardLayout(viewportWidth: number) {
   const phone = viewportWidth < 640
-  // Large covers: the middle card and its neighbours still sit inside the lens's undistorted core.
-  const width = phone ? viewportWidth * 0.8 : Math.min(viewportWidth * 0.3, 760)
+  // Big covers: the middle card fills the lens's undistorted core and its neighbours bend away at the rims.
+  // Keep in step with the static strip's widths in ProjectsCarousel.tsx.
+  const width = phone ? viewportWidth * 0.9 : Math.min(viewportWidth * 0.45, 1100)
   return { width, height: width / COVER_ASPECT, gap: phone ? 10 : 14 }
 }
 
