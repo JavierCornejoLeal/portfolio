@@ -80,7 +80,7 @@ function followVia(event: React.MouseEvent, link: MenuLink) {
       still = Math.abs(top - last) < 1 ? still + 1 : 0
       last = top
       if (still >= 3) {
-        target.scrollIntoView()
+        target.scrollIntoView({ block: (target as HTMLElement).dataset.scrollAlign === "end" ? "end" : "start" })
         return
       }
     }

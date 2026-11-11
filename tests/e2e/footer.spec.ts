@@ -122,17 +122,19 @@ test.describe('footer', () => {
 		expect(name.y - pillsBottom).toBeGreaterThanOrEqual(48);
 	});
 
-	test('fits the whole footer on one laptop screen', async ({ browser }) => {
-		const laptop = await browser.newContext({ viewport: { width: 1512, height: 783 } });
-		const page = await laptop.newPage();
-		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
-		await openFooter(page);
+	test('fits the whole footer on one screen, laptop to wide desktop', async ({ browser }) => {
+		for (const [width, height] of [[1512, 783], [1728, 960], [2000, 975]]) {
+			const screen = await browser.newContext({ viewport: { width, height } });
+			const page = await screen.newPage();
+			await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+			await openFooter(page);
 
-		const box = (await page.locator(footer).boundingBox())!;
-		expect(box.height).toBeLessThanOrEqual(783);
-		await expect(page.locator(footer).getByText(/©\d{4} — Javier Cornejo/)).toBeInViewport();
-		await expect(page.locator(`${footer} [data-footer-name]`)).toBeInViewport({ ratio: 1 });
-		await laptop.close();
+			const box = (await page.locator(footer).boundingBox())!;
+			expect(box.height, `${width}x${height}`).toBeLessThanOrEqual(height);
+			await expect(page.locator(footer).getByText(/©\d{4} — Javier Cornejo/)).toBeInViewport();
+			await expect(page.locator(`${footer} [data-footer-name]`)).toBeInViewport({ ratio: 1 });
+			await screen.close();
+		}
 	});
 
 	test('lists the phone under the profiles, set just like them', async ({ page }) => {
@@ -214,6 +216,20 @@ test.describe('footer', () => {
 		await expect(nav.getByRole('link', { name: 'Projects' })).toHaveAttribute('href', '#projects');
 		await expect(nav.getByRole('link', { name: 'Back to top' })).toHaveAttribute('href', '#top');
 		await expect(page.locator('#top')).toHaveCount(1);
+	});
+
+	test('shows HELLO again on the way back down after using a footer link', async ({ page }) => {
+		await openFooter(page);
+		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+		// A link in the footer keeps the focus after it is used.
+		await page.locator(footer).getByRole('navigation', { name: 'Footer' }).getByRole('link', { name: 'Back to top' }).click();
+		await expect.poll(() => page.evaluate(() => scrollY), { timeout: 10_000 }).toBe(0);
+
+		// Scroll back down into the portal, early in the zoom: the word is still a window onto the green, not a wall.
+		const section = page.locator('[data-contact] section');
+		await section.evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY + innerHeight * 0.2, behavior: 'instant' }));
+		await expect.poll(async () => Number(await section.getAttribute('data-gp-progress'))).toBeGreaterThan(0);
+		await expect(page.locator('[data-contact] [data-gp-field]')).toHaveCSS('clip-path', /url/);
 	});
 
 	test('glides back to the top from the footer, leaving the address clean', async ({ page }) => {

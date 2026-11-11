@@ -104,7 +104,8 @@ const person = {
 				const target = id ? document.getElementById(id) : null;
 				if (!target) return;
 				event.preventDefault();
-				target.scrollIntoView();
+				// A section can ask to be shown by its end (the footer, so its last line is always in view).
+				target.scrollIntoView({ block: target.dataset.scrollAlign === 'end' ? 'end' : 'start' });
 			});
 		</script>
 	</body>

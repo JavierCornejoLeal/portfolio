@@ -252,10 +252,11 @@
 
 /* The footer's JAVIER, set into the green as if pressed into it: a fill a shade darker than the ground, a lower lip
    catching a little green light and a shaded upper edge. One line, as large as the room the footer's top block
-   leaves on screen (about 30rem), and never wider than the insets: the advance of JAVIER in Anton is 2.514em. */
+   leaves on screen (up to about 32rem on wide screens, where the headline is largest), and never wider than the
+   insets: the advance of JAVIER in Anton is 2.514em. */
 .footer-name {
 	font-family: var(--font-poster);
-	font-size: max(6rem, min(calc((100vw - 5rem) / 2.53), calc((100svh - 30rem) / 0.87)));
+	font-size: max(6rem, min(calc((100vw - 5rem) / 2.53), calc((100svh - 32rem) / 0.87)));
 	/* Anton's font box is 1.51em tall but the ink of JAVIER only 0.868em: at 0.87 the line box sits exactly on
 	   the ink, and clipping the rest keeps the font box from stretching the page below the footer. */
 	line-height: 0.87;

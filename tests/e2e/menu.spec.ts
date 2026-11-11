@@ -212,6 +212,20 @@ test.describe('menu', () => {
 		await expect(page.locator('#contact')).toHaveCount(1);
 	});
 
+	test('takes Contact all the way down, even on a short screen where the footer is taller than the view', async ({ browser }) => {
+		const short = await browser.newContext({ viewport: { width: 1280, height: 560 } });
+		const page = await short.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/');
+		await menuButton(page).click();
+		await menu(page).getByRole('link', { name: 'Contact', exact: true }).click();
+		await expect
+			.poll(() => page.evaluate(() => Math.round(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1), { timeout: 10_000 })
+			.toBe(true);
+		await expect(page.locator('footer#contact-inside').getByText(/©\d{4} — Javier Cornejo/)).toBeInViewport({ ratio: 1 });
+		await short.close();
+	});
+
 	test('glides to the footer from Contact, so every way to get in touch is in view', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
@@ -229,8 +243,10 @@ test.describe('menu', () => {
 		await menu(page).getByRole('link', { name: 'Contact', exact: true }).click();
 
 		await expect(menu(page)).toHaveCount(0);
-		const footerTop = () => page.locator('footer#contact-inside').evaluate(element => Math.round(element.getBoundingClientRect().top));
-		await expect.poll(footerTop, { timeout: 10_000 }).toBe(0);
+		// All the way down: the whole footer in view, its bottom line included, at the very end of the page.
+		const atBottom = () => page.evaluate(() => Math.round(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1);
+		await expect.poll(atBottom, { timeout: 10_000 }).toBe(true);
+		await expect(page.locator('footer#contact-inside').getByText(/©\d{4} — Javier Cornejo/)).toBeInViewport({ ratio: 1 });
 		// Smooth, not a jump: the page passed through several positions on the way down.
 		const target = await page.evaluate(() => scrollY);
 		const samples = await page.evaluate(() => (window as unknown as { scrollSamples: number[] }).scrollSamples);

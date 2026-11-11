@@ -57,6 +57,8 @@ export default function SiteFooter({ background }: { background: string }) {
     <footer
       id="contact-inside"
       role="contentinfo"
+      // Links that glide here show all of it: aligned by its end, the page's end.
+      data-scroll-align="end"
       style={{ backgroundColor: background }}
       className="flex min-h-svh flex-col justify-between gap-12 px-6 pt-[clamp(5.5rem,14svh,9rem)] pb-5 text-ink sm:px-10 max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"
     >
