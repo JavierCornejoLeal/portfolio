@@ -1,7 +1,7 @@
 import * as React from "react"
 import { ArrowRight, ArrowUpRight } from "lucide-react"
 
-import { SOCIALS } from "@/components/HeroGlass"
+import { SOCIALS } from "@/components/SiteMenu"
 import { GlassLayer } from "@/components/ui/glass-layer"
 
 /*
@@ -57,8 +57,10 @@ export default function SiteFooter({ background }: { background: string }) {
     <footer
       id="contact-inside"
       role="contentinfo"
+      // Links that glide here show all of it: aligned by its end, the page's end.
+      data-scroll-align="end"
       style={{ backgroundColor: background }}
-      className="flex min-h-svh flex-col justify-between gap-12 px-6 pt-[clamp(5.5rem,14svh,9rem)] pb-5 text-ink sm:px-10 max-sm:pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]"
+      className="flex min-h-svh flex-col justify-between gap-12 px-6 pt-[clamp(5.5rem,14svh,9rem)] pb-5 text-ink sm:px-10 max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"
     >
       <div className="flex flex-col gap-14 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-10">

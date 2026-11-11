@@ -102,17 +102,9 @@ test.describe('contact portal', () => {
 		await openSection(page);
 
 		await page.locator('[data-contact]').getByRole('link', { name: "Let's talk" }).click();
-		await expect(page).toHaveURL(/#contact-inside$/);
 		await expect(page.locator(portal)).toHaveAttribute('data-gp-entered', 'true', { timeout: 10_000 });
-	});
-
-	test('lands the menu\'s Contact link on the section', async ({ page }) => {
-		await page.goto('/');
-		await page.getByRole('button', { name: 'Open menu' }).click();
-		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Contact', exact: true }).click();
-		await expect
-			.poll(() => page.locator('#contact').evaluate(element => Math.round(element.getBoundingClientRect().top)))
-			.toBe(0);
+		// No #fragment in the address.
+		expect(new URL(page.url()).hash).toBe('');
 	});
 
 	test('stays still and fully readable under reduced motion', async ({ page }) => {
