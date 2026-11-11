@@ -2,6 +2,7 @@ import * as React from "react"
 
 import GlyphPortal from "@/components/ui/glyph-portal"
 import { GlassCta } from "@/components/ui/glass-cta"
+import SiteFooter from "@/components/SiteFooter"
 
 /*
  * Contact: a quiet HELLO in Anton. Scrolling carries a camera into one of its letters until a near-black green
@@ -11,18 +12,15 @@ import { GlassCta } from "@/components/ui/glass-cta"
 
 const FONT = '"Anton"'
 
-/** The green behind the letters: a near-black green, dark enough to stay quiet while HELLO still reads, and the
- *  ground the footer will land on. */
+/**
+ * The near-black green the camera opens onto. Flat on purpose: the footer paints it too, and only one flat colour
+ * matches across the seam where the pinned view hands over to the footer, whatever the boxes' sizes.
+ */
+const FIELD_COLOUR = "#052a03"
+
+/** The green behind the letters, dark enough to stay quiet while HELLO still reads. */
 function Field() {
-  return (
-    <div
-      className="absolute inset-0"
-      style={{
-        transform: "scale(var(--gp-field-scale, 1))",
-        background: "linear-gradient(135deg, #031f02 0%, #052a03 50%, #031f02 100%)",
-      }}
-    />
-  )
+  return <div className="absolute inset-0" style={{ backgroundColor: FIELD_COLOUR }} />
 }
 
 function Front() {
@@ -63,7 +61,7 @@ export default function ContactPortal() {
       interactive={false}
       fontFamily={FONT}
       fontWeight={400}
-      scrollLength={2.4}
+      scrollLength={1.4}
       background={<Field />}
       front={<Front />}
       style={{
@@ -71,12 +69,12 @@ export default function ContactPortal() {
         fontFamily: "var(--font-sans)",
         "--gp-paper": "transparent",
         "--gp-ink": "var(--color-ink)",
-        "--gp-field": "#052a03",
+        "--gp-field": FIELD_COLOUR,
         "--gp-foreground": "var(--color-ink)",
       }}
     >
-      {/* The footer lands here, in the green the camera opens onto. */}
-      <div id="contact-inside" data-contact-inside />
+      {/* The footer, in the green the camera opens onto (#contact-inside). */}
+      <SiteFooter background={FIELD_COLOUR} />
     </GlyphPortal>
   )
 }
