@@ -1,4 +1,5 @@
 import { LiquidGlass } from "@/components/ui/liquid-glass"
+import type { GlassCut } from "@/components/ui/glass-shape"
 import { cn } from "@/lib/utils"
 
 /**
@@ -22,7 +23,21 @@ function GlassRim({ className }: { className?: string }) {
  * A refracting glass layer that fills its positioned parent. `smoked` tints the body dark instead of white,
  * so white icons stay legible even when the glass passes over white type.
  */
-export function GlassLayer({ radius, className, smoked = false }: { radius: number; className?: string; smoked?: boolean }) {
+export function GlassLayer({
+  radius,
+  className,
+  smoked = false,
+  cut,
+  wash,
+}: {
+  radius: number
+  className?: string
+  smoked?: boolean
+  /** Lean one side: the glass draws its own rim along the slanted outline instead of the box rim. */
+  cut?: GlassCut
+  /** A colour washed over the glass. It sits on top of the body, so the frosted fallback keeps its dark body. */
+  wash?: string
+}) {
   return (
     <LiquidGlass
       aria-hidden="true"
@@ -32,10 +47,12 @@ export function GlassLayer({ radius, className, smoked = false }: { radius: numb
       bevelDepth={18}
       frost={0.4}
       tint={0.06}
+      cut={cut}
       className={cn("absolute inset-0", className)}
       style={smoked ? { backgroundColor: "rgb(7 9 7 / 0.55)" } : undefined}
     >
-      <GlassRim />
+      {wash ? <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundColor: wash }} /> : null}
+      {cut ? null : <GlassRim />}
     </LiquidGlass>
   )
 }

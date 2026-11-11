@@ -9,6 +9,7 @@ import {
   type HTMLAttributes,
 } from "react";
 import { cn } from "@/lib/utils";
+import { roundedCutDistance, roundedCutPath, type GlassCut } from "@/components/ui/glass-shape";
 
 export type LiquidGlassProps = HTMLAttributes<HTMLDivElement> & {
   contentClassName?: string;
@@ -24,6 +25,8 @@ export type LiquidGlassProps = HTMLAttributes<HTMLDivElement> & {
   frost?: number;
   /** White body tint 0–1. */
   tint?: number;
+  /** Lean one side, making a rounded trapezoid: the refraction, clip and rim all follow the slanted edge. */
+  cut?: GlassCut;
 };
 
 /**
@@ -42,6 +45,7 @@ export function LiquidGlass({
   aberration = 4,
   frost = 0.4,
   tint = 0.12,
+  cut,
   style,
   ...rest
 }: LiquidGlassProps) {
@@ -61,7 +65,7 @@ export function LiquidGlass({
 
   useEffect(() => {
     const el = rootRef.current;
-    if (!el || mode !== "pending") return;
+    if (!el || (mode !== "pending" && !cut)) return;
     const ro = new ResizeObserver(([entry]) => {
       if (!entry) return;
       // Border box, so the map matches the backdrop-filter layer.
@@ -75,7 +79,7 @@ export function LiquidGlass({
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [mode]);
+  }, [mode, cut]);
 
   useEffect(() => {
     if (mode !== "pending" || size.w <= 1 || size.h <= 1) return;
@@ -88,6 +92,7 @@ export function LiquidGlass({
         radius: Math.min(radius, size.w / 2, size.h / 2),
         bevelDepth: Math.min(bevelDepth, Math.min(size.w, size.h) / 2),
         dpr: Math.min(window.devicePixelRatio || 1, 2),
+        cut,
       });
       // Decode the map before the filter attaches.
       await new Promise<void>((resolve) => {
@@ -121,7 +126,7 @@ export function LiquidGlass({
     return () => {
       cancelled = true;
     };
-  }, [mode, size.w, size.h, radius, bevelDepth, scale, aberration, frost, reactId]);
+  }, [mode, size.w, size.h, radius, bevelDepth, scale, aberration, frost, reactId, cut?.side, cut?.slant]);
 
   useEffect(
     () => () => {
@@ -138,6 +143,10 @@ export function LiquidGlass({
         : filter
           ? `url(#${filter.id}) blur(0.5px) saturate(1.85) brightness(1.02)`
           : "blur(10px) saturate(1.6) brightness(1.04)";
+
+  // A cut shape is clipped to its own outline (border-radius only rounds a box) and draws its rim along it.
+  const outline = cut && size.w > 1 && size.h > 1 ? roundedCutPath(size.w, size.h, radius, cut) : null;
+  const rimId = `lg-rim-${reactId}`;
 
   return (
     <div
@@ -157,6 +166,7 @@ export function LiquidGlass({
           mode === "pending" ? `rgb(255 255 255 / ${tint})` : undefined,
         backdropFilter: backdrop,
         WebkitBackdropFilter: backdrop,
+        ...(outline ? { clipPath: `path("${outline}")` } : {}),
         ...style,
       } as CSSProperties}
       {...rest}
@@ -168,6 +178,24 @@ export function LiquidGlass({
           className="pointer-events-none absolute size-0 overflow-hidden"
           dangerouslySetInnerHTML={{ __html: filter.svg }}
         />
+      ) : null}
+      {outline ? (
+        <svg
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-10 size-full overflow-visible"
+          viewBox={`0 0 ${size.w} ${size.h}`}
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id={rimId} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="rgb(255 255 255 / 0.55)" />
+              <stop offset="0.45" stopColor="rgb(255 255 255 / 0.12)" />
+              <stop offset="1" stopColor="rgb(255 255 255 / 0.4)" />
+            </linearGradient>
+          </defs>
+          {/* Twice the stroke width, half of it clipped away: the visible half sits just inside the outline. */}
+          <path d={outline} fill="none" stroke={`url(#${rimId})`} strokeWidth="2" />
+        </svg>
       ) : null}
       {contentClassName ? (
         <div className={contentClassName}>{children}</div>
@@ -204,6 +232,7 @@ function isSafariLike() {
  * ------------------------------------------------------------------------- */
 
 type DisplacementOptions = {
+  cut?: GlassCut;
   width: number;
   height: number;
   radius: number;
@@ -271,13 +300,19 @@ function computeDisplacementData(opts: DisplacementOptions) {
   const r = Math.min(opts.radius * dpr, halfW, halfH);
   const bevel = Math.max(1, opts.bevelDepth * dpr);
   const phi = buildPhiTable(bevel);
+  // Distance to the outline from a point centred on the map: the rounded box, or the rounded trapezoid of a cut.
+  const cutDistance = opts.cut
+    ? roundedCutDistance(W, H, r, { side: opts.cut.side, slant: opts.cut.slant * dpr })
+    : null;
+  const sd = (px: number, py: number) =>
+    cutDistance ? cutDistance(px + halfW, py + halfH) : sdRoundedBox(px, py, halfW, halfH, r);
 
   // Height field over the shape, then displace along its gradient.
   const field = new Float32Array(W * H);
   for (let y = 0; y < H; y++) {
     const py = y - halfH + 0.5;
     for (let x = 0; x < W; x++) {
-      const d = sdRoundedBox(x - halfW + 0.5, py, halfW, halfH, r);
+      const d = sd(x - halfW + 0.5, py);
       field[y * W + x] = d > 0 ? 0 : samplePhi(phi, Math.min(bevel, -d));
     }
   }
@@ -288,7 +323,7 @@ function computeDisplacementData(opts: DisplacementOptions) {
     for (let x = 0; x < W; x++) {
       const px = x - halfW + 0.5;
       const i = (y * W + x) << 2;
-      const d = sdRoundedBox(px, py, halfW, halfH, r);
+      const d = sd(px, py);
 
       if (d > 0) {
         data[i] = data[i + 1] = data[i + 2] = 128;
@@ -310,11 +345,11 @@ function computeDisplacementData(opts: DisplacementOptions) {
       let specular = 0;
       if (d >= -bevel) {
         const gx =
-          sdRoundedBox(px + 1, py, halfW, halfH, r) -
-          sdRoundedBox(px - 1, py, halfW, halfH, r);
+          sd(px + 1, py) -
+          sd(px - 1, py);
         const gy =
-          sdRoundedBox(px, py + 1, halfW, halfH, r) -
-          sdRoundedBox(px, py - 1, halfW, halfH, r);
+          sd(px, py + 1) -
+          sd(px, py - 1);
         const len = Math.hypot(gx, gy) || 1;
         const dot = (gx / len) * lx + (gy / len) * ly;
         const rim = 1 - Math.min(1, -d / bevel);
