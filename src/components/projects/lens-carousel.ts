@@ -646,7 +646,11 @@ export class LensCarousel {
     else this.requestFrame()
   }
 
-  private tap(clientX: number, clientY: number) {
+  /**
+   * The card under a point in viewport pixels, if any: whether a tap there opens it (its centre sits in the lens's
+   * calm middle) and which side of the middle it is on. A tap and the cursor label read the same answer.
+   */
+  cardAt(clientX: number, clientY: number): { instance: number; openable: boolean; side: -1 | 0 | 1 } | null {
     const stageRect = this.options.stage.getBoundingClientRect()
     const x = clientX - stageRect.left
     const y = clientY - stageRect.top
@@ -654,15 +658,23 @@ export class LensCarousel {
       const rect = this.cardRect(index)
       if (x < rect.x || x > rect.x + rect.width || y < rect.y || y > rect.y + rect.height) continue
       const centreDistance = lensDistance(rect.x + rect.width / 2, rect.y + rect.height / 2, this.width, this.height)
-      if (centreDistance < OPENABLE_DISTANCE && this.entryDone) {
-        // Settle exactly where the card is, so the dialog grows from what is on screen.
-        this.targetX = this.current
-        this.needsSnap = false
-        this.options.onOpen(index)
-      } else {
-        this.centerInstance(index)
-      }
-      return
+      const openable = centreDistance < OPENABLE_DISTANCE && this.entryDone
+      const side = openable ? 0 : rect.x + rect.width / 2 < this.width / 2 ? -1 : 1
+      return { instance: index, openable, side }
+    }
+    return null
+  }
+
+  private tap(clientX: number, clientY: number) {
+    const hit = this.cardAt(clientX, clientY)
+    if (!hit) return
+    if (hit.openable) {
+      // Settle exactly where the card is, so the dialog grows from what is on screen.
+      this.targetX = this.current
+      this.needsSnap = false
+      this.options.onOpen(hit.instance)
+    } else {
+      this.centerInstance(hit.instance)
     }
   }
 

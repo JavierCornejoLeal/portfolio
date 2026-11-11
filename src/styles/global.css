@@ -375,3 +375,54 @@ button[aria-controls="site-menu"][aria-expanded="true"] .menu-button-glass {
 		transition-delay: 0s;
 	}
 }
+
+/* Cursor label (CursorLabel.tsx). Over labelled elements the box takes the arrow's place, but only while the label is
+   mounted to replace it (it sets data-cursor-ready on <html>), so a failed script never leaves the pointer invisible. */
+html[data-cursor-ready] [data-cursor],
+html[data-cursor-ready] [data-cursor] * {
+	/* Children too: the carousel's canvas sets its own grab cursor, which would otherwise show beside the box. */
+	cursor: none;
+}
+/* The box wipes in from the left and back out to the right, square-cornered like a printed tag. */
+.cursor-box {
+	clip-path: inset(0 100% 0 0);
+	transition: clip-path 0.32s cubic-bezier(0.55, 0, 0.75, 0.2);
+}
+[data-cursor-label][data-visible="true"] .cursor-box {
+	clip-path: inset(0 0 0 0);
+	transition: clip-path 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+	.cursor-box,
+	[data-cursor-label][data-visible="true"] .cursor-box {
+		transition-duration: 0s;
+	}
+}
+
+/* Project pages ([slug].astro): each letter of the name rises out of its own clipped window, one after another, and
+   settles with a soft brake. A line box of 1em holds Anton's capitals whole (their ink sits 0.065em below its top),
+   so the mask never trims a letter once it has landed. */
+.letter-mask {
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: bottom;
+	line-height: 1;
+}
+.letter {
+	display: inline-block;
+	animation: letter-rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: calc(0.15s + var(--i, 0) * 0.045s);
+}
+@keyframes letter-rise {
+	from {
+		transform: translateY(105%);
+	}
+	to {
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.letter {
+		animation: none;
+	}
+}
