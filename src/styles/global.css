@@ -224,9 +224,12 @@
 	animation-play-state: paused;
 }
 
-/* Process belts: dashes 14 units apart run one gap per cycle toward the next station. */
-@keyframes conveyor {
+/* Process links: one short stroke travels from the start of a link past its end, then rests (Process.tsx). */
+@keyframes process-pulse {
+	from {
+		stroke-dashoffset: var(--pulse-from);
+	}
 	to {
-		stroke-dashoffset: -14;
+		stroke-dashoffset: var(--pulse-to);
 	}
 }

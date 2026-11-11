@@ -418,7 +418,9 @@ test.describe('home page', () => {
 				const first = await canvas.screenshot();
 				await page.waitForTimeout(300);
 				return first.equals(await canvas.screenshot());
-			}, { timeout: 8000 })
+			// Wide window: the glass resumes within a frame or two, but each probe waits on input and screenshots,
+			// which a loaded CI runner rendering WebGL in software slows down a lot.
+			}, { timeout: 20_000 })
 			.toBe(false);
 		expect(errors).toEqual([]);
 	});

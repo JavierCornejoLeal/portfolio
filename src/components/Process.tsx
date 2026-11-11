@@ -7,9 +7,9 @@ import { RollingTitle } from "@/components/ui/rolling-title"
 import { cn } from "@/lib/utils"
 
 /*
- * Process: how a full project moves, drawn as a production line. Stations are glass boxes; the belts between
- * them carry parcels from discovery to operation, build splits into three parallel lanes, and a feedback belt
- * returns from operation to discovery. Horizontal on wide screens, vertical on phones.
+ * Process: how a full project moves, drawn as a production line. Stations are glass boxes joined by hairlines,
+ * and a short stroke travels each link toward the next station; build splits into three parallel lanes, and a
+ * feedback link returns from operation to discovery. Horizontal on wide screens, vertical on phones.
  */
 
 type StepId = "discover" | "design" | "interface" | "api" | "data" | "test" | "ship" | "operate"
@@ -26,7 +26,7 @@ interface Step {
 
 const STEPS: Step[] = [
   { id: "discover", number: "01", title: "Discover", detail: "Goals, users and scope", Icon: Search, stage: 0 },
-  { id: "design", number: "02", title: "Design", detail: "Architecture, data model and UI", Icon: PencilRuler, stage: 1 },
+  { id: "design", number: "02", title: "Design", detail: "Stack, architecture and UI", Icon: PencilRuler, stage: 1 },
   { id: "interface", number: "03", title: "Interface", detail: "Responsive, accessible UI", Icon: LayoutTemplate, stage: 2 },
   { id: "api", number: "03", title: "API", detail: "Business logic and auth", Icon: Server, stage: 2 },
   { id: "data", number: "03", title: "Data", detail: "Schema and migrations", Icon: Database, stage: 2 },
@@ -37,8 +37,6 @@ const STEPS: Step[] = [
 
 interface Belt {
   d: string
-  /** Seconds a parcel takes to ride the belt (about 110 units a second). */
-  ride: number
   stage: number
 }
 
@@ -65,17 +63,17 @@ const WIDE: Layout = {
     operate: [1230, 270]
   },
   belts: [
-    { d: "M90 270 H300", ride: 2, stage: 0 },
-    { d: "M300 270 H410 Q430 270 430 250 V120 Q430 100 450 100 H560", ride: 3, stage: 1 },
-    { d: "M300 270 H560", ride: 2.4, stage: 1 },
-    { d: "M300 270 H410 Q430 270 430 290 V420 Q430 440 450 440 H560", ride: 3, stage: 1 },
-    { d: "M560 100 H670 Q690 100 690 120 V250 Q690 270 710 270 H820", ride: 3, stage: 2 },
-    { d: "M560 270 H820", ride: 2.4, stage: 2 },
-    { d: "M560 440 H670 Q690 440 690 420 V290 Q690 270 710 270 H820", ride: 3, stage: 2 },
-    { d: "M820 270 H1020", ride: 1.9, stage: 3 },
-    { d: "M1020 270 H1230", ride: 2, stage: 4 }
+    { d: "M90 270 H300", stage: 0 },
+    { d: "M300 270 H410 Q430 270 430 250 V120 Q430 100 450 100 H560", stage: 1 },
+    { d: "M300 270 H560", stage: 1 },
+    { d: "M300 270 H410 Q430 270 430 290 V420 Q430 440 450 440 H560", stage: 1 },
+    { d: "M560 100 H670 Q690 100 690 120 V250 Q690 270 710 270 H820", stage: 2 },
+    { d: "M560 270 H820", stage: 2 },
+    { d: "M560 440 H670 Q690 440 690 420 V290 Q690 270 710 270 H820", stage: 2 },
+    { d: "M820 270 H1020", stage: 3 },
+    { d: "M1020 270 H1230", stage: 4 }
   ],
-  loop: { d: "M1230 270 V560 Q1230 580 1210 580 H110 Q90 580 90 560 V270", ride: 14, stage: 5 },
+  loop: { d: "M1230 270 V560 Q1230 580 1210 580 H110 Q90 580 90 560 V270", stage: 5 },
   loopLabel: [660, 580]
 }
 
@@ -93,17 +91,17 @@ const TALL: Layout = {
     operate: [180, 1000]
   },
   belts: [
-    { d: "M180 70 V240", ride: 1.6, stage: 0 },
-    { d: "M180 240 V320 Q180 340 160 340 H92 Q72 340 72 360 V440", ride: 2.2, stage: 1 },
-    { d: "M180 240 V440", ride: 1.8, stage: 1 },
-    { d: "M180 240 V320 Q180 340 200 340 H268 Q288 340 288 360 V440", ride: 2.2, stage: 1 },
-    { d: "M72 440 V560 Q72 580 92 580 H160 Q180 580 180 600 V660", ride: 2.2, stage: 2 },
-    { d: "M180 440 V660", ride: 2, stage: 2 },
-    { d: "M288 440 V560 Q288 580 268 580 H200 Q180 580 180 600 V660", ride: 2.2, stage: 2 },
-    { d: "M180 660 V830", ride: 1.6, stage: 3 },
-    { d: "M180 830 V1000", ride: 1.6, stage: 4 }
+    { d: "M180 70 V240", stage: 0 },
+    { d: "M180 240 V320 Q180 340 160 340 H92 Q72 340 72 360 V440", stage: 1 },
+    { d: "M180 240 V440", stage: 1 },
+    { d: "M180 240 V320 Q180 340 200 340 H268 Q288 340 288 360 V440", stage: 1 },
+    { d: "M72 440 V560 Q72 580 92 580 H160 Q180 580 180 600 V660", stage: 2 },
+    { d: "M180 440 V660", stage: 2 },
+    { d: "M288 440 V560 Q288 580 268 580 H200 Q180 580 180 600 V660", stage: 2 },
+    { d: "M180 660 V830", stage: 3 },
+    { d: "M180 830 V1000", stage: 4 }
   ],
-  loop: { d: "M180 1000 V1120 Q180 1140 160 1140 H36 Q16 1140 16 1120 V90 Q16 70 36 70 H180", ride: 16, stage: 5 },
+  loop: { d: "M180 1000 V1120 Q180 1140 160 1140 H36 Q16 1140 16 1120 V90 Q16 70 36 70 H180", stage: 5 },
   loopLabel: [100, 1140]
 }
 
@@ -124,7 +122,7 @@ function Station({ step, layout, show, index }: { step: Step; layout: Layout; sh
       transition={{ delay: step.stage * STAGE_DELAY + index * 0.04, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="relative isolate flex size-(--station) items-center justify-center rounded-[18px] text-ink">
-        {/* Smoked, so a parcel entering the station disappears into it instead of showing through. */}
+        {/* Smoked, so a stroke reaching the station slips under it instead of showing through. */}
         <GlassLayer radius={18} smoked className="-z-10" />
         <step.Icon aria-hidden="true" className="size-[42%]" strokeWidth={1.6} />
       </div>
@@ -139,68 +137,88 @@ function Station({ step, layout, show, index }: { step: Step; layout: Layout; sh
   )
 }
 
+/** Travelling stroke: viewBox units per second, its length, and the pause before it sets off again. */
+const PULSE_SPEED = 260
+const PULSE_LENGTH = 34
+const PULSE_REST = 0.9
+
+/**
+ * One short stroke riding a link from end to end. The link's length is measured, so every stroke is the same
+ * size and speed whatever the link's shape; the dash gap is longer than the link, so only one stroke shows.
+ */
+function Pulse({ d, delay, loop, running }: { d: string; delay: number; loop: boolean; running: boolean }) {
+  const ref = React.useRef<SVGPathElement>(null)
+  const [length, setLength] = React.useState(0)
+
+  React.useLayoutEffect(() => {
+    setLength(ref.current?.getTotalLength() ?? 0)
+  }, [d])
+
+  const rest = PULSE_REST * PULSE_SPEED
+  const style = length
+    ? ({
+        strokeDasharray: `${PULSE_LENGTH} ${length + PULSE_LENGTH + rest}`,
+        strokeDashoffset: PULSE_LENGTH,
+        "--pulse-from": `${PULSE_LENGTH}`,
+        "--pulse-to": `${-(length + rest)}`,
+        animationDuration: `${(length + PULSE_LENGTH + rest) / PULSE_SPEED}s`,
+        animationDelay: `${delay}s`
+      } as React.CSSProperties)
+    : { strokeDasharray: `0 1` }
+
+  return (
+    <path
+      ref={ref}
+      data-pulse
+      d={d}
+      stroke="currentColor"
+      strokeWidth={loop ? 1.5 : 2}
+      strokeLinecap="round"
+      style={style}
+      className={cn(
+        loop ? "text-harlequin-200/50" : "text-harlequin-300",
+        running && length > 0 ? "animate-[process-pulse_linear_infinite] opacity-100" : "opacity-0"
+      )}
+    />
+  )
+}
+
 function Line({ layout, className }: { layout: Layout; className: string }) {
   const ref = React.useRef<HTMLDivElement>(null)
-  const svgRef = React.useRef<SVGSVGElement>(null)
   const show = useInView(ref, { once: true, amount: 0.25 })
   const visible = useInView(ref, { amount: 0 })
   const reduced = useReducedMotion()
-  const moving = show && !reduced
+  // Strokes travel only once the line has drawn in, while it is on screen, and never under reduced motion.
+  const moving = show && visible && !reduced
 
-  // Parcels ride on SMIL, belts on CSS: both stop while the line is off screen.
-  React.useEffect(() => {
-    const svg = svgRef.current
-    if (!svg) return
-    if (visible && moving) svg.unpauseAnimations()
-    else svg.pauseAnimations()
-  }, [visible, moving])
-
-  const belts = [...layout.belts, layout.loop]
+  const links = [...layout.belts, layout.loop]
 
   return (
     <div
       ref={ref}
       data-process-line
-      data-moving={moving && visible ? "true" : "false"}
+      data-moving={moving ? "true" : "false"}
       aria-hidden="true"
       className={cn("relative w-full", className)}
       style={{ aspectRatio: `${layout.width} / ${layout.height}` }}
     >
-      <svg ref={svgRef} viewBox={`0 0 ${layout.width} ${layout.height}`} fill="none" className="absolute inset-0 size-full overflow-visible">
-        {belts.map((belt, i) => {
-          const loop = belt === layout.loop
+      <svg viewBox={`0 0 ${layout.width} ${layout.height}`} fill="none" className="absolute inset-0 size-full overflow-visible">
+        {links.map((link, i) => {
+          const loop = link === layout.loop
           return (
             <g key={i}>
               <motion.path
-                d={belt.d}
+                data-link
+                d={link.d}
                 stroke="currentColor"
-                strokeWidth={loop ? 1 : 1.5}
-                strokeDasharray={loop ? "2 6" : undefined}
-                className="text-ink/20"
+                strokeWidth={1}
+                className={loop ? "text-ink/12" : "text-ink/20"}
                 initial={reduced ? false : { pathLength: 0 }}
                 animate={show ? { pathLength: 1 } : undefined}
-                transition={{ delay: belt.stage * STAGE_DELAY + 0.1, duration: 0.6, ease: "easeInOut" }}
+                transition={{ delay: link.stage * STAGE_DELAY + 0.1, duration: 0.6, ease: "easeInOut" }}
               />
-              {/* The belt surface: short dashes running toward the next station. */}
-              <path
-                data-belt
-                d={belt.d}
-                stroke="currentColor"
-                strokeWidth={loop ? 1.5 : 2.5}
-                strokeLinecap="round"
-                strokeDasharray="1 13"
-                className={cn(
-                  "transition-opacity duration-700",
-                  loop ? "text-harlequin-200/30" : "text-harlequin-300/55",
-                  moving ? "opacity-100" : "opacity-0",
-                  moving && visible && "animate-[conveyor_0.9s_linear_infinite]"
-                )}
-              />
-              {moving && (
-                <rect data-parcel width={loop ? 7 : 10} height={loop ? 7 : 10} x={loop ? -3.5 : -5} y={loop ? -3.5 : -5} rx={2} className={loop ? "fill-harlequin-200/50" : "fill-harlequin-400"}>
-                  <animateMotion dur={`${belt.ride}s`} repeatCount="indefinite" rotate="auto" path={belt.d} begin={`${(i * 0.37) % 1.5}s`} />
-                </rect>
-              )}
+              {/* One start per stage: links that share a first stretch carry one stroke that splits at the fork. */}
+              <Pulse d={link.d} loop={loop} running={moving} delay={1.2 + link.stage * 0.45} />
             </g>
           )
         })}
@@ -226,7 +244,7 @@ export default function Process() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
         <RollingTitle id="process-title" text="Process" />
         <p data-process-lede className="max-w-md text-lg leading-snug text-ink/80 sm:text-xl lg:pb-2 lg:text-right">
-          Like a production line: every stage hands over something you can see and test before the next one starts.
+          Like a production line: tools chosen to work well together, and every stage hands over something you can test before the next one starts.
         </p>
       </div>
 
