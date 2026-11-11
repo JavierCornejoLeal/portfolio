@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro';
 import FlutedGlass from '@/components/FlutedGlass';
 import SiteMenu from '@/components/SiteMenu';
+import CursorLabel from '@/components/CursorLabel';
 import { GlassSplitLink } from '@/components/ui/glass-split-link';
 import Statement from '@/components/Statement';
 import LivingGradient from '@/components/LivingGradient';
@@ -81,4 +82,6 @@ import ContactPortal from '@/components/ContactPortal';
 		</div>
 
 	</main>
+	<!-- Says what a click does over the projects (data-cursor), in place of the arrow. Mouse and pen only. -->
+	<CursorLabel client:only="react" />
 </Layout>

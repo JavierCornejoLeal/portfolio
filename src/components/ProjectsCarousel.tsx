@@ -159,7 +159,18 @@ export default function ProjectsCarousel() {
     placeAnchors()
     const onMotionChange = () => engine.setReducedMotion(motionQuery.matches)
     motionQuery.addEventListener("change", onMotionChange)
+    // What the cursor label says here (CursorLabel reads data-cursor): the middle card opens, a neighbour comes to
+    // the middle. Between the cards it says nothing and the arrow stays. The same hit test as a tap decides it.
+    const describe = (event: PointerEvent) => {
+      const hit = engine.cardAt(event.clientX, event.clientY)
+      if (hit) stage.dataset.cursor = hit.openable ? "View project" : hit.side < 0 ? "Previous" : "Next"
+      else delete stage.dataset.cursor
+    }
+    stage.addEventListener("pointermove", describe)
+    stage.addEventListener("pointerenter", describe)
     return () => {
+      stage.removeEventListener("pointermove", describe)
+      stage.removeEventListener("pointerenter", describe)
       motionQuery.removeEventListener("change", onMotionChange)
       window.clearTimeout(closeTimer.current)
       engine.destroy()
