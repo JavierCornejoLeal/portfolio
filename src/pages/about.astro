@@ -4,6 +4,7 @@ import SiteMenu from '@/components/SiteMenu';
 import DepthImage from '@/components/DepthImage';
 import RevealOnScroll from '@/components/RevealOnScroll.astro';
 import AboutWho from '@/components/about/AboutWho.astro';
+import AboutLife from '@/components/about/AboutLife.astro';
 import AboutProcess from '@/components/about/AboutProcess.astro';
 import AboutExperience from '@/components/about/AboutExperience.astro';
 import AboutStack from '@/components/about/AboutStack.astro';
@@ -11,7 +12,7 @@ import AboutFaq from '@/components/about/AboutFaq.astro';
 ---
 
 <!-- About: it opens on a statue in the dark, relit by a light that follows the cursor (DepthImage), with the page's
-     name and a Roman boast top right catching the same light; then five sections about Javier. Kept out of search
+     name and a Roman boast top right catching the same light; then six sections about Javier. Kept out of search
      until the page is finished. -->
 <Layout title="About · Javier Cornejo" noindex siteLoader={false}>
 	<!-- The site's glass menu, pinned top right as everywhere; its section links lead back home. -->
@@ -27,15 +28,17 @@ import AboutFaq from '@/components/about/AboutFaq.astro';
 				backgroundColor="#000000"
 				className="size-full"
 			>
-				<!-- Top right, under the menu: the page's name and a Roman boast, lit by the statue's light. -->
-				<div class="pointer-events-none flex size-full flex-col items-end px-6 pt-[clamp(7rem,16dvh,10rem)] text-right sm:px-10">
+				<!-- Top right, under the menu and set in to the content's edge: the page's name and a Roman boast, lit by the
+				     statue's light. -->
+				<div class="pointer-events-none flex size-full flex-col items-end px-[clamp(1.5rem,7vw,10rem)] pt-[clamp(7rem,16dvh,10rem)] text-right">
 					<h1 data-light-catch class="light-catch font-poster text-[clamp(4rem,10vw,9rem)] leading-none uppercase">About</h1>
 					<p data-light-catch class="light-catch mt-3 text-[clamp(1.25rem,2.2vw,2rem)] font-light tracking-[-0.01em]">Veni, vidi, deployed.</p>
 				</div>
 			</DepthImage>
 		</section>
-		<!-- Then who he is, how he works, where, with what, and the questions people ask. -->
+		<!-- Then who he is, who he is off the clock, how he works, where, with what, and the questions people ask. -->
 		<AboutWho />
+		<AboutLife />
 		<AboutProcess />
 		<AboutExperience />
 		<AboutStack />

@@ -3,14 +3,14 @@ import AboutSection from './AboutSection.astro';
 import { process } from '@/data/about';
 ---
 
-<AboutSection id="process" number={2} title="How I work">
+<AboutSection id="process" title="How I work">
 	<!-- Hollow numbers that fill as the pointer reaches their step. -->
-	<ol class="border-t border-ink/15">
+	<ol>
 		{
 			process.map((step, i) => (
 				<li
 					data-reveal
-					class="group grid grid-cols-[4.5rem_minmax(0,1fr)] items-baseline gap-x-6 sm:items-center gap-y-2 border-b border-ink/15 py-8 sm:grid-cols-[7rem_minmax(0,14rem)_minmax(0,1fr)] sm:gap-x-10"
+					class="group grid grid-cols-[4.5rem_minmax(0,1fr)] items-baseline gap-x-6 sm:items-center gap-y-2 py-8 sm:grid-cols-[7rem_minmax(0,14rem)_minmax(0,1fr)] sm:gap-x-10"
 				>
 					<span
 						aria-hidden="true"

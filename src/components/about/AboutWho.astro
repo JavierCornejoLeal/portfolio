@@ -7,7 +7,7 @@ const turn = 'the things people actually touch';
 const [before, after] = who.lead.split(turn);
 ---
 
-<AboutSection id="who" number={1} title="Who I am">
+<AboutSection id="who" title="Who I am">
 	<div class="flex flex-col gap-[clamp(3rem,8vh,5rem)]">
 		<p data-reveal class="text-[clamp(1.75rem,3vw,3rem)] leading-[1.15] font-medium tracking-[-0.02em] text-pretty">
 			{before}<span class="text-harlequin-200">{turn}</span>{after}
@@ -15,7 +15,7 @@ const [before, after] = who.lead.split(turn);
 		<div class="grid gap-8 text-lg leading-relaxed text-ink/75 md:grid-cols-2 md:gap-12">
 			{who.paragraphs.map((paragraph) => <p data-reveal class="text-pretty">{paragraph}</p>)}
 		</div>
-		<dl data-reveal class="grid grid-cols-2 gap-x-6 gap-y-10 border-t border-ink/15 pt-10 lg:grid-cols-4">
+		<dl data-reveal class="flex flex-wrap gap-x-[clamp(3rem,8vw,7rem)] gap-y-8">
 			{
 				who.facts.map((fact) => (
 					<div class="flex flex-col gap-2">

@@ -446,24 +446,10 @@ html[data-cursor-ready] [data-cursor] * {
 }
 
 /* About (components/about): the process numbers are hollow, drawn in outline, and fill as the pointer reaches their
-   step (group-hover). A question's answer fades in as it opens. */
+   step (group-hover). */
 .process-number {
 	color: transparent;
 	-webkit-text-stroke: 1px color-mix(in srgb, var(--color-ink) 40%, transparent);
-}
-.faq[open] .faq-answer {
-	animation: faq-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-@keyframes faq-in {
-	from {
-		opacity: 0;
-		transform: translateY(-0.5rem);
-	}
-}
-@media (prefers-reduced-motion: reduce) {
-	.faq[open] .faq-answer {
-		animation: none;
-	}
 }
 
 /* Project stories ([slug].astro): each block rises a little and fades in the first time it scrolls into view

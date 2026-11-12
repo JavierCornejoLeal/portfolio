@@ -73,7 +73,7 @@ test.describe('about page', () => {
 		await expect(depth(page).locator('canvas')).toHaveCount(0);
 	});
 
-	test('titles the page top right, under the menu, with a Roman slogan', async ({ page }) => {
+	test('titles the page top right, set in from the edge, under the menu, with a Roman slogan', async ({ page }) => {
 		await page.goto('/about');
 		const viewport = page.viewportSize()!;
 		const title = page.getByRole('heading', { level: 1, name: 'About' });
@@ -82,8 +82,11 @@ test.describe('about page', () => {
 		await expect(page.getByText('Veni, vidi, deployed.')).toBeVisible();
 		const box = (await title.boundingBox())!;
 		const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!;
-		// Right aligned with the menu, just below it, in the top part of the screen.
-		expect(Math.abs(box.x + box.width - (menu.x + menu.width))).toBeLessThan(4);
+		// Set in from the edge, on the right edge of the page's content below, under the menu.
+		const content = (await page.locator('[data-about-section="who"] h2').evaluate(element => element.closest('section')!.getBoundingClientRect()));
+		const inset = parseFloat(await page.locator('[data-about-section="who"]').evaluate(element => getComputedStyle(element).paddingRight));
+		expect(Math.abs(box.x + box.width - (content.right - inset))).toBeLessThan(4);
+		expect(viewport.width - (box.x + box.width)).toBeGreaterThan(viewport.width - (menu.x + menu.width) + 20);
 		expect(box.y).toBeGreaterThan(menu.y + menu.height);
 		expect(box.y + box.height).toBeLessThan(viewport.height * 0.45);
 	});

@@ -12,11 +12,33 @@ export const who = {
   ],
   facts: [
     { label: "Born", value: "Dénia" },
-    { label: "Roots", value: "La Mancha" },
-    { label: "Studied", value: "Bridges, then code" },
     { label: "Runs on", value: "Coffee" },
   ],
 }
+
+/** Off the clock: the person behind the code. */
+export const life = [
+  {
+    label: "Sport",
+    title: "Triathlon",
+    text: "I've done sport since I was a kid, triathlon above all: swim, bike, run, and a coffee at the finish line.",
+  },
+  {
+    label: "Music",
+    title: "Clarinet",
+    text: "I studied clarinet at the conservatory. Music has come with me ever since: at work, while training, and on the bad days too.",
+  },
+  {
+    label: "Curiosity",
+    title: "History & myth",
+    text: "History, mythology and video games. Blame them for the statue at the top of this page.",
+  },
+  {
+    label: "Character",
+    title: "All in",
+    text: "I'm always up for helping. I take a little while to open up, but give it a few days, or one coffee, and we're friends. When I'm in, I give it everything.",
+  },
+]
 
 export const process = [
   { title: "Ask", text: "Before any code, questions: what it is for, who uses it, and what must never break." },

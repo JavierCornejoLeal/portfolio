@@ -1,23 +1,9 @@
 ---
 import AboutSection from './AboutSection.astro';
+import FaqList from './FaqList';
 import { faqs } from '@/data/about';
 ---
 
-<AboutSection id="faq" number={5} title="Questions">
-	<div class="border-t border-ink/15">
-		{
-			faqs.map((faq) => (
-				<details data-reveal class="faq group border-b border-ink/15">
-					<summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-[clamp(1.25rem,2vw,1.75rem)] leading-snug tracking-[-0.01em] [&::-webkit-details-marker]:hidden">
-						{faq.question}
-						<span aria-hidden="true" class="relative size-5 shrink-0">
-							<span class="absolute top-1/2 left-0 h-px w-full bg-current" />
-							<span class="absolute top-1/2 left-0 h-px w-full rotate-90 bg-current transition-transform duration-300 group-open:rotate-0 motion-reduce:transition-none" />
-						</span>
-					</summary>
-					<p class="faq-answer max-w-2xl pb-8 text-lg leading-relaxed text-pretty text-ink/70">{faq.answer}</p>
-				</details>
-			))
-		}
-	</div>
+<AboutSection id="faq" title="Questions">
+	<FaqList client:visible faqs={faqs} />
 </AboutSection>

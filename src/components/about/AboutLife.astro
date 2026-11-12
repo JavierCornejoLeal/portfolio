@@ -1,0 +1,19 @@
+---
+import AboutSection from './AboutSection.astro';
+import { life } from '@/data/about';
+---
+
+<AboutSection id="life" title="Off the clock">
+	<!-- The person behind the code: one big word per side of him, and a line about it. -->
+	<div class="grid gap-x-[clamp(2rem,5vw,5rem)] gap-y-[clamp(3rem,8vh,5rem)] sm:grid-cols-2">
+		{
+			life.map((side) => (
+				<article data-reveal class="flex flex-col gap-4">
+					<span class="legend text-ink/45">{side.label}</span>
+					<h3 class="font-poster text-[clamp(2.5rem,4.6vw,4.5rem)] leading-[0.95] uppercase">{side.title}</h3>
+					<p class="max-w-md text-lg leading-relaxed text-pretty text-ink/75">{side.text}</p>
+				</article>
+			))
+		}
+	</div>
+</AboutSection>

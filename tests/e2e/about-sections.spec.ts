@@ -9,10 +9,10 @@ test.describe('about sections', () => {
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 	});
 
-	test('follows the hero with five sections, in order, below the first screen', async ({ page }) => {
+	test('follows the hero with six sections, in order, below the first screen', async ({ page }) => {
 		await page.goto('/about');
 		const titles = page.locator('main section[data-about-section] h2');
-		await expect(titles).toHaveText(['Who I am', 'How I work', 'Experience', 'Stack', 'Questions']);
+		await expect(titles).toHaveText(['Who I am', 'Off the clock', 'How I work', 'Experience', 'Stack', 'Questions']);
 		const top = await page.locator('main section[data-about-section]').first().evaluate(element => element.getBoundingClientRect().top);
 		expect(top).toBeGreaterThanOrEqual(page.viewportSize()!.height);
 	});
@@ -20,12 +20,35 @@ test.describe('about sections', () => {
 	test('says where he comes from and what he is like', async ({ page }) => {
 		await page.goto('/about');
 		const who = page.locator('[data-about-section="who"]');
-		for (const [label, value] of [['Born', 'Dénia'], ['Roots', 'La Mancha'], ['Runs on', 'Coffee']]) {
+		for (const [label, value] of [['Born', 'Dénia'], ['Runs on', 'Coffee']]) {
 			await expect(who.locator('dt', { hasText: label })).toHaveCount(1);
 			await expect(who.locator('dd', { hasText: value })).toHaveCount(1);
 		}
+		await expect(who.locator('dt')).toHaveCount(2);
 		await expect(who).toContainText('Public Works Engineering');
 		await expect(who).toContainText('almost anything for a coffee');
+	});
+
+	test('has no section numbers and no divider lines', async ({ page }) => {
+		await page.goto('/about');
+		await expect(page.locator('[data-about-section]').getByText(/^\d{2} \/ \d{2}$/)).toHaveCount(0);
+		const lines = await page.locator('[data-about-section]').evaluateAll(sections =>
+			sections.flatMap(section => [section, ...section.querySelectorAll('*')]).filter(element => {
+				const style = getComputedStyle(element);
+				return ['Top', 'Bottom', 'Left', 'Right'].some(side => parseFloat(style.getPropertyValue(`border-${side.toLowerCase()}-width`)) > 0 && style.getPropertyValue(`border-${side.toLowerCase()}-style`) !== 'none');
+			}).length
+		);
+		expect(lines).toBe(0);
+	});
+
+	test('talks about life off the clock: sport, music, curiosity and character', async ({ page }) => {
+		await page.goto('/about');
+		const life = page.locator('[data-about-section="life"]');
+		await expect(life).toContainText('triathlon');
+		await expect(life).toContainText('clarinet');
+		await expect(life).toContainText('conservatory');
+		for (const word of ['History', 'mythology', 'video games']) await expect(life).toContainText(word);
+		await expect(life).toContainText('one coffee');
 	});
 
 	test('numbers the steps of the process', async ({ page }) => {
@@ -55,17 +78,42 @@ test.describe('about sections', () => {
 		for (const item of ['Next.js', 'Spring Boot', 'Supabase', 'Playwright']) await expect(stack.getByText(item, { exact: true })).toBeVisible();
 	});
 
-	test('answers the questions one at a time, opened on demand', async ({ page }) => {
+	test('answers the questions one at a time, opening and closing smoothly', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/about');
 		const faq = page.locator('[data-about-section="faq"]');
 		const open = faq.getByRole('group').filter({ hasText: 'Are you open to new roles?' });
 		const answer = open.getByText(/Remote, hybrid, or on site/);
 		await expect(answer).toBeHidden();
-		await open.getByText('Are you open to new roles?').click();
+		await open.scrollIntoViewIfNeeded();
+		await expect(page.locator('[data-about-section="faq"] astro-island[ssr]')).toHaveCount(0);
+		// It grows open rather than jumping: the click starts an eased height animation from nothing to the answer.
+		const growth = await open.evaluate(details => {
+			details.querySelector('summary')!.click();
+			const body = details.querySelector('[data-faq-body]')!;
+			const [animation] = body.getAnimations();
+			const frames = (animation?.effect as KeyframeEffect | undefined)?.getKeyframes() ?? [];
+			return { from: parseFloat(String(frames[0]?.height)), to: parseFloat(String(frames.at(-1)?.height)), duration: Number(animation?.effect?.getTiming().duration) };
+		});
+		expect(growth.from).toBe(0);
+		expect(growth.to).toBeGreaterThan(20);
+		expect(growth.duration).toBeGreaterThanOrEqual(300);
 		await expect(answer).toBeVisible();
 		await expect(faq.getByText(/freelance/i).first()).toBeVisible();
-		await open.getByText('Are you open to new roles?').click();
+		await open.locator('summary').click();
 		await expect(answer).toBeHidden();
+	});
+
+	test('rolls the letters of a question on hover, like the footer links', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/about');
+		const question = page.locator('[data-about-section="faq"] summary').first();
+		await question.scrollIntoViewIfNeeded();
+		await expect(page.locator('[data-about-section="faq"] astro-island[ssr]')).toHaveCount(0);
+		await expect(question.locator('[data-roll-letter]')).toHaveCount(0);
+		await question.hover();
+		await expect.poll(() => question.locator('[data-roll-letter]').count()).toBeGreaterThan(10);
+		await expect(question).toContainText('Are you open to new roles?');
 	});
 
 	test('shows every section still under reduced motion', async ({ page }) => {
