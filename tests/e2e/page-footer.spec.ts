@@ -78,6 +78,17 @@ for (const path of ['/projects/ocaive', '/about']) {
 			await expect(name).toHaveCSS('text-shadow', 'none');
 			// Lowercase, like the halftone reference.
 			await expect(dots).toHaveAttribute('data-word', 'javier');
+			// No dots over the i or the j: nothing printed above the body of the letters.
+			await expect(dots).toHaveAttribute('data-dotless', 'true');
+			const top = await dots.evaluate(element => {
+				const c = element as HTMLCanvasElement;
+				const rows = Math.round(c.height * 0.12);
+				const data = c.getContext('2d')!.getImageData(0, 0, c.width, rows).data;
+				let ink = 0;
+				for (let i = 3; i < data.length; i += 4) if (data[i] > 0) ink++;
+				return ink;
+			});
+			expect(top).toBe(0);
 			// Pushed dots turn green.
 			await expect(dots).toHaveAttribute('data-lift', '#5bff2e');
 		});

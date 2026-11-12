@@ -31,7 +31,7 @@ export function HalftoneWordmark({
   radius = 80,
   crop = 0,
   lowercase = false,
-  dotlessJ = false,
+  dotless = false,
 }: {
   word: string
   /** The dots at rest. */
@@ -46,8 +46,8 @@ export function HalftoneWordmark({
   crop?: number
   /** Set the word in lowercase, scaled to the width the box's own setting of it takes. */
   lowercase?: boolean
-  /** Leave the dot off every j. */
-  dotlessJ?: boolean
+  /** Leave the dot off every i and j. */
+  dotless?: boolean
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
 
@@ -111,13 +111,13 @@ export function HalftoneWordmark({
       const baseline = hang > 0 ? h + body * hang : (h + ascent - descent) / 2
       const left = (w - metrics.width) / 2
       m.fillText(text, left, baseline)
-      if (dotlessJ) {
-        // Wipe the tittle off every j: whatever sits above the body of the letters, across the j's own advance.
-        const jWidth = m.measureText("j").width
-        for (let i = text.indexOf("j"); i >= 0; i = text.indexOf("j", i + 1)) {
+      if (dotless) {
+        // Wipe the tittle off every i and j: whatever sits above the body of the letters, across the letter's advance.
+        ;[...text].forEach((letter, i) => {
+          if (letter !== "i" && letter !== "j") return
           const x = left + m.measureText(text.slice(0, i)).width
-          m.clearRect(x - 2, 0, jWidth + 4, baseline - xHeight * 1.04)
-        }
+          m.clearRect(x - 2, 0, m.measureText(letter).width + 4, baseline - xHeight * 1.04)
+        })
       }
       const img = m.getImageData(0, 0, w, h).data
 
@@ -282,7 +282,7 @@ export function HalftoneWordmark({
       canvas.removeEventListener("pointerleave", onLeave)
       canvas.removeEventListener("pointerdown", onDown)
     }
-  }, [word, ink, lift, dotGap, radius, crop, lowercase, dotlessJ])
+  }, [word, ink, lift, dotGap, radius, crop, lowercase, dotless])
 
-  return <canvas ref={canvasRef} data-halftone data-word={lowercase ? word.toLowerCase() : word} data-lift={lift} aria-hidden="true" className="absolute inset-0 size-full" />
+  return <canvas ref={canvasRef} data-halftone data-word={lowercase ? word.toLowerCase() : word} data-dotless={dotless ? "true" : undefined} data-lift={lift} aria-hidden="true" className="absolute inset-0 size-full" />
 }
