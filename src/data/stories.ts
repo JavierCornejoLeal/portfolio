@@ -76,7 +76,7 @@ export const stories: Record<string, Story> = {
   },
 
   ocaive: {
-    role: "Development",
+    role: "Initial development",
     intro:
       "The home of a studio that joins technology development, audiovisual production and a 360 music agency: one long, cinematic page that tells all three stories.",
     lead: {
@@ -98,7 +98,7 @@ export const stories: Record<string, Story> = {
     ],
     curiosities: [
       "Three businesses, one page: technology development, an audiovisual production company and a 360 music agency.",
-      "The home runs to almost 15,000 pixels on a laptop, told as a sequence of full-screen scenes.",
+      "I laid the foundations; the studio's team later built on them, adding scenes such as the opening video.",
       "Another project on this list, Hub Cultural Cabanyal, shows up among its work.",
     ],
   },
