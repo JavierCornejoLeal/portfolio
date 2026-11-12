@@ -186,7 +186,9 @@ test.describe('home page', () => {
 		const pieces = link.locator('[data-glass-piece]');
 		await expect(pieces).toHaveCount(2);
 		// Each piece is real glass: it bends the backdrop instead of painting a flat fill.
-		await expect(link.locator('[data-refract="true"]')).toHaveCount(2);
+		// The glass marks itself refracting once its displacement map is built, which a CI runner (rendering WebGL in
+		// software) can take past the default 5s to finish.
+		await expect(link.locator('[data-refract="true"]')).toHaveCount(2, { timeout: 15_000 });
 		// Each piece is shaped as a rounded trapezoid leaning into the other, not cut with a straight polygon.
 		for (const glass of await link.locator('[data-refract]').all()) await expect(glass).toHaveCSS('clip-path', /^path\(/);
 
