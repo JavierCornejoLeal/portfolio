@@ -79,6 +79,9 @@ function RoleSwap() {
   const [label, setLabel] = React.useState(ROLE)
   const [swap, setSwap] = React.useState<{ from: string; to: string; id: number } | null>(null)
 
+  const box = React.useRef<HTMLSpanElement>(null)
+  const pointer = React.useRef("")
+
   const go = (to: string) => {
     if (to === label) return
     setLabel(to)
@@ -86,12 +89,24 @@ function RoleSwap() {
     setSwap(reduce ? null : (current) => ({ from: current?.to ?? label, to, id: (current?.id ?? 0) + 1 }))
   }
 
+  // When a roll ends, its letters give way to plain text right under the pointer, and the browser can drop a
+  // pointerleave in that swap. So a mouse's actual hover decides where the role settles.
+  const settle = () => {
+    setSwap(null)
+    if (pointer.current !== "mouse") return
+    go(box.current?.matches(":hover") ? ROLE_REVEALED : ROLE)
+  }
+
   return (
     // A fixed box, as wide as the longer role: the shorter one never slips out from under the pointer, and the
     // roll, laid over it, never reflows the line (on a phone a wider line would wrap and shrink JAVIER above).
     <span
+      ref={box}
       data-footer-role
-      onPointerEnter={() => go(ROLE_REVEALED)}
+      onPointerEnter={(event) => {
+        pointer.current = event.pointerType
+        go(ROLE_REVEALED)
+      }}
       onPointerLeave={() => go(ROLE)}
       className="relative inline-block whitespace-nowrap"
     >
@@ -102,7 +117,7 @@ function RoleSwap() {
           <>
             <span className="sr-only">{label}</span>
             <span aria-hidden="true">
-              <TextSwapRoll key={swap.id} from={swap.from} to={swap.to} onAnimationComplete={() => setSwap(null)} />
+              <TextSwapRoll key={swap.id} from={swap.from} to={swap.to} onAnimationComplete={settle} />
             </span>
           </>
         ) : (

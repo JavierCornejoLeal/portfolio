@@ -179,15 +179,15 @@ test.describe('footer', () => {
 		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
 		const role = page.locator(footer).locator('[data-footer-role]');
 		await expect(role).toHaveText('full creative developer');
-		await expect(role.locator('[data-swap-letter]')).toHaveCount(0);
+		await expect(role.locator('[data-swap-word]')).toHaveCount(0);
 
 		await role.hover();
-		// The letters roll: one slot per letter of the longer text, while readers already get the new words.
-		await expect(role.locator('[data-swap-letter]')).toHaveCount('full creative developer'.length);
+		// The words roll, paired one by one, while readers already get the new ones.
+		await expect(role.locator('[data-swap-word]')).toHaveCount(3);
 		await expect(role.locator('.sr-only')).toHaveText('full stack developer');
 		// Once it has rolled, it settles into plain text.
 		await expect(role).toHaveText('full stack developer');
-		await expect(role.locator('[data-swap-letter]')).toHaveCount(0);
+		await expect(role.locator('[data-swap-word]')).toHaveCount(0);
 
 		await page.mouse.move(0, 0);
 		await expect(role).toHaveText('full creative developer');
@@ -202,7 +202,7 @@ test.describe('footer', () => {
 		await expect(role.getByText('full stack developer', { exact: true })).toBeVisible();
 		// Settled and still revealed: the box did not shrink out from under the pointer.
 		await page.waitForTimeout(1500);
-		await expect(role.locator('[data-swap-letter]')).toHaveCount(0);
+		await expect(role.locator('[data-swap-word]')).toHaveCount(0);
 		await expect(role).toHaveText('full stack developer');
 		expect(await role.boundingBox()).toEqual(box);
 	});
@@ -216,7 +216,7 @@ test.describe('footer', () => {
 		const name = page.locator(footer).locator('[data-footer-name]');
 		const before = await name.boundingBox();
 		await role.hover();
-		await expect(role.locator('[data-swap-letter]').first()).toBeAttached();
+		await expect(role.locator('[data-swap-word]').first()).toBeAttached();
 		for (let i = 0; i < 6; i++) {
 			expect(await name.boundingBox()).toEqual(before);
 			await page.waitForTimeout(120);
@@ -232,7 +232,7 @@ test.describe('footer', () => {
 			const tops: number[] = [];
 			(window as unknown as { tops: number[] }).tops = tops;
 			const sample = () => {
-				for (const slot of element.querySelectorAll('[data-swap-letter]')) tops.push(Math.round(slot.getBoundingClientRect().top * 10) / 10);
+				for (const slot of element.querySelectorAll('[data-swap-word]')) tops.push(Math.round(slot.getBoundingClientRect().top * 10) / 10);
 				tops.push(Math.round(element.getBoundingClientRect().top * 10) / 10);
 				requestAnimationFrame(sample);
 			};
@@ -246,6 +246,50 @@ test.describe('footer', () => {
 		expect(new Set(tops).size).toBe(1);
 	});
 
+	test('keeps every word\'s letters together and inside its own room while the role rolls, so "developer" never splits or gets covered', async ({ page }) => {
+		await openFooter(page);
+		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+		const role = page.locator(footer).locator('[data-footer-role]');
+		// Every frame: the gaps between neighbouring letters of one face of one word, and how far any letter still
+		// showing (not tipped flat) reaches past its word's room.
+		await role.evaluate(element => {
+			const gaps: number[] = [];
+			const spill: number[] = [];
+			Object.assign(window, { gaps, spill });
+			const showing = (letter: Element) => {
+				const matrix = getComputedStyle(letter).transform;
+				if (matrix === 'none') return true;
+				const values = matrix.match(/-?[\d.e]+/g)!.map(Number);
+				return Math.abs(matrix.startsWith('matrix3d') ? values[5] : values[3]) > 0.05;
+			};
+			const sample = () => {
+				for (const word of element.querySelectorAll('[data-swap-word]')) {
+					const room = word.getBoundingClientRect();
+					for (const face of word.querySelectorAll(':scope > span:not(.invisible)')) {
+						const letters = [...face.children];
+						const boxes = letters.map(letter => letter.getBoundingClientRect());
+						for (let i = 1; i < boxes.length; i++) gaps.push(Math.abs(boxes[i].left - boxes[i - 1].right));
+						letters.forEach((letter, i) => showing(letter) && spill.push(boxes[i].right - room.right));
+					}
+				}
+				requestAnimationFrame(sample);
+			};
+			sample();
+		});
+		await role.hover();
+		await expect(role).toHaveText('full stack developer');
+		await page.mouse.move(0, 0);
+		await expect(role).toHaveText('full creative developer');
+		const { gaps, spill } = await page.evaluate(() => {
+			const { gaps, spill } = window as unknown as { gaps: number[]; spill: number[] };
+			return { gaps, spill };
+		});
+		expect(gaps.length).toBeGreaterThan(0);
+		expect(Math.max(...gaps)).toBeLessThan(0.5);
+		// A letter tipping in 3D reaches a hair past its own box; a real overlap is a whole letter or more.
+		expect(Math.max(...spill)).toBeLessThan(2);
+	});
+
 	test('swaps the role without rolling under reduced motion', async ({ page }) => {
 		// The portal only flies in with motion, so arrive first, then ask for less of it.
 		await openFooter(page);
@@ -254,7 +298,7 @@ test.describe('footer', () => {
 		const role = page.locator(footer).locator('[data-footer-role]');
 		await role.hover();
 		await expect(role).toHaveText('full stack developer');
-		await expect(role.locator('[data-swap-letter]')).toHaveCount(0);
+		await expect(role.locator('[data-swap-word]')).toHaveCount(0);
 	});
 
 	test('lists every social profile, the same ones as the menu', async ({ page }) => {
