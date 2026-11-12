@@ -1,84 +1,87 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import Silk from '@/components/Silk';
-import CurtainText from '@/components/CurtainText.astro';
-
-const year = new Date().getFullYear();
-
-const SOCIALS_START = 2;
-const SOCIAL_STEP = 0.03;
-
-// Chain the links so each one starts right after the previous link's last glyph
-let socialCursor = SOCIALS_START;
-const socials = [
-	{ label: 'Instagram', href: 'https://www.instagram.com/javiiicornejo/' },
-	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/cornejolealjavier/' },
-	{ label: 'GitHub', href: 'https://github.com/JavierCornejoLeal' }
-].map(social => {
-	const delay = socialCursor;
-	socialCursor += social.label.length * SOCIAL_STEP;
-	return { ...social, delay };
-});
-const footerStart = socialCursor;
+import FlutedGlass from '@/components/FlutedGlass';
+import SiteMenu from '@/components/SiteMenu';
+import CursorLabel from '@/components/CursorLabel';
+import { GlassSplitLink } from '@/components/ui/glass-split-link';
+import Statement from '@/components/Statement';
+import LivingGradient from '@/components/LivingGradient';
+import ProjectsCarousel from '@/components/ProjectsCarousel';
+import ContactPortal from '@/components/ContactPortal';
 ---
 
 <Layout>
-	<main class="relative min-h-dvh overflow-x-clip">
-		<div class="absolute inset-0">
-			<Silk
+	<!-- One living backdrop behind the whole page, so sections flow into each other with no seam. It is
+	     subtle behind the hero and grows to full brightness over the first screen of scroll. -->
+	<div class="fixed inset-0 -z-10" aria-hidden="true">
+		<LivingGradient client:only="react" className="size-full" scrollIntensity={[0.5, 1]} />
+	</div>
+	<main class="relative overflow-x-clip">
+		<!-- The menu, pinned top right over every section, and first in the tab order. Only its button runs the entrance (see SiteMenu.tsx). -->
+		<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
+			<SiteMenu client:load />
+		</div>
+
+		<!-- The hero owns its backdrop: the fluted glass covers this first screen only. -->
+		<div class="relative">
+		<!-- The glass fades out towards the hero's foot, so its flutes melt into the living backdrop below. -->
+		<div class="hero-glass-fade absolute inset-0" data-hero-bg>
+			<FlutedGlass
 				client:only="react"
-				color="#3F3A46"
-				sheenColor="#C9C3D6"
-				speed={4}
-				scale={1}
-				noiseIntensity={1.2}
+				className="size-full"
+				colors={['#2ee600', '#abff90']}
+				backgroundColor="transparent"
+				texture={0}
+				autoplay="touch"
 			/>
 		</div>
-		<div class="silk-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
-		<section
-			class="pointer-events-none relative z-10 mx-auto flex min-h-dvh max-w-6xl flex-col gap-12 px-6 py-8 sm:px-10 sm:py-10"
-		>
-			<div class="flex flex-1 flex-col items-center justify-center text-center">
+		<div class="hero-scrim pointer-events-none absolute inset-0" aria-hidden="true"></div>
+		<!-- Geometry (insets and the name's size) lives in .hero in global.css, so it can follow the screen's height. -->
+		<section id="top" class="hero pointer-events-none relative z-10 flex min-h-dvh flex-col justify-end gap-8">
+			<!-- Elements arrive top to bottom: see .place-in in global.css. The menu, first in, is pinned outside the
+			     hero (below) so it stays in its corner on every section. -->
+			<!-- The name runs edge to edge, past the content insets. From sm up it sits dead centre on the screen,
+			     out of the flow; on phones it takes the room between the top and the foot. -->
+			<div class="hero-bleed flex flex-1 items-center justify-center sm:absolute sm:inset-0">
 				<h1
-					class="font-display text-[clamp(3rem,12.5vw,9rem)] leading-[0.95] font-extrabold tracking-[-0.03em] uppercase"
+					class="place-in hero-name font-poster text-center leading-[0.9] uppercase max-sm:[word-spacing:100vw] sm:whitespace-nowrap"
+					style="--place-delay: 0.45s"
 				>
-					<CurtainText text="Incoming" delay={0.35} step={0.07} />
+					<!-- Stretched on an inner span (wider and taller, like a cover): the entrance animation owns the h1's
+					     transform. The stretch takes no layout room; the size formula in .hero leaves space for it. -->
+					<span class="name-fade name-stretch inline-block origin-center">Javier Cornejo</span>
 				</h1>
-				<p class="mt-8 max-w-3xl text-xl text-balance text-zinc-200 sm:text-2xl md:text-3xl">
-					<CurtainText
-						text="Something big is on its way. I'm building my new portfolio right now, piece by piece."
-						delay={1}
-						step={0.012}
-					/>
-				</p>
 			</div>
 
-			<footer class="flex flex-col items-center gap-4 text-center">
-				<ul class="flex flex-wrap justify-center gap-x-8 gap-y-2" aria-label="Social links">
-					{
-						socials.map(social => (
-							<li>
-								<a
-									href={social.href}
-									target="_blank"
-									rel="noopener noreferrer"
-									class="curtain-group pointer-events-auto text-sm text-zinc-200 underline decoration-zinc-500 decoration-1 underline-offset-[6px] transition-colors duration-300 hover:text-white hover:decoration-silk"
-								>
-									<CurtainText text={social.label} delay={social.delay} step={SOCIAL_STEP} />
-									<span class="sr-only">(opens in a new tab)</span>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-				<p class="text-xs text-zinc-300">
-					<CurtainText
-						text={`© ${year} Javier Cornejo. All rights reserved. Designed and built by Javier Cornejo.`}
-						delay={footerStart}
-						step={0.008}
-					/>
-				</p>
-			</footer>
+			<!-- Foot of the cover: the slogan as one long line bottom left, the way into the work bottom right. -->
+			<div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-12">
+				<div class="place-in max-w-3xl" style="--place-delay: 0.8s">
+					<p
+						class="font-display text-lg leading-[1.25] font-semibold tracking-[-0.01em] text-pretty uppercase sm:text-xl"
+					>
+						Code you can see through: sharp on the surface, solid all the way down.
+					</p>
+				</div>
+				<div class="place-in pointer-events-auto shrink-0" style="--place-delay: 0.95s">
+					<GlassSplitLink client:load href="#projects">Discover works</GlassSplitLink>
+				</div>
+			</div>
 		</section>
+		</div>
+
+		<Statement client:load />
+
+		<!-- Hydrates ahead of arrival so the covers are ready to rise in when the section scrolls into view. -->
+		<ProjectsCarousel client:visible={{ rootMargin: '600px' }} />
+
+		<!-- A quiet HELLO the camera flies into, and the footer in its green. Hydrated on approach, not on load: the
+		     portal turns its motion off for good if its first frame comes more than 2.5s after mounting, which a page
+		     still busy with the hero's WebGL can cause. The menu's Contact link finds its way here anyway. -->
+		<div id="contact" data-contact>
+			<ContactPortal client:visible={{ rootMargin: '600px' }} />
+		</div>
+
 	</main>
+	<!-- Says what a click does over the projects (data-cursor), in place of the arrow. Mouse and pen only. -->
+	<CursorLabel client:only="react" />
 </Layout>

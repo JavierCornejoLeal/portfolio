@@ -1,62 +1,602 @@
 @import "tailwindcss";
+@import "@fontsource/anton";
 @import "@fontsource-variable/unbounded";
-@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/dm-sans";
 
 @theme {
-	--font-display: "Unbounded Variable", "Space Grotesk Variable", sans-serif;
-	--font-sans: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
-	--color-silk: #c9c3d6;
+	/* Anton: monumental condensed display. Unbounded: uppercase labels and survey legends. DM Sans: reading text. */
+	--font-poster: "Anton", "Unbounded Variable", sans-serif;
+	--font-display: "Unbounded Variable", ui-sans-serif, sans-serif;
+	--font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+
+	/* Survey ground: near-black with a faint green cast, never pure black. */
+	--color-ground: #070907;
+	--color-ground-raised: #0d110c;
+	--color-rule: #1c2619;
+	--color-ink: #e9efe6;
+	--color-ink-muted: #9aa894;
+
+	--color-harlequin-50: #ecffe4;
+	--color-harlequin-100: #d4ffc4;
+	--color-harlequin-200: #abff90;
+	--color-harlequin-300: #78ff50;
+	--color-harlequin-400: #5bff2e;
+	--color-harlequin-500: #2ee600;
+	--color-harlequin-600: #21b800;
+	--color-harlequin-700: #178b00;
+	--color-harlequin-800: #176d07;
+	--color-harlequin-900: #165c0b;
+	--color-harlequin-950: #063400;
+
 	--ease-curtain: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-survey: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @layer base {
+	html {
+		scroll-behavior: smooth;
+		background-color: var(--color-ground);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		html {
+			scroll-behavior: auto;
+		}
+	}
+
+	html {
+		scrollbar-color: var(--color-harlequin-800) var(--color-ground);
+		caret-color: var(--color-harlequin-400);
+	}
+
 	::selection {
-		background-color: var(--color-silk);
-		color: var(--color-zinc-950);
+		background-color: var(--color-harlequin-500);
+		color: var(--color-ground);
 	}
 
 	:focus-visible {
-		outline: 2px solid var(--color-silk);
+		outline: 2px solid var(--color-harlequin-400);
 		outline-offset: 4px;
 		border-radius: 2px;
 	}
 }
 
-/* Keeps text legible over the brightest Silk sheen: never fully transparent. */
-.silk-scrim {
+/* Keeps the slogan legible over the brightest liquid, and calms the backdrop behind the name. It fades out
+   towards the hero's foot, so the hero melts into the page's living backdrop instead of ending on an edge. */
+.hero-scrim {
 	background:
-		linear-gradient(to bottom, rgb(9 9 11 / 0.7), transparent 22%, transparent 72%, rgb(9 9 11 / 0.78)),
-		radial-gradient(ellipse at 50% 50%, rgb(9 9 11 / 0.72), rgb(9 9 11 / 0.4) 60%, rgb(9 9 11 / 0.35));
+		linear-gradient(to bottom, rgb(7 9 7 / 0.7), transparent 24%),
+		radial-gradient(ellipse at 50% 45%, rgb(7 9 7 / 0.32), rgb(7 9 7 / 0.18) 70%);
+	-webkit-mask-image: linear-gradient(to bottom, black 55%, transparent);
+	mask-image: linear-gradient(to bottom, black 55%, transparent);
 }
 
-/* Curtain reveal: each glyph rises from behind a clip edge at its own --start (see CurtainText). */
-.curtain-letter {
-	display: inline-block;
-	clip-path: inset(0 0 0 0);
-	animation: curtain-rise 1.4s var(--ease-curtain) both;
-	animation-delay: var(--start, 0s);
+/* Hero geometry. Insets grow with the screen. The name is stretched like a cover (--name-sx wider,
+   --name-sy taller) and sized by whichever runs out first: the width, so the ink of the outer letters just
+   grazes the screen's edges (the ink of the full name measures 5.998em in Anton, times the horizontal
+   stretch; 6.01em leaves about a pixel each side so nothing is cut), or the height left once the insets, the foot's slogan and link and ~40px of air above and below
+   the centred name are taken (12rem). On screen it is 0.9 x --name-sy times its font size tall. */
+.hero {
+	--inset-x: clamp(2rem, 7vw, 10rem);
+	--inset-y: clamp(3rem, 8dvh, 6.5rem);
+	--name-sx: 1.12;
+	--name-sy: 1.9;
+	--name-size: max(3rem, min(calc(100vw / (6.01 * var(--name-sx))), calc((100dvh - 2 * var(--inset-y) - 12rem) / (0.9 * var(--name-sy)))));
+	padding: var(--inset-y) var(--inset-x);
+}
+@media (width < 40rem) {
+	.hero {
+		/* Phones: two stacked lines (the ink of CORNEJO measures 3.237em; 3.25em grazes the edges), a taller stretch,
+		   and room kept at the bottom for the home indicator. Both stretched lines count
+		   against the height (2 x 0.9 x sy). */
+		--inset-y: clamp(1.5rem, 4dvh, 3rem);
+		--name-sx: 1;
+		--name-sy: 1.5;
+		--dock-room: env(safe-area-inset-bottom, 0px);
+		--name-size: max(2.5rem, min(calc(100vw / (3.25 * var(--name-sx))), calc((100dvh - 2 * var(--inset-y) - var(--dock-room) - 15rem) / (1.8 * var(--name-sy)))));
+		padding-bottom: calc(var(--inset-y) + var(--dock-room));
+	}
+}
+.hero-glass-fade {
+	-webkit-mask-image: linear-gradient(to bottom, black 62%, transparent);
+	mask-image: linear-gradient(to bottom, black 62%, transparent);
+}
+.hero-bleed {
+	margin-inline: calc(var(--inset-x) * -1);
+}
+.hero-name {
+	font-size: var(--name-size);
+}
+.name-stretch {
+	scale: var(--name-sx) var(--name-sy);
+}
+/* Anton gives the O more side bearing than the J (0.031em against 0.019em), so a box centred on screen leaves
+   the ink a hair to the left. Nudge it right by half the difference, stretched, so both edges graze evenly. */
+@media (width >= 40rem) {
+	.name-stretch {
+		translate: calc(0.0063em * var(--name-sx)) 0;
+	}
+}
+/* The name in white, fading to more transparent towards its foot so the background shows through. */
+.name-fade {
+	color: transparent;
+	-webkit-text-fill-color: transparent;
+	background-image: linear-gradient(
+		to bottom,
+		rgb(233 239 230),
+		rgb(233 239 230 / 0.9) 35%,
+		rgb(233 239 230 / 0.3)
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
 }
 
-/* Never hide a link that holds keyboard focus mid-entrance. */
-.curtain-group:focus-within .curtain-letter {
-	animation: none;
+/* Survey legend: small uppercase Unbounded with open tracking. */
+.legend {
+	font-family: var(--font-display);
+	font-size: 0.6875rem;
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
 }
 
-@keyframes curtain-rise {
+/* Line states, drawn by stroke pattern rather than hue. */
+.rail {
+	height: 0;
+	border-top: 1px solid currentColor;
+}
+.rail-dashed {
+	border-top-style: dashed;
+}
+.rail-double {
+	border-top: 4px double currentColor;
+}
+
+/* Entrance: elements arrive top to bottom (set --place-delay in that order), each sliding down a little into
+   place out of a soft blur. Ease-out with no overshoot, so nothing bounces. The last frame is filter: none and
+   opacity 1, so nothing is left that would cut the glass controls off from the backdrop they refract. */
+.place-in {
+	animation: place-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: var(--place-delay, 0s);
+}
+
+@keyframes place-in {
 	from {
-		clip-path: inset(0 0 100% 0);
-		transform: translateY(0.55em);
-		filter: blur(6px);
+		opacity: 0;
+		transform: translate3d(0, -1.25rem, 0);
+		filter: blur(8px);
 	}
 	to {
-		clip-path: inset(0 0 0 0);
-		transform: translateY(0);
-		filter: blur(0);
+		opacity: 1;
+		transform: none;
+		filter: none;
 	}
+}
+
+/* Sections below the fold rise once as they enter (see the observer in index.astro).
+   Gated on .js so content stays visible when scripts never run. */
+.js .reveal {
+	opacity: 0;
+	transform: translateY(2rem);
+	transition:
+		opacity 0.9s var(--ease-curtain),
+		transform 0.9s var(--ease-curtain);
+}
+.js .reveal.is-in {
+	opacity: 1;
+	transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.curtain-letter {
+	.place-in {
 		animation: none;
 	}
+	.js .reveal {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}
+
+/* Page loader: shown only while <html> has .is-loading (set by the inline head script, first visit per session).
+   Without JS the class is never set, so the page is never covered. */
+.page-loader {
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	display: grid;
+	place-items: center;
+	/* Solid black, the same as the logo's own canvas (PageLoader.tsx). */
+	background-color: #000;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition:
+		opacity 0.6s var(--ease-curtain),
+		visibility 0s linear 0.6s;
+}
+.is-loading .page-loader {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transition: none;
+}
+.is-loading body {
+	overflow: hidden;
+}
+/* Keep the covered page out of the tab order and the accessibility tree; layout is untouched. */
+.is-loading body > :not(.page-loader) {
+	visibility: hidden;
+}
+/* Hold the entrance until the loader lifts, so it plays in view. */
+.is-loading .place-in {
+	animation-play-state: paused;
+}
+
+/* Contact portal (ContactPortal.tsx): the page's own Let's talk replaces the portal's built-in enter caption. */
+[data-contact] [data-gp-caption] {
+	display: none;
+}
+/* The footer sets its own insets, so the giant name can run edge to edge. It rises with the page, plainly: no
+   fade, and live from the moment it shows. */
+[data-contact] section [data-gp-content] {
+	padding: 0;
+	align-content: stretch;
+	opacity: 1;
+	pointer-events: auto;
+}
+/* It starts to rise only once the camera is through: the portal drops its clip at 78% of the travel, when the green
+   fills the screen, so the footer's top edge enters at the bottom right then, over the same flat green. */
+[data-contact] section[data-gp-motion="on"] [data-gp-content] {
+	margin-top: calc(0.78 * var(--gp-length) * var(--gp-height));
+}
+
+/* The footer's JAVIER, set into the green as if pressed into it: a fill a shade darker than the ground, a lower lip
+   catching a little green light and a shaded upper edge. One line, as large as the room the footer's top block
+   leaves on screen (up to about 32rem on wide screens, where the headline is largest), and never wider than the
+   insets: the advance of JAVIER in Anton is 2.514em. */
+.footer-name {
+	font-family: var(--font-poster);
+	font-size: max(6rem, min(calc((100vw - 5rem) / 2.53), calc((100svh - 32rem) / 0.87)));
+	/* Anton's font box is 1.51em tall but the ink of JAVIER only 0.868em: at 0.87 the line box sits exactly on
+	   the ink, and clipping the rest keeps the font box from stretching the page below the footer. */
+	line-height: 0.87;
+	overflow-y: clip;
+	overflow-clip-margin: 0.02em;
+	white-space: nowrap;
+	text-align: center;
+	text-transform: uppercase;
+	color: #031d02;
+	text-shadow:
+		0 0.006em 0.002em rgb(120 255 80 / 0.09),
+		0 -0.004em 0.004em rgb(0 0 0 / 0.6);
+	user-select: none;
+}
+@media (width < 40rem) {
+	.footer-name {
+		font-size: calc((100vw - 3rem) / 2.53);
+	}
+}
+
+/* Site menu (SiteMenu.tsx). The panel is laid out at its final size; opening it stretches the = button's own circle
+   into the panel, like a drop of water spreading into a puddle. The clip is an inset() with round corners that starts
+   as exactly the button's box (fully round) in the top right corner and grows evenly to the whole panel: a long,
+   soft ease-out on the way in, a quicker ease-in back into the button on the way out. It clips the glass and the
+   links (.menu-reveal), never the nav: a clip-path on an ancestor makes it a backdrop root and the glass would no
+   longer see the page behind it. Desktop: a roomy panel hanging from the button. Phones: the whole screen. */
+#site-menu {
+	/* The button: its size and its inset from the panel's top right corner. */
+	--menu-button: 4rem;
+	--menu-gap: 0px;
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 0;
+	width: min(28rem, calc(100vw - 3rem));
+	border-radius: 28px;
+	visibility: hidden;
+	transition: visibility 0s linear 0.45s;
+}
+#site-menu[data-open] {
+	visibility: visible;
+	transition: visibility 0s;
+}
+#site-menu .menu-reveal {
+	clip-path: inset(
+		var(--menu-gap) var(--menu-gap) calc(100% - var(--menu-gap) - var(--menu-button))
+			calc(100% - var(--menu-gap) - var(--menu-button)) round calc(var(--menu-button) / 2)
+	);
+	transition: clip-path 0.45s cubic-bezier(0.55, 0, 0.75, 0.2);
+}
+#site-menu[data-open] .menu-reveal {
+	clip-path: inset(0px round 28px);
+	/* Slow to leave the button, quick to spread, soft to settle: a drop becoming a puddle. */
+	transition: clip-path 0.95s cubic-bezier(0.5, 0, 0.15, 1);
+}
+/* How dark the menu's glass body is (MenuGlass, both the resting circle and the panel): the rim bends the page, the
+   body keeps the words legible over it. On phones the panel takes the whole screen, so everything sits behind the
+   words: darker. */
+.site-menu {
+	--menu-smoke: 0.65;
+}
+@media (width < 40rem) {
+	.site-menu {
+		--menu-smoke: 0.82;
+	}
+}
+
+/* One piece of glass: at the first frame of opening the panel is exactly the button's circle, so the button's own
+   glass gives way at once and the panel carries on from it. On closing the panel shrinks back into the circle first,
+   and only then (0.45s, the close) does the button's glass return. The cross stays on top throughout. */
+.menu-button-glass {
+	/* Longhands on purpose: a minifier rewrites "opacity 0s linear 0.45s" to "opacity linear 0.45s", which turns
+	   the delay into a duration and fades the glass in instead of bringing it back at the end. */
+	transition-property: opacity;
+	transition-duration: 0s;
+	transition-delay: 0.45s;
+}
+button[aria-controls="site-menu"][aria-expanded="true"] .menu-button-glass {
+	opacity: 0;
+	transition-delay: 0s;
+}
+#site-menu .menu-item {
+	opacity: 0;
+	translate: 0 0.5rem;
+	transition:
+		opacity 0.2s ease-in,
+		translate 0.2s ease-in;
+}
+#site-menu[data-open] .menu-item {
+	opacity: 1;
+	translate: 0 0;
+	transition:
+		opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1) calc(0.12s + var(--menu-index, 0) * 0.04s),
+		translate 0.6s cubic-bezier(0.22, 1, 0.36, 1) calc(0.12s + var(--menu-index, 0) * 0.04s);
+}
+@media (width < 40rem) {
+	#site-menu {
+		/* The 3.5rem button sits 1.5rem in from the screen's top right corner. */
+		--menu-button: 3.5rem;
+		--menu-gap: 1.5rem;
+		position: fixed;
+		inset: 0;
+		width: auto;
+		border-radius: 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	#site-menu,
+	#site-menu[data-open],
+	#site-menu .menu-reveal,
+	#site-menu[data-open] .menu-reveal,
+	#site-menu .menu-item,
+	#site-menu[data-open] .menu-item,
+	.menu-button-glass {
+		transition-duration: 0s;
+		transition-delay: 0s;
+	}
+}
+
+/* Cursor label (CursorLabel.tsx). Over labelled elements the box takes the arrow's place, but only while the label is
+   mounted to replace it (it sets data-cursor-ready on <html>), so a failed script never leaves the pointer invisible. */
+html[data-cursor-ready] [data-cursor],
+html[data-cursor-ready] [data-cursor] * {
+	/* Children too: the carousel's canvas sets its own grab cursor, which would otherwise show beside the box. */
+	cursor: none;
+}
+/* The box wipes in from the left and back out to the right, square-cornered like a printed tag. */
+.cursor-box {
+	clip-path: inset(0 100% 0 0);
+	transition: clip-path 0.32s cubic-bezier(0.55, 0, 0.75, 0.2);
+}
+[data-cursor-label][data-visible="true"] .cursor-box {
+	clip-path: inset(0 0 0 0);
+	transition: clip-path 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+	.cursor-box,
+	[data-cursor-label][data-visible="true"] .cursor-box {
+		transition-duration: 0s;
+	}
+}
+
+/* Project pages ([slug].astro): each letter of the name rises out of its own clipped window, one after another, and
+   settles with a soft brake. A line box of 1em holds Anton's capitals whole (their ink sits 0.065em below its top),
+   so the mask never trims a letter once it has landed. */
+.letter-mask {
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: bottom;
+	line-height: 1;
+	/* Room above the capitals for accents (the Ò of ÒCAIVE), given back by a negative margin so the line stays put. */
+	padding-top: 0.25em;
+	margin-top: -0.25em;
+}
+.letter {
+	display: inline-block;
+	animation: letter-rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: calc(0.15s + var(--i, 0) * 0.045s);
+}
+@keyframes letter-rise {
+	from {
+		transform: translateY(105%);
+	}
+	to {
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.letter {
+		animation: none;
+	}
+}
+
+/* Text over a DepthImage that catches its light: a pool of white around the light, falling off to a dim stone grey.
+   The component sets --lx / --ly from the element's corner; without it (no WebGL) the pool rests up and to the left. */
+.light-catch {
+	color: transparent;
+	background-image: radial-gradient(
+		circle 22rem at var(--lx, 20%) var(--ly, 0%),
+		#ffffff 0%,
+		rgba(232, 236, 230, 0.78) 30%,
+		rgba(232, 236, 230, 0.3) 100%
+	);
+	background-clip: text;
+	-webkit-background-clip: text;
+}
+
+/* About (components/about): the process numbers are hollow, drawn in outline, and fill as the pointer reaches their
+   step (group-hover). */
+.process-number {
+	color: transparent;
+	-webkit-text-stroke: 1px color-mix(in srgb, var(--color-ink) 40%, transparent);
+}
+
+/* "the things people actually touch" (AboutWho): the letters are filled with fine wavy green lines, opaque to faint,
+   drifting sideways over a faint green fill, so the phrase reads as green and moves. A background clipped to the
+   text rather than a canvas, so it follows the phrase across a line break. Still under reduced motion. */
+.canvas-text {
+	color: transparent;
+	background-image:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='40'%3E%3Cpath d='M0 2 Q20 0.3999999999999999 40 2 T80 2 T120 2 T160 2' fill='none' stroke='rgba(171,255,144,1.0)' stroke-width='1.6'/%3E%3Cpath d='M0 6 Q20 4.4 40 6 T80 6 T120 6 T160 6' fill='none' stroke='rgba(171,255,144,0.94)' stroke-width='1.6'/%3E%3Cpath d='M0 10 Q20 8.4 40 10 T80 10 T120 10 T160 10' fill='none' stroke='rgba(171,255,144,0.87)' stroke-width='1.6'/%3E%3Cpath d='M0 14 Q20 12.4 40 14 T80 14 T120 14 T160 14' fill='none' stroke='rgba(171,255,144,0.8)' stroke-width='1.6'/%3E%3Cpath d='M0 18 Q20 16.4 40 18 T80 18 T120 18 T160 18' fill='none' stroke='rgba(171,255,144,0.74)' stroke-width='1.6'/%3E%3Cpath d='M0 22 Q20 20.4 40 22 T80 22 T120 22 T160 22' fill='none' stroke='rgba(171,255,144,0.68)' stroke-width='1.6'/%3E%3Cpath d='M0 26 Q20 24.4 40 26 T80 26 T120 26 T160 26' fill='none' stroke='rgba(171,255,144,0.61)' stroke-width='1.6'/%3E%3Cpath d='M0 30 Q20 28.4 40 30 T80 30 T120 30 T160 30' fill='none' stroke='rgba(171,255,144,0.54)' stroke-width='1.6'/%3E%3Cpath d='M0 34 Q20 32.4 40 34 T80 34 T120 34 T160 34' fill='none' stroke='rgba(171,255,144,0.48)' stroke-width='1.6'/%3E%3Cpath d='M0 38 Q20 36.4 40 38 T80 38 T120 38 T160 38' fill='none' stroke='rgba(171,255,144,0.42)' stroke-width='1.6'/%3E%3C/svg%3E"),
+		linear-gradient(rgba(171, 255, 144, 0.5), rgba(171, 255, 144, 0.5));
+	background-size: 160px 40px, 100% 100%;
+	background-clip: text;
+	-webkit-background-clip: text;
+	animation: canvas-text-drift 6s linear infinite;
+}
+@keyframes canvas-text-drift {
+	from {
+		background-position: 0 0, 0 0;
+	}
+	to {
+		background-position: -160px 0, 0 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.canvas-text {
+		animation: none;
+	}
+}
+
+/* Gradient bars (ui/gradient-bars-background.tsx): each bar breathes between its height and seven tenths of it, one
+   after another. Still under reduced motion. */
+.gradient-bar {
+	transform: scaleY(var(--initial-scale));
+	animation: pulse-bar 2s ease-in-out infinite alternate;
+}
+@keyframes pulse-bar {
+	from {
+		transform: scaleY(var(--initial-scale));
+	}
+	to {
+		transform: scaleY(calc(var(--initial-scale) * 0.7));
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.gradient-bar {
+		animation: none;
+	}
+}
+
+/* Project stories ([slug].astro): each block rises a little and fades in the first time it scrolls into view
+   (the page's script sets data-shown). Only with scripts on, so nothing stays hidden without them; still under
+   reduced motion. */
+.js [data-reveal] {
+	opacity: 0;
+	transform: translateY(2.5rem);
+	transition:
+		opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+		transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.js [data-reveal][data-shown] {
+	opacity: 1;
+	transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.js [data-reveal] {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}
+
+/* Page curtain (lib/curtain.ts): before leaving for another page, black columns rise up the screen in a staircase,
+   the rightmost first, until they cover it; the black page it opens then shows plainly. */
+.page-curtain {
+	position: fixed;
+	inset: 0;
+	z-index: 90;
+	display: flex;
+}
+.page-curtain > span {
+	flex: 1;
+	/* Overlap a hair so no seam shows between columns. */
+	margin-left: -1px;
+	background-color: #000;
+	transform-origin: bottom;
+	animation: curtain-rise 0.55s cubic-bezier(0.76, 0, 0.24, 1) both;
+	animation-delay: calc((var(--columns) - 1 - var(--i)) * 0.07s);
+}
+@keyframes curtain-rise {
+	from {
+		scale: 1 0;
+	}
+}
+/* The same columns drawing back up on the page they land on, the rightmost first, revealing it. Only after a curtain
+   page change (html.curtain-in, set before paint in Layout.astro); never in the way of a click. */
+.page-curtain-in {
+	display: none;
+	pointer-events: none;
+}
+html.curtain-in .page-curtain-in {
+	display: flex;
+	/* Gone once fully open. */
+	animation: curtain-gone 0s linear 1s forwards;
+}
+.page-curtain-in > span {
+	transform-origin: top;
+	animation-name: curtain-reveal;
+	animation-delay: calc(0.08s + (var(--columns) - 1 - var(--i)) * 0.07s);
+	animation-fill-mode: both;
+}
+@keyframes curtain-reveal {
+	to {
+		scale: 1 0;
+	}
+}
+@keyframes curtain-gone {
+	to {
+		visibility: hidden;
+	}
+}
+/* Held shut while home jumps to the section it was asked for (Layout.astro), then opened. */
+html.curtain-hold .page-curtain-in,
+html.curtain-hold .page-curtain-in > span {
+	animation-play-state: paused;
+}
+/* A project's title rises as the curtain opens. */
+html.curtain-in .letter {
+	animation-delay: calc(0.45s + var(--i, 0) * 0.045s);
+}
+@media (prefers-reduced-motion: reduce) {
+	html.curtain-in .page-curtain-in {
+		display: none;
+	}
+}
+
+/* The 404's number, pressed into the black like the footer's name: a dark grey fill barely off the black, a lower lip
+   catching a little light and a shaded upper edge. Sized by height and width alike; its line box sits on the ink. */
+.not-found-number {
+	display: block;
+	font-family: var(--font-poster);
+	font-size: min(calc((100vw - 3rem) / 1.6), 58svh);
+	line-height: 0.87;
+	overflow-y: clip;
+	overflow-clip-margin: 0.02em;
+	color: #141514;
+	text-shadow:
+		0 0.006em 0.002em rgb(255 255 255 / 0.09),
+		0 -0.004em 0.004em rgb(0 0 0 / 0.9);
+	user-select: none;
 }

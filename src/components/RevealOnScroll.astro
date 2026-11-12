@@ -1,0 +1,20 @@
+---
+/*
+ * Scroll reveal for the page: every [data-reveal] rises in once, the first time it scrolls into view (it gets
+ * data-shown; the motion is in global.css, still under reduced motion). Include it once on a page that uses it.
+ */
+---
+
+<script>
+	const reveal = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				if (!entry.isIntersecting) continue;
+				entry.target.setAttribute('data-shown', '');
+				reveal.unobserve(entry.target);
+			}
+		},
+		{ rootMargin: '0px 0px -12% 0px' }
+	);
+	document.querySelectorAll('[data-reveal]').forEach((element) => reveal.observe(element));
+</script>

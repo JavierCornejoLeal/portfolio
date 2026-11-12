@@ -1,0 +1,65 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { projects, type Project } from '@/data/projects';
+import SiteMenu from '@/components/SiteMenu';
+import ProjectStory from '@/components/projects/ProjectStory.astro';
+import { stories } from '@/data/stories';
+import PageFooter from '@/components/PageFooter';
+
+/*
+ * A project's page. Its opening screen: black, the site's glass menu top right, and the project's name set big at
+ * the foot, its letters rising one after another out of their own masks (.letter-mask / .letter in global.css).
+ * Scrolling past it tells the project's story (ProjectStory, data/stories.ts).
+ */
+
+export function getStaticPaths() {
+	return projects.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+
+const { project } = Astro.props as { project: Project };
+const story = stories[project.slug];
+// The next project in the carousel's order; the last one leads back to the first.
+const next = projects[(projects.findIndex((entry) => entry.slug === project.slug) + 1) % projects.length];
+// Letters are numbered across the whole name, so the rise runs left to right through every word.
+let index = 0;
+const words = project.name.split(' ').map((word) => [...word].map((letter) => ({ letter, index: index++ })));
+---
+
+<Layout title={`${project.name} · Javier Cornejo`} noindex siteLoader={false}>
+	<main class="min-h-dvh bg-black text-ink">
+		<!-- The site's glass menu, pinned top right as on the home page; its section links lead back home. -->
+		<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
+			<SiteMenu client:load home="/" />
+		</div>
+		<section id="top" class="flex min-h-dvh flex-col justify-end px-[clamp(1.5rem,7vw,10rem)] pb-10">
+
+			<div>
+				<h1 class="font-poster text-[clamp(4.5rem,9vw,10rem)] leading-none text-balance uppercase">
+					<span class="sr-only">{project.name}</span>
+					<span aria-hidden="true">
+						{
+							words.map((word, w) => (
+								<>
+									{w > 0 && ' '}
+									<span class="inline-block whitespace-nowrap">
+										{word.map(({ letter, index }) => (
+											<span data-letter-mask class="letter-mask">
+												<span data-letter class="letter" style={`--i: ${index}`}>
+													{letter}
+												</span>
+											</span>
+										))}
+									</span>
+								</>
+							))
+						}
+					</span>
+				</h1>
+				<hr data-project-rule class="mt-8 border-0 border-t border-ink/20" />
+			</div>
+		</section>
+		{story && <ProjectStory project={project} story={story} next={next} />}
+	</main>
+	<!-- The year comes from the visitor's clock, so the footer renders in the browser. -->
+	<PageFooter client:only="react" />
+</Layout>

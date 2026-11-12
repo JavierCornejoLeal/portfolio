@@ -1,18 +1,23 @@
 ---
 import '../styles/global.css';
+import PageLoader from '@/components/PageLoader';
 
 interface Props {
 	title?: string;
 	description?: string;
 	/** Keep the page out of search results (e.g. the 404). */
 	noindex?: boolean;
+	/** The site's first-visit loader. Pages with a loader of their own (the orb on about and projects) turn it off. */
+	siteLoader?: boolean;
+	/** Open the black page curtain on every load, not only after a curtain page change (the 404). */
+	revealOnLoad?: boolean;
 }
 
 const SITE_NAME = 'Javier Cornejo';
 const DEFAULT_DESCRIPTION =
-	'Javier Cornejo, full stack developer. Something big is on its way: a new portfolio is being built right now.';
+	'Javier Cornejo, full stack developer. Code you can see through: clear, honest software from database to pixel.';
 
-const { title = SITE_NAME, description = DEFAULT_DESCRIPTION, noindex = false } = Astro.props;
+const { title = SITE_NAME, description = DEFAULT_DESCRIPTION, noindex = false, siteLoader = true, revealOnLoad = false } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL('/og-image.png', Astro.site);
@@ -35,13 +40,47 @@ const person = {
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script is:inline>
+			document.documentElement.classList.add('js');
+			// Arriving through the page curtain (lib/curtain.ts): start covered in its colour and draw it back. Read once,
+			// before paint. Arriving on a section (/#projects) holds it shut until the page is there (released below).
+			// Coming back with the browser's Back or Forward also opens the curtain over the page.
+			try {
+				var html = document.documentElement;
+				var navigation = performance.getEntriesByType('navigation')[0];
+				if (sessionStorage.getItem('curtain-in')) {
+					sessionStorage.removeItem('curtain-in');
+					html.classList.add('curtain-in');
+					if (location.hash.length > 1) html.classList.add('curtain-hold');
+				} else if (navigation && navigation.type === 'back_forward') {
+					html.classList.add('curtain-in');
+				}
+			} catch (e) {}
+		</script>
+		{revealOnLoad && <script is:inline>document.documentElement.classList.add('curtain-in');</script>}
+		{siteLoader && <script is:inline>
+			(function () {
+				var root = document.documentElement;
+				var seen = false;
+				try {
+					seen = sessionStorage.getItem('loader-seen') === '1';
+				} catch (e) {}
+				// Arriving through the page curtain is not a first visit to greet.
+				if (seen || root.classList.contains('curtain-in')) return;
+				root.classList.add('is-loading');
+				// Failsafe: never trap the page behind the loader if the island fails to boot.
+				setTimeout(function () {
+					root.classList.remove('is-loading');
+				}, 10000);
+			})();
+		</script>}
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<meta name="author" content={SITE_NAME} />
 		{noindex ? <meta name="robots" content="noindex, follow" /> : <link rel="canonical" href={canonical} />}
-		<meta name="theme-color" content="#09090b" />
+		<meta name="theme-color" content="#070907" />
 		<meta name="color-scheme" content="dark" />
 
 		<link rel="icon" href="/favicon.ico" sizes="any" />
@@ -68,7 +107,60 @@ const person = {
 
 		{!noindex && <script type="application/ld+json" set:html={JSON.stringify(person)} />}
 	</head>
-	<body class="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
+	<body class="min-h-screen font-sans text-ink antialiased">
+		{siteLoader && (
+			<div class="page-loader">
+				<div aria-hidden="true">
+					<PageLoader client:only="react" />
+				</div>
+				<p class="sr-only" role="status">Loading</p>
+			</div>
+		)}
 		<slot />
+		<!-- The page curtain drawing back up after a page change (shown only with html.curtain-in). -->
+		<div data-curtain-in class="page-curtain page-curtain-in" aria-hidden="true" style="--columns: 6">
+			{Array.from({ length: 6 }, (_, i) => <span style={`--i: ${i}`} />)}
+		</div>
+		<script>
+			import { GLIDE_PATIENCE_MS, glideTo } from '@/lib/glide';
+			import { leaveTo, opensWithCurtain } from '@/lib/curtain';
+
+			// In-page links (#projects, #contact-inside, #top…) glide to their section without writing the #fragment
+			// into the address. A link already handled (default prevented) or a modified click is left alone.
+			document.addEventListener('click', (event) => {
+				if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+				const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href]');
+				if (!link) return;
+				const hash = link.getAttribute('href');
+				if (hash?.startsWith('#')) {
+					if (hash.length > 1 && glideTo(hash)) event.preventDefault();
+					return;
+				}
+				// Another page of the site (a project, About): draw the curtain first.
+				if (opensWithCurtain(link)) {
+					event.preventDefault();
+					leaveTo(link.href);
+				}
+			});
+
+			// Arriving from another page with a section in the address (/#projects): drop the fragment, then go there.
+			// Behind the curtain, jump straight there and open the curtain once it is in place (or once the glide gives up, at worst);
+			// otherwise (a link opened directly) glide there.
+			if (location.hash.length > 1) {
+				const hash = location.hash;
+				history.replaceState(null, '', location.pathname + location.search);
+				const root = document.documentElement;
+				if (root.classList.contains('curtain-hold')) {
+					const release = () => root.classList.remove('curtain-hold');
+					// As long as the glide is still waiting for its target (a slow device's footer), and a beat more.
+					window.setTimeout(release, GLIDE_PATIENCE_MS + 500);
+					requestAnimationFrame(() => {
+						if (!glideTo(hash, { instant: true, onArrive: release })) release();
+					});
+				} else {
+					requestAnimationFrame(() => glideTo(hash));
+				}
+			}
+		</script>
 	</body>
 </html>

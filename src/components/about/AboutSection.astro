@@ -1,0 +1,19 @@
+---
+/*
+ * One section of the About page. On wide screens its title is carried by the shared rail beside the sections
+ * (AboutRail), so the section's own heading is kept for assistive technology only; on a phone, where there is no
+ * rail, the heading shows above the content. No numbers, no rules: space alone separates sections.
+ */
+
+const { id, title } = Astro.props as { id: string; title: string };
+---
+
+<section data-about-section={id} aria-labelledby={`about-${id}`} class="scroll-mt-32 py-[clamp(4rem,12vh,8rem)]">
+	<h2
+		id={`about-${id}`}
+		class="mb-10 font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-none font-semibold tracking-[-0.03em] md:sr-only"
+	>
+		{title}
+	</h2>
+	<slot />
+</section>

@@ -1,0 +1,10 @@
+---
+import AboutSection from './AboutSection.astro';
+import FaqList from './FaqList';
+import { faqs } from '@/data/about';
+---
+
+<AboutSection id="faq" title="Questions">
+	<!-- Hydrated with the page: a first click before then would fall through to the browser's instant toggle. -->
+	<FaqList client:load faqs={faqs} />
+</AboutSection>
