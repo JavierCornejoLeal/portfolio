@@ -9,6 +9,7 @@ import AboutExperience from '@/components/about/AboutExperience.astro';
 import AboutStack from '@/components/about/AboutStack.astro';
 import AboutFaq from '@/components/about/AboutFaq.astro';
 import AboutRail from '@/components/about/AboutRail';
+import PageFooter from '@/components/PageFooter';
 
 // The sections in page order, for the rail's title.
 const sections = [
@@ -30,7 +31,7 @@ const sections = [
 		<SiteMenu client:load home="/" />
 	</div>
 	<main class="min-h-dvh bg-black">
-		<section class="relative h-dvh">
+		<section id="top" class="relative h-dvh">
 			<DepthImage
 				client:load
 				image="/about/statue.webp"
@@ -73,4 +74,6 @@ const sections = [
 			</div>
 		</div>
 	</main>
+	<!-- The year comes from the visitor's clock, so the footer renders in the browser. -->
+	<PageFooter client:only="react" />
 </Layout>

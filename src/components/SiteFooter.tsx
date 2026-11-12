@@ -129,10 +129,12 @@ function RoleSwap() {
 }
 
 /**
+ * `home` is where the page's sections live: "" on home itself, "/" elsewhere, so Projects leads back home (Back to top
+ * stays on the page, which carries its own #top).
  * `background` is the contact portal's flat green: the footer is as tall as the screen and outlasts the portal's
  * pinned view, so it paints that same green itself.
  */
-export default function SiteFooter({ background }: { background: string }) {
+export default function SiteFooter({ background, home = "" }: { background: string; home?: string }) {
   // The footer only ever renders in the browser (the portal mounts once Anton has loaded), so this is the
   // visitor's current year, never the year the site was built.
   const year = new Date().getFullYear()
@@ -181,7 +183,7 @@ export default function SiteFooter({ background }: { background: string }) {
           <nav aria-label="Footer">
             <ul className="legend flex gap-6 text-ink/75">
               <li>
-                <a href="#projects" className="transition-colors hover:text-ink">
+                <a href={`${home}#projects`} className="transition-colors hover:text-ink">
                   Projects
                 </a>
               </li>

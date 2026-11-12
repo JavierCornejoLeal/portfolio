@@ -150,6 +150,14 @@ test.describe('about sections', () => {
 		await expect(answer).toBeHidden();
 	});
 
+	test('readies the questions with the page, so even the first one opens smoothly', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/about');
+		// Ready before anyone scrolls down to them: no first click falls through to the browser's instant toggle.
+		await expect(page.locator('[data-about-section="faq"] astro-island[ssr]')).toHaveCount(0, { timeout: 5000 });
+		expect(await page.evaluate(() => scrollY)).toBe(0);
+	});
+
 	test('rolls the letters of a question on hover, like the footer links', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/about');

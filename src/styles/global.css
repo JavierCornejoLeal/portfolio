@@ -479,6 +479,26 @@ html[data-cursor-ready] [data-cursor] * {
 	}
 }
 
+/* Gradient bars (ui/gradient-bars-background.tsx): each bar breathes between its height and seven tenths of it, one
+   after another. Still under reduced motion. */
+.gradient-bar {
+	transform: scaleY(var(--initial-scale));
+	animation: pulse-bar 2s ease-in-out infinite alternate;
+}
+@keyframes pulse-bar {
+	from {
+		transform: scaleY(var(--initial-scale));
+	}
+	to {
+		transform: scaleY(calc(var(--initial-scale) * 0.7));
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.gradient-bar {
+		animation: none;
+	}
+}
+
 /* Project stories ([slug].astro): each block rises a little and fades in the first time it scrolls into view
    (the page's script sets data-shown). Only with scripts on, so nothing stays hidden without them; still under
    reduced motion. */

@@ -5,5 +5,6 @@ import { faqs } from '@/data/about';
 ---
 
 <AboutSection id="faq" title="Questions">
-	<FaqList client:visible faqs={faqs} />
+	<!-- Hydrated with the page: a first click before then would fall through to the browser's instant toggle. -->
+	<FaqList client:load faqs={faqs} />
 </AboutSection>
