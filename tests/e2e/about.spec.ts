@@ -17,4 +17,12 @@ test.describe('about page', () => {
 		const sitemap = await (await request.get('/sitemap-0.xml')).text();
 		expect(sitemap).not.toContain('/about');
 	});
+
+	test('carries the site\'s glass menu, its sections leading back home', async ({ page }) => {
+		await page.goto('/about');
+		await page.getByRole('button', { name: 'Open menu' }).click();
+		const menu = page.getByRole('navigation', { name: 'Main' });
+		await expect(menu.getByRole('link', { name: 'Projects', exact: true })).toHaveAttribute('href', '/#projects');
+		await expect(menu.getByRole('link', { name: 'Contact', exact: true })).toHaveAttribute('href', '/#contact-inside');
+	});
 });

@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { projects } from "@/data/projects"
 import { LensCarousel } from "@/components/projects/lens-carousel"
+import { leaveTo } from "@/lib/curtain"
 import { RollingTitle } from "@/components/ui/rolling-title"
 
 /*
@@ -70,7 +71,7 @@ export default function ProjectsCarousel() {
         covers: projects.map((project) => project.cover),
         reducedMotion: motionQuery.matches,
         // The middle card opens its project's page.
-        onOpen: (instance) => window.location.assign(pageOf(projects[engine.projectOf(instance)].slug)),
+        onOpen: (instance) => leaveTo(pageOf(projects[engine.projectOf(instance)].slug)),
         onFrame: placeAnchors,
         onActiveChange: (project) => (stage.dataset.active = String(project)),
         onRunningChange: (running) => (stage.dataset.running = String(running))

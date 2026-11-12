@@ -429,3 +429,67 @@ html[data-cursor-ready] [data-cursor] * {
 		animation: none;
 	}
 }
+
+/* Page curtain (lib/curtain.ts): before leaving for another page, black columns rise up the screen in a staircase,
+   the rightmost first, until they cover it; the black page it opens then shows plainly. */
+.page-curtain {
+	position: fixed;
+	inset: 0;
+	z-index: 90;
+	display: flex;
+}
+.page-curtain > span {
+	flex: 1;
+	/* Overlap a hair so no seam shows between columns. */
+	margin-left: -1px;
+	background-color: #000;
+	transform-origin: bottom;
+	animation: curtain-rise 0.55s cubic-bezier(0.76, 0, 0.24, 1) both;
+	animation-delay: calc((var(--columns) - 1 - var(--i)) * 0.07s);
+}
+@keyframes curtain-rise {
+	from {
+		scale: 1 0;
+	}
+}
+/* The same columns drawing back up on the page they land on, the rightmost first, revealing it. Only after a curtain
+   page change (html.curtain-in, set before paint in Layout.astro); never in the way of a click. */
+.page-curtain-in {
+	display: none;
+	pointer-events: none;
+}
+html.curtain-in .page-curtain-in {
+	display: flex;
+	/* Gone once fully open. */
+	animation: curtain-gone 0s linear 1s forwards;
+}
+.page-curtain-in > span {
+	transform-origin: top;
+	animation-name: curtain-reveal;
+	animation-delay: calc(0.08s + (var(--columns) - 1 - var(--i)) * 0.07s);
+	animation-fill-mode: both;
+}
+@keyframes curtain-reveal {
+	to {
+		scale: 1 0;
+	}
+}
+@keyframes curtain-gone {
+	to {
+		visibility: hidden;
+	}
+}
+/* Held shut while home jumps to the section it was asked for (Layout.astro), then opened. */
+html.curtain-hold .page-curtain-in,
+html.curtain-hold .page-curtain-in > span {
+	animation-play-state: paused;
+}
+/* A project's title rises as the curtain opens. */
+html.curtain-in .letter {
+	animation-delay: calc(0.45s + var(--i, 0) * 0.045s);
+}
+@media (prefers-reduced-motion: reduce) {
+	html.curtain-in .page-curtain-in {
+		display: none;
+	}
+}
