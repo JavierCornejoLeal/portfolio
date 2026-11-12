@@ -103,6 +103,14 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 	document.querySelectorAll('[data-project-story] [data-reveal]').forEach((element) => reveal.observe(element));
 
 	const videos = document.querySelectorAll<HTMLVideoElement>('[data-story-video]');
+	// Clips loop by hand, back to where their content starts rather than to the blank first frame of the recording.
+	videos.forEach((video) => {
+		const start = Number(video.dataset.start) || 0;
+		video.addEventListener('ended', () => {
+			video.currentTime = start;
+			if (!reduce) video.play().catch(() => {});
+		});
+	});
 	if (reduce) {
 		videos.forEach((video) => (video.controls = true));
 	} else {

@@ -2,7 +2,8 @@
 import type { StoryMedia } from '@/data/stories';
 
 /*
- * One picture or clip of a project story, framed. Clips are muted and loop; the page's script plays them only while
+ * One picture or clip of a project story, framed. Clips are muted and loop from their start (the page's script, which
+ * skips the blank page a recording opens on); it plays them only while
  * on screen (and leaves them to the visitor under reduced motion). Phone shots sit upright in a frame as wide as a
  * half, so a row keeps one height; on a phone, where frames stack, theirs is taller.
  */
@@ -10,20 +11,26 @@ import type { StoryMedia } from '@/data/stories';
 const { item } = Astro.props as { item: StoryMedia };
 const span = item.size === 'wide' ? 'sm:col-span-2' : '';
 const frame = item.size === 'phone' ? 'flex items-center justify-center bg-white/[0.04] p-[6%]' : '';
-const fit = item.size === 'phone' ? 'h-full w-auto rounded-[1.4rem] object-contain' : 'size-full object-cover object-top';
+const natural = item.kind === 'image' && item.natural;
+const fit =
+	item.size === 'phone' ? 'h-full w-auto rounded-[1.4rem] object-contain' : natural ? 'block h-auto w-full' : 'size-full object-cover object-top';
+const aspect = natural ? '' : item.size === 'phone' ? 'aspect-[4/5] sm:aspect-[16/10]' : 'aspect-[16/10]';
+// The fragment makes the first frame drawn already the clip's content, not the blank page it was recorded from.
+const start = item.start ?? 0;
+const src = item.kind === 'video' && start > 0 ? `${item.src}#t=${start}` : item.src;
 ---
 
 <figure data-reveal class:list={['flex flex-col gap-3', span]}>
-	<div class:list={['overflow-hidden rounded-2xl ring-1 ring-white/10', item.size === 'phone' ? 'aspect-[4/5] sm:aspect-[16/10]' : 'aspect-[16/10]', frame]}>
+	<div class:list={['overflow-hidden rounded-2xl ring-1 ring-white/10', aspect, frame]}>
 		{
 			item.kind === 'video' ? (
 				<video
 					data-story-video
-					src={item.src}
+					data-start={start}
+					src={src}
 					poster={item.poster}
 					aria-label={item.alt}
 					muted
-					loop
 					playsinline
 					preload="none"
 					class={fit}

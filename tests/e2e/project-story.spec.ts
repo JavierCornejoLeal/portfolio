@@ -66,6 +66,27 @@ test.describe('project stories', () => {
 		await expect.poll(() => video.evaluate(v => (v as HTMLVideoElement).paused)).toBe(true);
 	});
 
+	test('skips the blank page a recording opens on, when it starts and every time it loops', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		for (const slug of ['eduardo-calabuig', 'ocaive', 'hub-cultural-cabanyal', 'portfolio']) {
+			await page.goto(`/projects/${slug}`);
+			const video = story(page).locator('video').first();
+			const start = Number(await video.getAttribute('data-start'));
+			expect(start).toBeGreaterThan(0);
+			await video.scrollIntoViewIfNeeded();
+			await expect.poll(() => video.evaluate(v => (v as HTMLVideoElement).paused)).toBe(false);
+			expect(await video.evaluate(v => (v as HTMLVideoElement).currentTime)).toBeGreaterThanOrEqual(start);
+			// At the end it goes back to its start, not to the blank first frame.
+			await video.evaluate(v => {
+				const clip = v as HTMLVideoElement;
+				clip.currentTime = clip.duration - 0.15;
+			});
+			await expect.poll(() => video.evaluate(v => (v as HTMLVideoElement).currentTime), { timeout: 5000 }).toBeLessThan(start + 1.5);
+			expect(await video.evaluate(v => (v as HTMLVideoElement).currentTime)).toBeGreaterThanOrEqual(start);
+			await expect.poll(() => video.evaluate(v => (v as HTMLVideoElement).paused)).toBe(false);
+		}
+	});
+
 	test('shows everything still under reduced motion, with clips left for the visitor to play', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goto('/projects/eduardo-calabuig');

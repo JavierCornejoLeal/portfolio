@@ -16,6 +16,11 @@ export interface StoryMedia {
   size: "wide" | "half" | "phone"
   /** Videos: the still shown before the clip plays. */
   poster?: string
+  /** Videos: where the clip's content starts, in seconds. Recordings open on a blank page while the site loads; the
+   * clip starts and loops from here instead. */
+  start?: number
+  /** Images: keep the picture's own proportions instead of the 16:10 frame (wide strips, tall pages). */
+  natural?: boolean
 }
 
 export interface StackChoice {
@@ -46,13 +51,14 @@ export const stories: Record<string, Story> = {
       kind: "video",
       src: media("eduardo-calabuig", "scroll.webm"),
       poster: media("eduardo-calabuig", "home.webp"),
+      start: 0.6,
       alt: "Scrolling down the home page of eduardocalabuig.com",
       size: "wide",
     },
     stack: [
       { name: "React + Vite", why: "A quick single-page site with CSS route transitions, built to plain static files for the studio's own hosting." },
       { name: "React Bootstrap, trimmed", why: "Familiar components, and a custom Vite plugin that strips every Bootstrap rule the site never uses." },
-      { name: "GSAP, on demand", why: "Downloaded only as the visitor nears the animated sections, so the first screen stays light." },
+      { name: "GSAP", why: "Drives the storytelling: scroll-led scenes, downloaded only as the visitor nears them, so the first screen stays light." },
       { name: "i18next", why: "Spanish and English from the same components, with the visitor's language picked up on arrival." },
     ],
     gallery: [
@@ -69,20 +75,21 @@ export const stories: Record<string, Story> = {
       { kind: "image", src: media("eduardo-calabuig", "about.webp"), alt: "The about page", size: "half" },
     ],
     curiosities: [
+      "I produced every image and video of the storytelling myself with AI, then optimised each one for the web.",
       "Visits are queued until ten seconds after load and an idle moment, so analytics never compete with the page.",
       "It publishes llms.txt and an AI catalog, so AI agents can read the studio the way people do.",
-      "Hashed assets are cached for a year as immutable; the HTML always checks for a newer version.",
     ],
   },
 
   ocaive: {
-    role: "Initial development",
+    role: "Design & development",
     intro:
       "The home of a studio that joins technology development, audiovisual production and a 360 music agency: one long, cinematic page that tells all three stories.",
     lead: {
       kind: "video",
       src: media("ocaive", "scroll.webm"),
       poster: media("ocaive", "home.webp"),
+      start: 0.6,
       alt: "Scrolling down the home page of ocaive.com",
       size: "wide",
     },
@@ -98,8 +105,9 @@ export const stories: Record<string, Story> = {
     ],
     curiosities: [
       "Three businesses, one page: technology development, an audiovisual production company and a 360 music agency.",
-      "I laid the foundations; the studio's team later built on them, adding scenes such as the opening video.",
-      "Another project on this list, Hub Cultural Cabanyal, shows up among its work.",
+      "The home is told as a story: full-screen scenes, one after another, as you scroll.",
+      "Every image and video was optimised to stay light and play without a stutter down a very long page.",
+      "Design and build are mine; the studio later changed a couple of things, such as the opening video.",
     ],
   },
 
@@ -111,6 +119,7 @@ export const stories: Record<string, Story> = {
       kind: "video",
       src: media("hub-cultural-cabanyal", "scroll.webm"),
       poster: media("hub-cultural-cabanyal", "home.webp"),
+      start: 0.6,
       alt: "Scrolling down the home page of culturacabanyal.com",
       size: "wide",
     },
@@ -127,6 +136,7 @@ export const stories: Record<string, Story> = {
       "Three doors on the home page: Espais, Agenda and Professionals.",
       "Cultural agents sign up to show their projects, connect with each other and publish their own activities.",
       "Written in Valencian, the language of the neighbourhood it serves.",
+      "I built many of its pages and features, inside the platform itself.",
     ],
   },
 
@@ -146,13 +156,30 @@ export const stories: Record<string, Story> = {
       { name: "Resend", why: "The public site's contact forms send the studio a notice and the visitor a reply." },
     ],
     gallery: [
-      { kind: "image", src: media("crm-eduardo", "activity.webp"), alt: "Visit and click totals over a bar chart of the last 14 days", caption: "The last two weeks at a glance.", size: "wide" },
-      { kind: "image", src: media("crm-eduardo", "breakdown.webp"), alt: "Top pages, top clicks, countries and devices", size: "wide" },
+      {
+        kind: "image",
+        src: media("crm-eduardo", "editor.webp"),
+        alt: "Editing the Casa Umbral project: text and image blocks side by side",
+        caption: "A Notion-style editor: type / for titles, images, tables, videos or Instagram mentions.",
+        size: "wide",
+        natural: true,
+      },
+      {
+        kind: "image",
+        src: media("crm-eduardo", "projects.webp"),
+        alt: "The projects list with category, status, EN and VA translations and actions",
+        caption: "Every project with its status and translations; the eye opens an exact preview of its public page.",
+        size: "wide",
+        natural: true,
+      },
+      { kind: "image", src: media("crm-eduardo", "activity.webp"), alt: "Visit and click totals over a bar chart of the last 14 days", caption: "The last two weeks at a glance.", size: "wide", natural: true },
+      { kind: "image", src: media("crm-eduardo", "breakdown.webp"), alt: "Top pages, top clicks, countries and devices", size: "wide", natural: true },
     ],
     curiosities: [
+      "Projects and news preview exactly as they will look on the public site, before anything goes live.",
+      "Writing is block by block, like Notion: type / and pick a heading, an image, a table, a video or an Instagram mention.",
+      "Each project keeps its English and Valencian translations in the same record.",
       "A daily cron reads real published projects, so Supabase's free plan never pauses the database.",
-      "Projects and news keep their translations in the same record, so both languages come from one source.",
-      "Uploads are images of up to 3 MB; everything else stays private.",
     ],
   },
 
@@ -163,6 +190,7 @@ export const stories: Record<string, Story> = {
       kind: "video",
       src: media("portfolio", "portal.webm"),
       poster: media("portfolio", "hello.webp"),
+      start: 1,
       alt: "Scrolling into the O of HELLO, which opens onto the footer",
       size: "wide",
     },
