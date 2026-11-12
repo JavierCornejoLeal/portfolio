@@ -105,7 +105,9 @@ test.describe('project pages', () => {
 		await page.goto('/projects/eduardo-calabuig');
 		await page.getByRole('button', { name: 'Open menu' }).click();
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Projects', exact: true }).click();
-		await expect.poll(() => page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top)), { timeout: 10_000 }).toBe(0);
+		// The curtain, home's load and its jump chain up: a CI runner rendering WebGL in software needs room.
+		await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
+		await expect.poll(() => page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top)), { timeout: 15_000 }).toBe(0);
 		await expect.poll(() => new URL(page.url()).hash).toBe('');
 		expect(new URL(page.url()).pathname).toBe('/');
 	});
