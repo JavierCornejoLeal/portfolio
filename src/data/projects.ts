@@ -1,11 +1,12 @@
-/** Projects shown in the home carousel. Covers are 1920×1272 screenshots of each live site (aspect ≈ 1.509). */
+/** Projects shown in the home carousel. Covers are 1920×1272 screenshots of each project (aspect ≈ 1.509). */
 export interface Project {
   name: string
-  /** The project's page: /projects/<slug>. */
+  /** The project's page: /projects/<slug>. Also the project's key. */
   slug: string
-  url: string
+  /** The live site; absent for private tools, such as a client's admin panel. */
+  url?: string
   /** Bare domain, kept for the project pages to come. */
-  domain: string
+  domain?: string
   cover: string
   /** From each site's own description, in English; kept for the project pages to come. */
   description: string
@@ -37,5 +38,22 @@ export const projects: Project[] = [
     domain: "culturacabanyal.com",
     cover: "/projects/culturacabanyal.webp",
     description: "A living network that connects cultural professionals, venues and activities across the Poblats Marítims of València."
+  },
+  {
+    // Private: the studio's own admin panel, behind a login, so no public address.
+    name: "CRM Eduardo",
+    slug: "crm-eduardo",
+    cover: "/projects/crm-eduardo.webp",
+    description:
+      "The private admin panel behind eduardocalabuig.com: visits, clicks, countries and devices at a glance, plus the projects, news and users that feed the public site."
+  },
+  {
+    name: "Portfolio",
+    slug: "portfolio",
+    url: "https://javiercornejo.vercel.app",
+    domain: "javiercornejo.vercel.app",
+    cover: "/projects/portfolio.webp",
+    description:
+      "This site: a full stack portfolio built with Astro and React, with WebGL glass, a projects carousel and a letter that opens onto the footer."
   }
 ]

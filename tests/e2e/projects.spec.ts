@@ -15,7 +15,7 @@ test.describe('projects carousel', () => {
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 	});
 
-	test('follows the statement with the three projects and a quiet hint', async ({ page }) => {
+	test('follows the statement with the five projects and a quiet hint', async ({ page }) => {
 		await openSection(page);
 		const stage = page.locator(stageSelector);
 
@@ -27,7 +27,7 @@ test.describe('projects carousel', () => {
 		expect(after).toBe(true);
 		await expect(stage).toHaveAttribute('aria-roledescription', 'carousel');
 		await expect(stage.locator('canvas')).toBeAttached();
-		for (const name of ['Eduardo Calabuig', 'ÒCAIVE', 'Hub Cultural Cabanyal']) {
+		for (const name of ['Eduardo Calabuig', 'ÒCAIVE', 'Hub Cultural Cabanyal', 'CRM Eduardo', 'Portfolio']) {
 			// Links now: each opens its project's page.
 			await expect(page.getByRole('link', { name: `Open ${name}` })).toHaveCount(1);
 		}
@@ -141,9 +141,9 @@ test.describe('projects carousel', () => {
 	test('keeps one invisible link per project over its card, with no flat copy of the cover', async ({ page }) => {
 		await openSection(page);
 		const anchors = page.locator('[data-project-anchor]');
-		await expect(anchors).toHaveCount(3);
+		await expect(anchors).toHaveCount(5);
 		await expect(anchors.locator('img')).toHaveCount(0);
-		for (const [name, slug] of [['Eduardo Calabuig', 'eduardo-calabuig'], ['ÒCAIVE', 'ocaive'], ['Hub Cultural Cabanyal', 'hub-cultural-cabanyal']]) {
+		for (const [name, slug] of [['Eduardo Calabuig', 'eduardo-calabuig'], ['ÒCAIVE', 'ocaive'], ['Hub Cultural Cabanyal', 'hub-cultural-cabanyal'], ['CRM Eduardo', 'crm-eduardo'], ['Portfolio', 'portfolio']]) {
 			await expect(page.getByRole('link', { name: `Open ${name}` })).toHaveAttribute('href', `/projects/${slug}`);
 		}
 	});
@@ -268,7 +268,7 @@ test.describe('projects carousel', () => {
 		await page.goto('/');
 		await page.locator(stageSelector).evaluate(stage => window.scrollTo({ top: stage.getBoundingClientRect().top + scrollY, behavior: 'instant' }));
 		const strip = page.locator('[data-projects-static]');
-		await expect(strip.getByRole('img')).toHaveCount(3);
+		await expect(strip.getByRole('img')).toHaveCount(5);
 		await expect(page.locator(`${stageSelector} canvas`)).toHaveCount(0);
 
 		await strip.getByRole('link', { name: 'Open Hub Cultural Cabanyal' }).click();
