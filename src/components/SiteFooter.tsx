@@ -6,6 +6,7 @@ import { SOCIALS } from "@/components/SiteMenu"
 import { GlassLayer } from "@/components/ui/glass-layer"
 import { HoverRollLabel, useHoverRoll } from "@/components/ui/hover-roll"
 import { TextSwapRoll } from "@/components/ui/text-swap-roll"
+import { cn } from "@/lib/utils"
 
 /*
  * Footer: it waits in the near-black green the contact portal opens onto. A big line and liquid-glass pills top
@@ -138,9 +139,12 @@ export default function SiteFooter({
   background,
   home = "",
   name,
+  nameAtFoot = false,
 }: {
   background: string
   home?: string
+  /** Puts the name last, under the bottom line, its foot on the footer's bottom edge (to be cropped by it). */
+  nameAtFoot?: boolean
   /** Replaces the big JAVIER set into the footer (the pages away from home print it in halftone dots). */
   name?: React.ReactNode
 }) {
@@ -155,7 +159,11 @@ export default function SiteFooter({
       // Links that glide here show all of it: aligned by its end, the page's end.
       data-scroll-align="end"
       style={{ backgroundColor: background }}
-      className="flex min-h-svh flex-col justify-between gap-12 px-6 pt-[clamp(5.5rem,14svh,9rem)] pb-5 text-ink sm:px-10 max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"
+      className={cn(
+        "flex min-h-svh flex-col justify-between gap-12 px-6 pt-[clamp(5.5rem,14svh,9rem)] text-ink sm:px-10",
+        // A name at the foot runs into the bottom edge; otherwise the bottom line keeps clear of it.
+        nameAtFoot ? "pb-0" : "pb-5 max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]",
+      )}
     >
       <div className="flex flex-col gap-14 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-10">
@@ -180,7 +188,7 @@ export default function SiteFooter({
         </ul>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className={cn("flex flex-col gap-4", nameAtFoot && "flex-col-reverse")}>
         {/* Decorative: the name is read once, in the bottom line. */}
         {name ?? (
           <p data-footer-name aria-hidden="true" className="footer-name">

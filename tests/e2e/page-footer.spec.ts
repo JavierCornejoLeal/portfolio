@@ -42,33 +42,42 @@ for (const path of ['/projects/ocaive', '/about']) {
 			await expect.poll(() => page.evaluate(() => scrollY), { timeout: 5000 }).toBeLessThan(5);
 		});
 
-		test('prints JAVIER in green halftone dots, where home sets it solid', async ({ page }) => {
+		test('prints JAVIER in white halftone dots, cropped by the bottom edge, under the bottom line', async ({ page }) => {
 			await page.emulateMedia({ reducedMotion: 'no-preference' });
 			await page.goto(path);
 			const footer = page.getByRole('contentinfo');
 			await footer.scrollIntoViewIfNeeded();
 			const name = footer.locator('[data-footer-name]');
 			await expect(name).toHaveCount(1);
-			await expect(name).toHaveClass(/footer-name/);
 			const dots = name.locator('canvas[data-halftone]');
 			await expect(dots).toHaveAttribute('data-ready', 'true');
-			// The dots fill the name's own box, the same box home's JAVIER takes.
-			const [box, canvas] = [await name.boundingBox(), await dots.boundingBox()];
-			expect(Math.abs(box!.width - canvas!.width)).toBeLessThan(1);
-			expect(Math.abs(box!.height - canvas!.height)).toBeLessThan(1);
-			// Green dots, with clear canvas between them: the bars behind show through.
+			// Last in the footer, its foot on the footer's bottom edge.
+			const [box, foot, line] = [await name.boundingBox(), await footer.boundingBox(), await footer.getByText(/^©\d{4}/).boundingBox()];
+			expect(Math.abs(box!.y + box!.height - (foot!.y + foot!.height))).toBeLessThan(1);
+			expect(line!.y + line!.height).toBeLessThanOrEqual(box!.y + 1);
+			// White dots at rest, and the letters run into the bottom edge: cropped, not standing on it.
 			const pixels = await dots.evaluate(element => {
 				const c = element as HTMLCanvasElement;
 				const data = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
-				let green = 0, clear = 0;
+				let white = 0, green = 0;
 				for (let i = 0; i < data.length; i += 4 * 7) {
-					if (data[i + 3] === 0) clear++;
+					if (data[i + 3] === 0) continue;
+					if (data[i] > 200 && data[i + 1] > 200 && data[i + 2] > 200) white++;
 					else if (data[i + 1] > 180 && data[i] < 160) green++;
 				}
-				return { green, clear };
+				const last = c.getContext('2d')!.getImageData(0, c.height - 4, c.width, 4).data;
+				let edge = 0;
+				for (let i = 3; i < last.length; i += 4) if (last[i] > 0) edge++;
+				return { white, green, edge };
 			});
-			expect(pixels.green).toBeGreaterThan(200);
-			expect(pixels.clear).toBeGreaterThan(pixels.green);
+			expect(pixels.white).toBeGreaterThan(200);
+			expect(pixels.green).toBe(0);
+			expect(pixels.edge).toBeGreaterThan(20);
+			// Only the dots show: the name's own letters, there for its box, are invisible.
+			await expect(name).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+			await expect(name).toHaveCSS('text-shadow', 'none');
+			// Pushed dots turn green.
+			await expect(dots).toHaveAttribute('data-lift', '#5bff2e');
 		});
 
 		test('keeps its buttons liquid glass, with no glow painted in the middle', async ({ page }) => {

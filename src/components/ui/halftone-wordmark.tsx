@@ -5,7 +5,8 @@ import * as React from "react"
  * sized by how much of the letter covers its cell, so the type keeps its edges at any scale. Moving across it parts
  * the dots around the pointer on springs, lightening them as they leave their place; a click sends a ring through
  * the word. Only the wordmark is taken (the footer around it is the site's own), and it adapts: it fills its parent's
- * box and sets the word in the parent's own font and size, centred on the ink, over a clear canvas so whatever is
+ * box and sets the word in the parent's own font and size, centred on the ink (or cropped by the bottom edge), over
+ * a clear canvas so whatever is
  * behind shows between the dots; it draws only while on screen and moving; under reduced motion it holds still.
  */
 
@@ -28,6 +29,7 @@ export function HalftoneWordmark({
   lift = "#e9efe6",
   dotGap = 6,
   radius = 80,
+  crop = 0,
 }: {
   word: string
   /** The dots at rest. */
@@ -38,6 +40,8 @@ export function HalftoneWordmark({
   dotGap?: number
   /** How far the pointer pushes, in CSS px. */
   radius?: number
+  /** How much of the word's cap height hangs below the box's bottom edge, 0–0.6: cropped, like a print run off. */
+  crop?: number
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
 
@@ -85,7 +89,10 @@ export function HalftoneWordmark({
       const ascent = metrics.actualBoundingBoxAscent
       const descent = metrics.actualBoundingBoxDescent
       m.textBaseline = "alphabetic"
-      m.fillText(text, (w - metrics.width) / 2, (h + ascent - descent) / 2)
+      // Centred on its ink; a crop lowers it so its foot runs off the bottom edge.
+      const hang = Math.min(0.6, Math.max(0, crop))
+      const baseline = hang > 0 ? h + ascent * hang : (h + ascent - descent) / 2
+      m.fillText(text, (w - metrics.width) / 2, baseline)
       const img = m.getImageData(0, 0, w, h).data
 
       const gap = Math.max(3, dotGap)
@@ -249,7 +256,7 @@ export function HalftoneWordmark({
       canvas.removeEventListener("pointerleave", onLeave)
       canvas.removeEventListener("pointerdown", onDown)
     }
-  }, [word, ink, lift, dotGap, radius])
+  }, [word, ink, lift, dotGap, radius, crop])
 
-  return <canvas ref={canvasRef} data-halftone aria-hidden="true" className="absolute inset-0 size-full" />
+  return <canvas ref={canvasRef} data-halftone data-lift={lift} aria-hidden="true" className="absolute inset-0 size-full" />
 }
