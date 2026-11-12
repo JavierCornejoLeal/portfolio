@@ -19,7 +19,7 @@ function StaticStrip() {
     <div data-projects-static className="flex h-full snap-x snap-mandatory items-center gap-2.5 overflow-x-auto px-[10vw] sm:gap-3.5">
       {projects.map((project) => (
         <a
-          key={project.url}
+          key={project.slug}
           href={pageOf(project.slug)}
           aria-label={`Open ${project.name}`}
           className="w-[90vw] shrink-0 snap-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300 sm:w-[min(45vw,1100px)]"
@@ -121,7 +121,7 @@ export default function ProjectsCarousel() {
             <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 size-full cursor-grab active:cursor-grabbing" />
             {projects.map((project, index) => (
               <a
-                key={project.url}
+                key={project.slug}
                 ref={(element) => {
                   anchorRefs.current[index] = element
                 }}

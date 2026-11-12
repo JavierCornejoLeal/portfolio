@@ -10,7 +10,9 @@ async function openMenu(page: Page) {
 const PROJECTS = [
 	['eduardo-calabuig', 'Eduardo Calabuig'],
 	['ocaive', 'ÒCAIVE'],
-	['hub-cultural-cabanyal', 'Hub Cultural Cabanyal']
+	['hub-cultural-cabanyal', 'Hub Cultural Cabanyal'],
+	['crm-eduardo', 'CRM Eduardo'],
+	['portfolio', 'Portfolio']
 ] as const;
 
 test.describe('project pages', () => {
