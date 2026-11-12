@@ -88,6 +88,7 @@ export const stories: Record<string, Story> = {
     },
     stack: [
       { name: "Next.js", why: "Server-rendered pages for a long, media-heavy home that still has to load fast and be found." },
+      { name: "Tailwind CSS", why: "One set of utilities across very different scenes, so the whole page keeps the same spacing and type." },
     ],
     gallery: [
       { kind: "image", src: media("ocaive", "systems.webp"), alt: "Sistemas que hacen crecer tu negocio", size: "half" },
