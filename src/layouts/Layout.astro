@@ -122,7 +122,7 @@ const person = {
 			{Array.from({ length: 6 }, (_, i) => <span style={`--i: ${i}`} />)}
 		</div>
 		<script>
-			import { glideTo } from '@/lib/glide';
+			import { GLIDE_PATIENCE_MS, glideTo } from '@/lib/glide';
 			import { leaveTo, opensWithCurtain } from '@/lib/curtain';
 
 			// In-page links (#projects, #contact-inside, #top…) glide to their section without writing the #fragment
@@ -144,7 +144,7 @@ const person = {
 			});
 
 			// Arriving from another page with a section in the address (/#projects): drop the fragment, then go there.
-			// Behind the curtain, jump straight there and open the curtain once it is in place (or after 4s at worst);
+			// Behind the curtain, jump straight there and open the curtain once it is in place (or once the glide gives up, at worst);
 			// otherwise (a link opened directly) glide there.
 			if (location.hash.length > 1) {
 				const hash = location.hash;
@@ -152,7 +152,8 @@ const person = {
 				const root = document.documentElement;
 				if (root.classList.contains('curtain-hold')) {
 					const release = () => root.classList.remove('curtain-hold');
-					window.setTimeout(release, 4000);
+					// As long as the glide is still waiting for its target (a slow device's footer), and a beat more.
+					window.setTimeout(release, GLIDE_PATIENCE_MS + 500);
 					requestAnimationFrame(() => {
 						if (!glideTo(hash, { instant: true, onArrive: release })) release();
 					});
