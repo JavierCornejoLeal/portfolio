@@ -3,12 +3,13 @@ import type { Project } from '@/data/projects';
 import type { Story } from '@/data/stories';
 import StoryMedia from './StoryMedia.astro';
 import NextProjectLink from './NextProjectLink';
+import RevealOnScroll from '@/components/RevealOnScroll.astro';
 
 /*
  * The story under a project's title screen: a line of context with the role, stack and site beside it, a lead clip
  * or picture, why each piece of the stack was chosen, more pictures, a few curiosities, and the way on to the next
  * project, bottom right. Blocks rise in as they
- * scroll into view (data-reveal, global.css); the script below also plays clips only while they are on screen.
+ * scroll into view (RevealOnScroll); the script below plays clips only while they are on screen.
  */
 
 const { project, story, next } = Astro.props as { project: Project; story: Story; next: Project };
@@ -91,22 +92,11 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 	</div>
 </section>
 
-<script>
-	// Blocks rise in once, the first time they scroll into view. Clips play only while on screen; under reduced
-	// motion they never start on their own and get controls instead.
-	const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+<RevealOnScroll />
 
-	const reveal = new IntersectionObserver(
-		(entries) => {
-			for (const entry of entries) {
-				if (!entry.isIntersecting) continue;
-				entry.target.setAttribute('data-shown', '');
-				reveal.unobserve(entry.target);
-			}
-		},
-		{ rootMargin: '0px 0px -12% 0px' }
-	);
-	document.querySelectorAll('[data-project-story] [data-reveal]').forEach((element) => reveal.observe(element));
+<script>
+	// Clips play only while on screen; under reduced motion they never start on their own and get controls instead.
+	const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 	const videos = document.querySelectorAll<HTMLVideoElement>('[data-story-video]');
 	// Clips loop by hand, back to where their content starts rather than to the blank first frame of the recording.

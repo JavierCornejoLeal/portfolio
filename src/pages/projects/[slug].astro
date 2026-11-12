@@ -4,6 +4,7 @@ import { projects, type Project } from '@/data/projects';
 import SiteMenu from '@/components/SiteMenu';
 import ProjectStory from '@/components/projects/ProjectStory.astro';
 import { stories } from '@/data/stories';
+import PageFooter from '@/components/PageFooter';
 
 /*
  * A project's page. Its opening screen: black, the site's glass menu top right, and the project's name set big at
@@ -30,7 +31,7 @@ const words = project.name.split(' ').map((word) => [...word].map((letter) => ({
 		<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
 			<SiteMenu client:load home="/" />
 		</div>
-		<section class="flex min-h-dvh flex-col justify-end px-[clamp(1.5rem,7vw,10rem)] pb-10">
+		<section id="top" class="flex min-h-dvh flex-col justify-end px-[clamp(1.5rem,7vw,10rem)] pb-10">
 
 			<div>
 				<h1 class="font-poster text-[clamp(4.5rem,9vw,10rem)] leading-none text-balance uppercase">
@@ -59,4 +60,6 @@ const words = project.name.split(' ').map((word) => [...word].map((letter) => ({
 		</section>
 		{story && <ProjectStory project={project} story={story} next={next} />}
 	</main>
+	<!-- The year comes from the visitor's clock, so the footer renders in the browser. -->
+	<PageFooter client:only="react" />
 </Layout>

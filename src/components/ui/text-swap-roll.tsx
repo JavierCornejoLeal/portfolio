@@ -122,8 +122,9 @@ export function TextSwapRoll({
     return () => window.clearTimeout(timer)
   }, [timing.total])
 
+  // The line may break between words (each word stays whole); a caller that wants one line sets nowrap around it.
   return (
-    <span className="inline-block whitespace-nowrap">
+    <span>
       {pairs.map(([a, b], i) => (
         <React.Fragment key={i}>
           {i > 0 && " "}
