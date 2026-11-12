@@ -42,6 +42,19 @@ for (const path of ['/projects/ocaive', '/about']) {
 			await expect.poll(() => page.evaluate(() => scrollY), { timeout: 5000 }).toBeLessThan(5);
 		});
 
+		test('drops the big name, and keeps its buttons liquid glass with the bars behind them to bend', async ({ page }) => {
+			await page.goto(path);
+			const footer = page.getByRole('contentinfo');
+			await footer.scrollIntoViewIfNeeded();
+			await expect(footer.locator('[data-footer-name]')).toHaveCount(0);
+			for (const pill of await footer.locator('[data-footer-pill]').all()) {
+				// The refracting glass (Chromium), not the frosted fallback.
+				await expect(pill.locator('[data-refract]').first()).toHaveAttribute('data-refract', 'true');
+			}
+			// The bars reach all the way up, faintly, so the glass has something to bend.
+			await expect(page.locator('[data-gradient-bars] [data-bar]').first()).toHaveCSS('background-image', /rgba\(91, 255, 46, 0\.0\d+\)\)$/);
+		});
+
 		test('holds the bars still under reduced motion', async ({ page }) => {
 			await page.emulateMedia({ reducedMotion: 'reduce' });
 			await page.goto(path);
@@ -50,8 +63,10 @@ for (const path of ['/projects/ocaive', '/about']) {
 	});
 }
 
-test('keeps the green portal footer on home, with no bars', async ({ page }) => {
+test('keeps the green portal footer on home, with no bars and its big name', async ({ page }) => {
 	await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 	await page.goto('/');
 	await expect(page.locator('[data-gradient-bars]')).toHaveCount(0);
+	await page.locator('[data-contact]').evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY, behavior: 'instant' }));
+	await expect(page.locator('footer#contact-inside [data-footer-name]')).toHaveCount(1, { timeout: 15_000 });
 });

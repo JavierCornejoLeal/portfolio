@@ -134,7 +134,16 @@ function RoleSwap() {
  * `background` is the contact portal's flat green: the footer is as tall as the screen and outlasts the portal's
  * pinned view, so it paints that same green itself.
  */
-export default function SiteFooter({ background, home = "" }: { background: string; home?: string }) {
+export default function SiteFooter({
+  background,
+  home = "",
+  showName = true,
+}: {
+  background: string
+  home?: string
+  /** The big JAVIER set into the footer; the pages away from home leave it out. */
+  showName?: boolean
+}) {
   // The footer only ever renders in the browser (the portal mounts once Anton has loaded), so this is the
   // visitor's current year, never the year the site was built.
   const year = new Date().getFullYear()
@@ -173,9 +182,11 @@ export default function SiteFooter({ background, home = "" }: { background: stri
 
       <div className="flex flex-col gap-4">
         {/* Decorative: the name is read once, in the bottom line. */}
-        <p data-footer-name aria-hidden="true" className="footer-name">
-          Javier
-        </p>
+        {showName && (
+          <p data-footer-name aria-hidden="true" className="footer-name">
+            Javier
+          </p>
+        )}
         <div className="flex flex-col gap-3 text-sm text-ink/75 sm:flex-row sm:items-center sm:justify-between">
           <p>
             ©{year} — Javier Cornejo, <RoleSwap />
