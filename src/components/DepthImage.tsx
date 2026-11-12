@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils"
  * circles slowly on its own; under reduced motion it holds still. Without WebGL the photo shows as it is.
  *
  * Hand-written WebGL (like FlutedGlass), drawn only while on screen. The root reports the light's position in
- * data-light ("x,y", 0..1 from the left and from the bottom) and data-ready once the first lit frame is drawn.
+ * data-light ("x,y", 0..1 from the left and from the bottom) and data-ready once the first lit frame is drawn; any
+ * [data-light-catch] laid over it gets the light's position from its own corner in --lx / --ly (.light-catch).
  */
 
 interface Settings {
@@ -354,6 +355,16 @@ function startEngine(root: HTMLDivElement, photo: HTMLImageElement, live: React.
       reported = value
       root.dataset.light = value
     }
+    // Content laid over the picture catches the same light: each [data-light-catch] gets the light's position from
+    // its own corner (--lx, --ly, in px), for a light pool drawn in CSS.
+    const box = root.getBoundingClientRect()
+    const x = box.left + light[0] * box.width
+    const y = box.top + (1 - light[1]) * box.height
+    root.querySelectorAll<HTMLElement>("[data-light-catch]").forEach((element) => {
+      const r = element.getBoundingClientRect()
+      element.style.setProperty("--lx", `${(x - r.left).toFixed(1)}px`)
+      element.style.setProperty("--ly", `${(y - r.top).toFixed(1)}px`)
+    })
   }
 
   function render() {

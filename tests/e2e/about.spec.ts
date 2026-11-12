@@ -73,6 +73,36 @@ test.describe('about page', () => {
 		await expect(depth(page).locator('canvas')).toHaveCount(0);
 	});
 
+	test('titles the page top right, under the menu, with a Roman slogan', async ({ page }) => {
+		await page.goto('/about');
+		const viewport = page.viewportSize()!;
+		const title = page.getByRole('heading', { level: 1, name: 'About' });
+		await expect(title).toBeVisible();
+		await expect(title).toHaveCSS('font-family', /Anton/);
+		await expect(page.getByText('Veni, vidi, deployed.')).toBeVisible();
+		const box = (await title.boundingBox())!;
+		const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!;
+		// Right aligned with the menu, just below it, in the top part of the screen.
+		expect(Math.abs(box.x + box.width - (menu.x + menu.width))).toBeLessThan(4);
+		expect(box.y).toBeGreaterThan(menu.y + menu.height);
+		expect(box.y + box.height).toBeLessThan(viewport.height * 0.45);
+	});
+
+	test('lights the title and the slogan with the same light as the statue', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/about');
+		await expect(depth(page)).toHaveAttribute('data-ready', 'true', { timeout: 15_000 });
+		const title = page.getByRole('heading', { level: 1, name: 'About' });
+		const box = (await title.boundingBox())!;
+		// The light pool sits where the light is, measured from the title's own corner.
+		const pool = () => title.evaluate(element => [parseFloat(element.style.getPropertyValue('--lx')), parseFloat(element.style.getPropertyValue('--ly'))]);
+		await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.5);
+		await expect.poll(async () => Math.abs((await pool())[0] - box.width * 0.3), { timeout: 5000 }).toBeLessThan(12);
+		await expect.poll(async () => Math.abs((await pool())[1] - box.height * 0.5)).toBeLessThan(12);
+		await expect(title).toHaveCSS('background-image', /radial-gradient/);
+		await expect(title).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+	});
+
 	test('stays out of search results until it has content', async ({ page, request }) => {
 		await page.goto('/about');
 		await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);

@@ -431,6 +431,20 @@ html[data-cursor-ready] [data-cursor] * {
 	}
 }
 
+/* Text over a DepthImage that catches its light: a pool of white around the light, falling off to a dim stone grey.
+   The component sets --lx / --ly from the element's corner; without it (no WebGL) the pool rests up and to the left. */
+.light-catch {
+	color: transparent;
+	background-image: radial-gradient(
+		circle 22rem at var(--lx, 20%) var(--ly, 0%),
+		#ffffff 0%,
+		rgba(232, 236, 230, 0.78) 30%,
+		rgba(232, 236, 230, 0.3) 100%
+	);
+	background-clip: text;
+	-webkit-background-clip: text;
+}
+
 /* Project stories ([slug].astro): each block rises a little and fades in the first time it scrolls into view
    (the page's script sets data-shown). Only with scripts on, so nothing stays hidden without them; still under
    reduced motion. */
