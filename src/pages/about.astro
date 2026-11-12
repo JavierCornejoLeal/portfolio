@@ -2,7 +2,6 @@
 import Layout from '@/layouts/Layout.astro';
 import SiteMenu from '@/components/SiteMenu';
 import DepthImage from '@/components/DepthImage';
-import RevealOnScroll from '@/components/RevealOnScroll.astro';
 import AboutWho from '@/components/about/AboutWho.astro';
 import AboutLife from '@/components/about/AboutLife.astro';
 import AboutProcess from '@/components/about/AboutProcess.astro';
@@ -20,7 +19,7 @@ import AboutFaq from '@/components/about/AboutFaq.astro';
 		<SiteMenu client:load home="/" />
 	</div>
 	<main class="min-h-dvh bg-black">
-		<section class="h-dvh">
+		<section class="relative h-dvh">
 			<DepthImage
 				client:load
 				image="/about/statue.webp"
@@ -35,6 +34,12 @@ import AboutFaq from '@/components/about/AboutFaq.astro';
 					<p data-light-catch class="light-catch mt-3 text-[clamp(1.25rem,2.2vw,2rem)] font-light tracking-[-0.01em]">Veni, vidi, deployed.</p>
 				</div>
 			</DepthImage>
+			<!-- The statue sinks into the black below it, so the page carries on without a seam. -->
+			<div
+				data-statue-fade
+				aria-hidden="true"
+				class="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[38%] bg-[linear-gradient(to_bottom,rgba(0,0,0,0),#000)]"
+			></div>
 		</section>
 		<!-- Then who he is, who he is off the clock, how he works, where, with what, and the questions people ask. -->
 		<AboutWho />
@@ -44,5 +49,4 @@ import AboutFaq from '@/components/about/AboutFaq.astro';
 		<AboutStack />
 		<AboutFaq />
 	</main>
-	<RevealOnScroll />
 </Layout>

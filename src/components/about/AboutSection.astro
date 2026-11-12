@@ -1,8 +1,8 @@
 ---
 /*
  * One section of the About page: its title in a rail on the left (it stays put while the content scrolls past on
- * wide screens), the content on the right. No numbers, no rules: space alone separates sections. Blocks inside mark
- * themselves data-reveal.
+ * wide screens), the content on the right. No numbers, no rules: space alone separates sections, and the text is
+ * simply there, with no reveal on scroll.
  */
 
 const { id, title } = Astro.props as { id: string; title: string };
@@ -14,7 +14,7 @@ const { id, title } = Astro.props as { id: string; title: string };
 	class="px-[clamp(1.5rem,7vw,10rem)] py-[clamp(5rem,14vh,10rem)]"
 >
 	<div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,2.6fr)] md:gap-20">
-		<header data-reveal class="md:sticky md:top-32 md:self-start">
+		<header class="md:sticky md:top-32 md:self-start">
 			<h2 id={`about-${id}`} class="font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-none font-semibold tracking-[-0.03em]">
 				{title}
 			</h2>

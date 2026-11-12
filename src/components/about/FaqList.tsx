@@ -4,7 +4,8 @@ import { HoverRollLabel, useHoverRoll } from "@/components/ui/hover-roll"
 
 /*
  * The About page's questions. Each is a <details>: it works before this hydrates and reads as a disclosure to
- * assistive technology. Once live, an answer grows open and folds shut with an eased height instead of jumping, and a
+ * assistive technology. Once live, an answer grows open and folds shut with a slow eased height, its text fading in
+ * after the room for it opens (and out before it closes); a
  * question's letters roll on hover or focus like the footer's links. Under reduced motion it opens and closes at once.
  */
 
@@ -31,12 +32,14 @@ function Question({ question, answer }: { question: string; answer: string }) {
       element.open = true
       if (still) return
       const to = panel.scrollHeight
+      // The room opens first; the answer fades in a moment later, once there is space for it.
       running.current = panel.animate(
         [
-          { height: `${from}px`, opacity: 0 },
-          { height: `${to}px`, opacity: 1 },
+          { height: `${from}px`, opacity: 0, offset: 0 },
+          { opacity: 0, offset: 0.2 },
+          { height: `${to}px`, opacity: 1, offset: 1 },
         ],
-        { duration: 550, easing: EASE },
+        { duration: 800, easing: EASE },
       )
     } else {
       setOpen(false)
@@ -45,11 +48,13 @@ function Question({ question, answer }: { question: string; answer: string }) {
         return
       }
       const animation = panel.animate(
+        // The answer fades out first, then the room closes.
         [
-          { height: `${from}px`, opacity: 1 },
-          { height: "0px", opacity: 0 },
+          { height: `${from}px`, opacity: 1, offset: 0 },
+          { opacity: 0, offset: 0.45 },
+          { height: "0px", opacity: 0, offset: 1 },
         ],
-        { duration: 420, easing: EASE },
+        { duration: 650, easing: EASE },
       )
       running.current = animation
       animation.onfinish = () => {
@@ -59,7 +64,7 @@ function Question({ question, answer }: { question: string; answer: string }) {
   }
 
   return (
-    <details ref={details} data-reveal className="faq">
+    <details ref={details} className="faq">
       <summary
         onClick={toggle}
         onPointerEnter={play}

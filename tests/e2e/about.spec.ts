@@ -23,6 +23,16 @@ test.describe('about page', () => {
 		expect(Math.round(statue.height)).toBeGreaterThanOrEqual(page.viewportSize()!.height);
 	});
 
+	test('fades the statue into the black below it', async ({ page }) => {
+		await page.goto('/about');
+		const fade = page.locator('[data-statue-fade]');
+		await expect(fade).toHaveCSS('background-image', /linear-gradient\(.*rgba\(0, 0, 0, 0\).*rgb\(0, 0, 0\)/);
+		await expect(fade).toHaveCSS('pointer-events', 'none');
+		const [box, hero] = [await fade.boundingBox(), await page.locator('main > section').first().boundingBox()];
+		expect(Math.abs(box!.y + box!.height - (hero!.y + hero!.height))).toBeLessThan(1);
+		expect(box!.height).toBeGreaterThan(hero!.height * 0.2);
+	});
+
 	test('relights the statue with a light that follows the cursor', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/about');

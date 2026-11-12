@@ -2,20 +2,20 @@
 import AboutSection from './AboutSection.astro';
 import { who } from '@/data/about';
 
-// The phrase the opening line turns on, in the site's green.
+// The phrase the opening line turns on: filled with drifting green lines (.canvas-text in global.css).
 const turn = 'the things people actually touch';
 const [before, after] = who.lead.split(turn);
 ---
 
 <AboutSection id="who" title="Who I am">
 	<div class="flex flex-col gap-[clamp(3rem,8vh,5rem)]">
-		<p data-reveal class="text-[clamp(1.75rem,3vw,3rem)] leading-[1.15] font-medium tracking-[-0.02em] text-pretty">
-			{before}<span class="text-harlequin-200">{turn}</span>{after}
+		<p class="text-[clamp(1.75rem,3vw,3rem)] leading-[1.15] font-medium tracking-[-0.02em] text-pretty">
+			{before}<span data-canvas-text class="canvas-text">{turn}</span>{after}
 		</p>
-		<div class="grid gap-8 text-lg leading-relaxed text-ink/75 md:grid-cols-2 md:gap-12">
-			{who.paragraphs.map((paragraph) => <p data-reveal class="text-pretty">{paragraph}</p>)}
+		<div data-who-text class="flex max-w-3xl flex-col gap-6 text-xl leading-relaxed text-ink/75">
+			{who.paragraphs.map((paragraph) => <p class="text-pretty">{paragraph}</p>)}
 		</div>
-		<dl data-reveal class="flex flex-wrap gap-x-[clamp(3rem,8vw,7rem)] gap-y-8">
+		<dl class="flex flex-wrap gap-x-[clamp(3rem,8vw,7rem)] gap-y-8">
 			{
 				who.facts.map((fact) => (
 					<div class="flex flex-col gap-2">

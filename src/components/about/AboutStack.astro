@@ -8,7 +8,7 @@ import { stack } from '@/data/portfolio';
 		<div class="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-4">
 			{
 				stack.map((group) => (
-					<div data-reveal class="flex flex-col gap-5">
+					<div class="flex flex-col gap-5">
 						<h3 class="legend text-ink/50">{group.group}</h3>
 						<ul class="flex flex-col gap-1.5">
 							{group.items.map((item) => (
@@ -19,6 +19,6 @@ import { stack } from '@/data/portfolio';
 				))
 			}
 		</div>
-		<p data-reveal class="text-ink/50">What I reach for most. The right tool for the job beats a favourite one.</p>
+		<p class="text-ink/50">What I reach for most. The right tool for the job beats a favourite one.</p>
 	</div>
 </AboutSection>

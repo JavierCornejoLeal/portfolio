@@ -93,11 +93,19 @@ test.describe('about sections', () => {
 			const body = details.querySelector('[data-faq-body]')!;
 			const [animation] = body.getAnimations();
 			const frames = (animation?.effect as KeyframeEffect | undefined)?.getKeyframes() ?? [];
-			return { from: parseFloat(String(frames[0]?.height)), to: parseFloat(String(frames.at(-1)?.height)), duration: Number(animation?.effect?.getTiming().duration) };
+			const fadeIn = frames.find(frame => frame.opacity !== undefined && Number(frame.opacity) === 0 && Number(frame.offset) > 0);
+			return {
+				from: parseFloat(String(frames[0]?.height)),
+				to: parseFloat(String(frames.at(-1)?.height)),
+				duration: Number(animation?.effect?.getTiming().duration),
+				textDelay: Number(fadeIn?.offset ?? 0)
+			};
 		});
 		expect(growth.from).toBe(0);
 		expect(growth.to).toBeGreaterThan(20);
-		expect(growth.duration).toBeGreaterThanOrEqual(300);
+		// Slow enough to read as smooth, with the text arriving after the room for it.
+		expect(growth.duration).toBeGreaterThanOrEqual(700);
+		expect(growth.textDelay).toBeGreaterThan(0);
 		await expect(answer).toBeVisible();
 		await expect(faq.getByText(/freelance/i).first()).toBeVisible();
 		await open.locator('summary').click();
@@ -116,13 +124,35 @@ test.describe('about sections', () => {
 		await expect(question).toContainText('Are you open to new roles?');
 	});
 
-	test('shows every section still under reduced motion', async ({ page }) => {
-		await page.emulateMedia({ reducedMotion: 'reduce' });
+	test('shows its text as it is, with no reveal on scroll', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/about');
-		const blocks = page.locator('[data-about-section] [data-reveal]');
-		expect(await blocks.count()).toBeGreaterThan(0);
-		for (const block of await blocks.all()) {
-			await expect(block).toHaveCSS('opacity', '1');
-		}
+		await expect(page.locator('[data-about-section] [data-reveal]')).toHaveCount(0);
+		const lead = page.locator('[data-about-section="who"] p').first();
+		await lead.scrollIntoViewIfNeeded();
+		await expect(lead).toHaveCSS('opacity', '1');
+		await expect(lead).toHaveCSS('transform', 'none');
+	});
+
+	test('tells who he is in paragraphs, one after another, not side by side', async ({ page }) => {
+		await page.goto('/about');
+		const paragraphs = page.locator('[data-about-section="who"] [data-who-text] p');
+		await expect(paragraphs).toHaveCount(2);
+		const [first, second] = [await paragraphs.nth(0).boundingBox(), await paragraphs.nth(1).boundingBox()];
+		expect(Math.abs(first!.x - second!.x)).toBeLessThan(1);
+		expect(second!.y).toBeGreaterThan(first!.y + first!.height - 1);
+	});
+
+	test('fills "the things people actually touch" with green lines that drift', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/about');
+		const phrase = page.locator('[data-about-section="who"] [data-canvas-text]');
+		await expect(phrase).toHaveText('the things people actually touch');
+		await expect(phrase).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+		await expect(phrase).toHaveCSS('background-clip', /^text(, text)*$/);
+		await expect(phrase).toHaveCSS('background-image', /url\("data:image\/svg\+xml/);
+		await expect(phrase).not.toHaveCSS('animation-name', 'none');
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		await expect(phrase).toHaveCSS('animation-name', 'none');
 	});
 });

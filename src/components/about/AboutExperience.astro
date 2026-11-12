@@ -9,7 +9,7 @@ import { education, experience } from '@/data/portfolio';
 		<ol>
 			{
 				experience.map((role) => (
-					<li data-reveal class="grid gap-3 py-8 md:grid-cols-[13rem_minmax(0,1fr)_minmax(0,1.3fr)] md:gap-10">
+					<li class="grid gap-3 py-8 md:grid-cols-[13rem_minmax(0,1fr)_minmax(0,1.3fr)] md:gap-10">
 						<span class="legend pt-2 text-ink/50">{role.period}</span>
 						<div class="flex flex-col gap-1">
 							<h3 class="font-display text-[clamp(1.5rem,2.4vw,2.25rem)] leading-tight font-semibold tracking-[-0.02em]">{role.company}</h3>
@@ -23,7 +23,7 @@ import { education, experience } from '@/data/portfolio';
 				))
 			}
 		</ol>
-		<div data-reveal class="flex flex-col gap-6">
+		<div class="flex flex-col gap-6">
 			<span class="legend text-ink/45">Before and alongside</span>
 			<ul class="flex flex-col">
 				{
