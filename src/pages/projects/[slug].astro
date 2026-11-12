@@ -2,11 +2,13 @@
 import Layout from '@/layouts/Layout.astro';
 import { projects, type Project } from '@/data/projects';
 import SiteMenu from '@/components/SiteMenu';
+import ProjectStory from '@/components/projects/ProjectStory.astro';
+import { stories } from '@/data/stories';
 
 /*
- * A project's page. For now its opening screen only: black, the site's glass menu top right, and the project's
- * name set big at the foot, its letters rising one after another out of their own masks
- * (.letter-mask / .letter in global.css). The rest of the page fills in project by project.
+ * A project's page. Its opening screen: black, the site's glass menu top right, and the project's name set big at
+ * the foot, its letters rising one after another out of their own masks (.letter-mask / .letter in global.css).
+ * Scrolling past it tells the project's story (ProjectStory, data/stories.ts).
  */
 
 export function getStaticPaths() {
@@ -14,6 +16,7 @@ export function getStaticPaths() {
 }
 
 const { project } = Astro.props as { project: Project };
+const story = stories[project.slug];
 // Letters are numbered across the whole name, so the rise runs left to right through every word.
 let index = 0;
 const words = project.name.split(' ').map((word) => [...word].map((letter) => ({ letter, index: index++ })));
@@ -52,5 +55,6 @@ const words = project.name.split(' ').map((word) => [...word].map((letter) => ({
 				<hr data-project-rule class="mt-8 border-0 border-t border-ink/20" />
 			</div>
 		</section>
+		{story && <ProjectStory project={project} story={story} />}
 	</main>
 </Layout>

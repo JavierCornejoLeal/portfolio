@@ -1,0 +1,37 @@
+---
+import type { StoryMedia } from '@/data/stories';
+
+/*
+ * One picture or clip of a project story, framed. Clips are muted and loop; the page's script plays them only while
+ * on screen (and leaves them to the visitor under reduced motion). Phone shots sit upright in a frame as wide as a
+ * half, so a row keeps one height; on a phone, where frames stack, theirs is taller.
+ */
+
+const { item } = Astro.props as { item: StoryMedia };
+const span = item.size === 'wide' ? 'sm:col-span-2' : '';
+const frame = item.size === 'phone' ? 'flex items-center justify-center bg-white/[0.04] p-[6%]' : '';
+const fit = item.size === 'phone' ? 'h-full w-auto rounded-[1.4rem] object-contain' : 'size-full object-cover object-top';
+---
+
+<figure data-reveal class:list={['flex flex-col gap-3', span]}>
+	<div class:list={['overflow-hidden rounded-2xl ring-1 ring-white/10', item.size === 'phone' ? 'aspect-[4/5] sm:aspect-[16/10]' : 'aspect-[16/10]', frame]}>
+		{
+			item.kind === 'video' ? (
+				<video
+					data-story-video
+					src={item.src}
+					poster={item.poster}
+					aria-label={item.alt}
+					muted
+					loop
+					playsinline
+					preload="none"
+					class={fit}
+				/>
+			) : (
+				<img src={item.src} alt={item.alt} loading="lazy" decoding="async" class={fit} />
+			)
+		}
+	</div>
+	{item.caption && <figcaption class="text-sm leading-snug text-ink/60">{item.caption}</figcaption>}
+</figure>
