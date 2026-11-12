@@ -177,9 +177,10 @@ test.describe('page curtain', () => {
 		await page.goto('/projects/ocaive');
 		await page.getByRole('button', { name: 'Open menu' }).click();
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Contact', exact: true }).click();
-		await expect(page).toHaveURL(/\/$/);
+		// The menu's glass, the curtain and home's load chain up: a CI runner rendering WebGL in software needs room.
+		await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
 		// Held shut until the footer has mounted and the page is at its end, then opened.
-		await expect(page.locator('html')).not.toHaveClass(/curtain-hold/, { timeout: 8_000 });
+		await expect(page.locator('html')).not.toHaveClass(/curtain-hold/, { timeout: 15_000 });
 		expect(await page.evaluate(() => Math.round(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1)).toBe(true);
 		await expect(page.locator('footer#contact-inside')).toBeInViewport();
 		expect(new URL(page.url()).hash).toBe('');
