@@ -2,14 +2,16 @@
 import type { Project } from '@/data/projects';
 import type { Story } from '@/data/stories';
 import StoryMedia from './StoryMedia.astro';
+import NextProjectLink from './NextProjectLink';
 
 /*
  * The story under a project's title screen: a line of context with the role, stack and site beside it, a lead clip
- * or picture, why each piece of the stack was chosen, more pictures, and a few curiosities. Blocks rise in as they
+ * or picture, why each piece of the stack was chosen, more pictures, a few curiosities, and the way on to the next
+ * project, bottom right. Blocks rise in as they
  * scroll into view (data-reveal, global.css); the script below also plays clips only while they are on screen.
  */
 
-const { project, story } = Astro.props as { project: Project; story: Story };
+const { project, story, next } = Astro.props as { project: Project; story: Story; next: Project };
 const number = (i: number) => String(i + 1).padStart(2, '0');
 ---
 
@@ -82,6 +84,10 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 				))
 			}
 		</ol>
+	</div>
+
+	<div data-reveal class="flex justify-end">
+		<NextProjectLink client:visible name={next.name} href={`/projects/${next.slug}`} />
 	</div>
 </section>
 

@@ -99,11 +99,48 @@ test.describe('project stories', () => {
 		await expect(video).toHaveAttribute('controls', '');
 	});
 
+	test('ends with the next project, bottom right, in light type whose letters roll on hover', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		const order = ['eduardo-calabuig', 'ocaive', 'hub-cultural-cabanyal', 'crm-eduardo', 'portfolio'];
+		const names = ['Eduardo Calabuig', 'ÒCAIVE', 'Hub Cultural Cabanyal', 'CRM Eduardo', 'Portfolio'];
+		for (const [i, slug] of order.entries()) {
+			const next = (i + 1) % order.length;
+			await page.goto(`/projects/${slug}`);
+			const link = page.locator('[data-next-project]');
+			await expect(link).toHaveAccessibleName(`View ${names[next]}`);
+			await expect(link).toHaveAttribute('href', `/projects/${order[next]}`);
+		}
+
+		await page.goto('/projects/eduardo-calabuig');
+		const link = page.locator('[data-next-project]');
+		await link.scrollIntoViewIfNeeded();
+		// Last in the story, at the right edge of the content.
+		const after = await link.evaluate(element => {
+			const story = element.closest('[data-project-story]')!;
+			const blocks = [...story.querySelectorAll('[data-reveal]')].filter(block => !block.contains(element));
+			return blocks.every(block => block.getBoundingClientRect().bottom <= element.getBoundingClientRect().top + 1);
+		});
+		expect(after).toBe(true);
+		const box = (await link.boundingBox())!;
+		const story = (await page.locator('[data-project-story] [data-reveal]').first().boundingBox())!;
+		expect(Math.abs(box.x + box.width - (story.x + story.width))).toBeLessThan(2);
+		// Medium, light type: not a heading.
+		const type = await link.evaluate(element => ({ size: parseFloat(getComputedStyle(element).fontSize), weight: Number(getComputedStyle(element).fontWeight) }));
+		expect(type.size).toBeGreaterThanOrEqual(24);
+		expect(type.size).toBeLessThanOrEqual(56);
+		expect(type.weight).toBeLessThanOrEqual(300);
+
+		await expect(link.locator('[data-roll-letter]')).toHaveCount(0);
+		await link.hover();
+		await expect(link.locator('[data-roll-letter]')).toHaveCount('ViewÒCAIVE'.length);
+	});
+
 	test('links a live project to its site, and says so when it is private', async ({ page }) => {
 		await page.goto('/projects/eduardo-calabuig');
 		await expect(story(page).getByRole('link', { name: /eduardocalabuig\.com/ })).toHaveAttribute('href', 'https://eduardocalabuig.com');
 		await page.goto('/projects/crm-eduardo');
-		await expect(story(page).getByRole('link')).toHaveCount(0);
+		// No site to link to: only the way on to the next project.
+		await expect(story(page).locator('a[target="_blank"]')).toHaveCount(0);
 		await expect(story(page)).toContainText('Private tool');
 	});
 });
