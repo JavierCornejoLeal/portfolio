@@ -32,6 +32,14 @@ test.describe('page loader', () => {
 		await expect(loader).toBeHidden();
 	});
 
+	test('covers the page in one solid black, the logo\'s own canvas included', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('.page-loader')).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+		// The logo's square is the same black, so no lighter or darker tile shows around it.
+		const tile = page.locator('.page-loader [style*="background-color"]').first();
+		await expect(tile).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+	});
+
 	test('holds the headline entrance until the loader lifts', async ({ page }) => {
 		await page.goto('/');
 		const glyph = page.locator('main h1');

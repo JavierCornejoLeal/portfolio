@@ -1,8 +1,9 @@
 import * as React from "react"
-import { ArrowRight, ArrowUpRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 import { SOCIALS } from "@/components/SiteMenu"
 import { GlassLayer } from "@/components/ui/glass-layer"
+import { HoverRollLabel, useHoverRoll } from "@/components/ui/hover-roll"
 
 /*
  * Footer: it waits in the near-black green the contact portal opens onto. A big line and liquid-glass pills top
@@ -44,6 +45,26 @@ function FooterPill({ pill }: { pill: Pill }) {
   )
 }
 
+/** A profile or the phone: its letters roll on hover, as in the menu. Profiles open a new tab; the phone dials. */
+function ElsewhereLink({ link }: { link: { label: string; href: string } }) {
+  const { roll, play } = useHoverRoll()
+  const external = link.href.startsWith("https://")
+  return (
+    <li>
+      <a
+        href={link.href}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        onPointerEnter={play}
+        onFocus={play}
+        className="inline-block whitespace-nowrap"
+      >
+        <HoverRollLabel label={link.label} roll={roll} />
+        {external && <span className="sr-only"> (opens in a new tab)</span>}
+      </a>
+    </li>
+  )
+}
+
 /**
  * `background` is the contact portal's flat green: the footer is as tall as the screen and outlasts the portal's
  * pinned view, so it paints that same green itself.
@@ -79,23 +100,9 @@ export default function SiteFooter({ background }: { background: string }) {
         </div>
 
         <ul aria-label="Elsewhere" className="flex flex-col gap-2 text-[clamp(1.5rem,2.2vw,2.125rem)] leading-tight font-medium tracking-[-0.02em] sm:pr-6">
-          {ELSEWHERE.map((link) => {
-            // Profiles open in a new tab; the phone stays on the page and hands over to the dialler.
-            const external = link.href.startsWith("https://")
-            return (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  className="group inline-flex items-center gap-2 whitespace-nowrap transition-opacity duration-200 hover:opacity-70 motion-reduce:transition-none"
-                >
-                  {link.label}
-                  {external && <span className="sr-only"> (opens in a new tab)</span>}
-                  <ArrowUpRight aria-hidden="true" className="size-5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100" />
-                </a>
-              </li>
-            )
-          })}
+          {ELSEWHERE.map((link) => (
+            <ElsewhereLink key={link.href} link={link} />
+          ))}
         </ul>
       </div>
 

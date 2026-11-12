@@ -19,7 +19,7 @@ let index = 0;
 const words = project.name.split(' ').map((word) => [...word].map((letter) => ({ letter, index: index++ })));
 ---
 
-<Layout title={`${project.name} · Javier Cornejo`} noindex>
+<Layout title={`${project.name} · Javier Cornejo`} noindex siteLoader={false}>
 	<main class="min-h-dvh bg-black text-ink">
 		<!-- The site's glass menu, pinned top right as on the home page; its section links lead back home. -->
 		<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">

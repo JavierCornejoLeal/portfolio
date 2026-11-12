@@ -206,7 +206,8 @@
 	z-index: 100;
 	display: grid;
 	place-items: center;
-	background-color: var(--color-ground);
+	/* Solid black, the same as the logo's own canvas (PageLoader.tsx). */
+	background-color: #000;
 	opacity: 0;
 	visibility: hidden;
 	pointer-events: none;
@@ -407,6 +408,9 @@ html[data-cursor-ready] [data-cursor] * {
 	overflow: hidden;
 	vertical-align: bottom;
 	line-height: 1;
+	/* Room above the capitals for accents (the Ò of ÒCAIVE), given back by a negative margin so the line stays put. */
+	padding-top: 0.25em;
+	margin-top: -0.25em;
 }
 .letter {
 	display: inline-block;
@@ -425,4 +429,84 @@ html[data-cursor-ready] [data-cursor] * {
 	.letter {
 		animation: none;
 	}
+}
+
+/* Page curtain (lib/curtain.ts): before leaving for another page, black columns rise up the screen in a staircase,
+   the rightmost first, until they cover it; the black page it opens then shows plainly. */
+.page-curtain {
+	position: fixed;
+	inset: 0;
+	z-index: 90;
+	display: flex;
+}
+.page-curtain > span {
+	flex: 1;
+	/* Overlap a hair so no seam shows between columns. */
+	margin-left: -1px;
+	background-color: #000;
+	transform-origin: bottom;
+	animation: curtain-rise 0.55s cubic-bezier(0.76, 0, 0.24, 1) both;
+	animation-delay: calc((var(--columns) - 1 - var(--i)) * 0.07s);
+}
+@keyframes curtain-rise {
+	from {
+		scale: 1 0;
+	}
+}
+/* The same columns drawing back up on the page they land on, the rightmost first, revealing it. Only after a curtain
+   page change (html.curtain-in, set before paint in Layout.astro); never in the way of a click. */
+.page-curtain-in {
+	display: none;
+	pointer-events: none;
+}
+html.curtain-in .page-curtain-in {
+	display: flex;
+	/* Gone once fully open. */
+	animation: curtain-gone 0s linear 1s forwards;
+}
+.page-curtain-in > span {
+	transform-origin: top;
+	animation-name: curtain-reveal;
+	animation-delay: calc(0.08s + (var(--columns) - 1 - var(--i)) * 0.07s);
+	animation-fill-mode: both;
+}
+@keyframes curtain-reveal {
+	to {
+		scale: 1 0;
+	}
+}
+@keyframes curtain-gone {
+	to {
+		visibility: hidden;
+	}
+}
+/* Held shut while home jumps to the section it was asked for (Layout.astro), then opened. */
+html.curtain-hold .page-curtain-in,
+html.curtain-hold .page-curtain-in > span {
+	animation-play-state: paused;
+}
+/* A project's title rises as the curtain opens. */
+html.curtain-in .letter {
+	animation-delay: calc(0.45s + var(--i, 0) * 0.045s);
+}
+@media (prefers-reduced-motion: reduce) {
+	html.curtain-in .page-curtain-in {
+		display: none;
+	}
+}
+
+/* The 404's number, pressed into the black like the footer's name: a dark grey fill barely off the black, a lower lip
+   catching a little light and a shaded upper edge. Sized by height and width alike; its line box sits on the ink. */
+.not-found-number {
+	display: block;
+	font-family: var(--font-poster);
+	font-size: min(calc((100vw - 3rem) / 1.6), 58svh);
+	line-height: 0.87;
+	overflow-y: clip;
+	overflow-clip-margin: 0.02em;
+	color: #141514;
+	text-shadow:
+		0 0.006em 0.002em rgb(255 255 255 / 0.09),
+		0 -0.004em 0.004em rgb(0 0 0 / 0.9);
+	user-select: none;
 }

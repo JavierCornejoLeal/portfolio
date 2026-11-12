@@ -161,6 +161,19 @@ test.describe('footer', () => {
 		expect(Math.abs(phone.x - instagram.x)).toBeLessThan(2);
 	});
 
+	test('rolls the profiles\' and the phone\'s letters on hover, like the menu, with no arrow', async ({ page }) => {
+		await openFooter(page);
+		const socials = page.locator(footer).getByRole('list', { name: 'Elsewhere' });
+		await expect(socials.locator('a svg')).toHaveCount(0);
+		for (const name of ['GitHub', '+34 634 44 36 02']) {
+			const link = socials.getByRole('link', { name: new RegExp(`^${name.replace('+', '\\+')}`) });
+			await expect(link.locator('[data-roll-letter]')).toHaveCount(0);
+			await link.hover();
+			await expect(link.locator('[data-roll-letter]')).toHaveCount(name.replaceAll(' ', '').length);
+			await expect(link).toHaveAccessibleName(new RegExp(`^${name.replace('+', '\\+')}`));
+		}
+	});
+
 	test('lists every social profile, the same ones as the menu', async ({ page }) => {
 		await openFooter(page);
 

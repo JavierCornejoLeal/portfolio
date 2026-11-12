@@ -7,10 +7,10 @@ import react from '@astrojs/react';
 
 import sitemap from '@astrojs/sitemap';
 
-// A build (the e2e tests, CI, the deploy) bundles React for production. Sharing Vite's dependency cache with a
-// running dev server would overwrite it with that production React, whose jsxDEV is undefined, and break every
-// island in the dev server ("_jsxDEV is not a function", or "504 Outdated Optimize Dep"). Builds keep their own.
-const building = process.argv.includes('build');
+// Only the dev server uses Vite's default dependency cache. Every other command (build, preview, check: the e2e tests,
+// CI, the deploy) bundles React for production, and sharing that cache would hand a running dev server production
+// React, whose jsxDEV is undefined, breaking every island ("_jsxDEV is not a function", "useContext of null").
+const devServer = process.argv.includes('dev');
 
 // https://astro.build/config
 export default defineConfig({
@@ -19,7 +19,7 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
-    cacheDir: building ? 'node_modules/.vite-build' : 'node_modules/.vite',
+    cacheDir: devServer ? 'node_modules/.vite' : 'node_modules/.vite-build',
     // Dev only: pre-bundle every browser dependency at startup. Otherwise Vite discovers some mid-session (after
     // files are added, removed or the branch changes), re-bundles them under a new hash, and the open page's
     // requests for the old one fail with "504 Outdated Optimize Dep", leaving the islands unhydrated.

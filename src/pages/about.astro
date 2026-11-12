@@ -1,8 +1,13 @@
 ---
 import Layout from '@/layouts/Layout.astro';
+import SiteMenu from '@/components/SiteMenu';
 ---
 
 <!-- About: a plain black page for now; it fills in step by step. Kept out of search until it has content. -->
-<Layout title="About · Javier Cornejo" noindex>
+<Layout title="About · Javier Cornejo" noindex siteLoader={false}>
+	<!-- The site's glass menu, pinned top right as everywhere; its section links lead back home. -->
+	<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
+		<SiteMenu client:load home="/" />
+	</div>
 	<main class="min-h-dvh bg-black"></main>
 </Layout>
