@@ -429,6 +429,10 @@ test.describe('home page', () => {
 				[type, buttons]
 			);
 
+		// Start from the glass's own first guess (touch emulation reports no hovering pointer), so the pen's events
+		// reach a mounted listener rather than racing the island's hydration on a slow runner.
+		await expect(glass).toHaveAttribute('data-autoplay', 'on', { timeout: 15_000 });
+
 		// A pen that touches down before it is ever seen hovering behaves like a finger.
 		await pen('pointerdown', 1);
 		await pen('pointermove', 1);

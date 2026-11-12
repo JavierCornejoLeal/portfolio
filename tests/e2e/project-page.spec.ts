@@ -1,4 +1,11 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/** Opens the menu once its island has hydrated (Astro drops `ssr`): a click before that is lost on a slow runner. */
+async function openMenu(page: Page) {
+	const button = page.getByRole('button', { name: 'Open menu' });
+	await expect(page.locator('astro-island[ssr]', { has: button })).toHaveCount(0, { timeout: 15_000 });
+	await button.click();
+}
 
 const PROJECTS = [
 	['eduardo-calabuig', 'Eduardo Calabuig'],
@@ -103,9 +110,11 @@ test.describe('project pages', () => {
 	test('takes Projects back home, onto the projects, leaving the address clean', async ({ page }) => {
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await page.goto('/projects/eduardo-calabuig');
-		await page.getByRole('button', { name: 'Open menu' }).click();
+		await openMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Projects', exact: true }).click();
-		await expect.poll(() => page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top)), { timeout: 10_000 }).toBe(0);
+		// The curtain, home's load and its jump chain up: a CI runner rendering WebGL in software needs room.
+		await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
+		await expect.poll(() => page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top)), { timeout: 15_000 }).toBe(0);
 		await expect.poll(() => new URL(page.url()).hash).toBe('');
 		expect(new URL(page.url()).pathname).toBe('/');
 	});
@@ -113,12 +122,16 @@ test.describe('project pages', () => {
 	test('takes Contact back home, all the way down to the footer, leaving the address clean', async ({ page }) => {
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await page.goto('/projects/eduardo-calabuig');
-		await page.getByRole('button', { name: 'Open menu' }).click();
+		await openMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Contact', exact: true }).click();
+		// Home mounts the footer only once Anton has loaded: on a CI runner, seconds after the page itself. Until then
+		// the page already ends at the portal's placeholder, so "at the bottom" alone proves nothing: wait for the footer.
+		const footer = page.locator('footer#contact-inside');
+		await expect(footer).toBeInViewport({ timeout: 15_000 });
 		await expect
 			.poll(() => page.evaluate(() => Math.round(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1), { timeout: 15_000 })
 			.toBe(true);
-		await expect(page.locator('footer#contact-inside')).toBeInViewport();
+		await expect(footer).toBeInViewport();
 		await expect.poll(() => new URL(page.url()).hash).toBe('');
 	});
 
