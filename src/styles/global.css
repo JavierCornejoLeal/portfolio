@@ -407,6 +407,9 @@ html[data-cursor-ready] [data-cursor] * {
 	overflow: hidden;
 	vertical-align: bottom;
 	line-height: 1;
+	/* Room above the capitals for accents (the Ò of ÒCAIVE), given back by a negative margin so the line stays put. */
+	padding-top: 0.25em;
+	margin-top: -0.25em;
 }
 .letter {
 	display: inline-block;

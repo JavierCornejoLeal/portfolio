@@ -46,6 +46,21 @@ test.describe('project pages', () => {
 		await expect(title).toHaveAccessibleName('ÒCAIVE');
 	});
 
+	test('keeps accents whole: a letter\'s mask leaves room above the capitals without moving the title', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		await page.goto('/projects/ocaive');
+		const mask = page.getByRole('heading', { level: 1 }).locator('[data-letter-mask]').first();
+		const room = await mask.evaluate(element => {
+			const style = getComputedStyle(element);
+			const size = parseFloat(style.fontSize);
+			return { top: parseFloat(style.paddingTop) / size, margin: parseFloat(style.marginTop) / size };
+		});
+		// Room above the capitals for the Ò's grave accent...
+		expect(room.top).toBeGreaterThanOrEqual(0.2);
+		// ...given back by a negative margin, so the line sits where it did.
+		expect(room.margin).toBeCloseTo(-room.top, 3);
+	});
+
 	test('sets the title still under reduced motion', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goto('/projects/ocaive');
