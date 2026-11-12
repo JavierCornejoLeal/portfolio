@@ -33,6 +33,8 @@ for (const path of ['/projects/ocaive', '/about']) {
 
 		test('leads Projects back home and Back to top up this page', async ({ page }) => {
 			await page.goto(path);
+			// The footer renders in the browser (its year is the visitor's): give a slow runner room for it.
+			await expect(page.getByRole('contentinfo')).toBeAttached({ timeout: 15_000 });
 			const nav = page.getByRole('contentinfo').getByRole('navigation', { name: 'Footer' });
 			await expect(nav.getByRole('link', { name: 'Projects' })).toHaveAttribute('href', '/#projects');
 			await expect(nav.getByRole('link', { name: 'Back to top' })).toHaveAttribute('href', '#top');

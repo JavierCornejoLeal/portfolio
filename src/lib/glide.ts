@@ -4,7 +4,7 @@
  */
 
 /** How long a glide waits for a target that has not mounted yet (the footer, in the contact portal) before giving up. */
-export const GLIDE_PATIENCE_MS = 8000
+export const GLIDE_PATIENCE_MS = 12000
 
 /** Sections whose content mounts on approach: head for the section that mounts it, and the target appears. */
 const VIA: Record<string, string> = {

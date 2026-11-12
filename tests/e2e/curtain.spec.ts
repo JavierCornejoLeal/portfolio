@@ -187,9 +187,10 @@ test.describe('page curtain', () => {
 	});
 
 	test('keeps the curtain shut for a late footer, as long as the way down to it is still waiting', async ({ page }) => {
-		// A slow device: home's footer lives in the contact portal, which here takes five seconds to arrive.
+		// A slow device: home's footer lives in the contact portal, which here arrives four and a half seconds late
+		// (past the four the curtain used to wait, well inside the glide's patience even on a slow CI runner).
 		await page.route(/ContactPortal[^/]*\.js/, async route => {
-			await new Promise(resolve => setTimeout(resolve, 5000));
+			await new Promise(resolve => setTimeout(resolve, 4500));
 			await route.continue();
 		});
 		await page.goto('/projects/ocaive');
