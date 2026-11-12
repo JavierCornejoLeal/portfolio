@@ -12,18 +12,8 @@ const [before, after] = who.lead.split(turn);
 		<p class="text-[clamp(1.75rem,3vw,3rem)] leading-[1.15] font-medium tracking-[-0.02em] text-pretty">
 			{before}<span data-canvas-text class="canvas-text">{turn}</span>{after}
 		</p>
-		<div data-who-text class="flex max-w-3xl flex-col gap-6 text-xl leading-relaxed text-ink/75">
+		<div data-who-text class="flex flex-col gap-6 text-xl leading-relaxed text-ink/75">
 			{who.paragraphs.map((paragraph) => <p class="text-pretty">{paragraph}</p>)}
 		</div>
-		<dl class="flex flex-wrap gap-x-[clamp(3rem,8vw,7rem)] gap-y-8">
-			{
-				who.facts.map((fact) => (
-					<div class="flex flex-col gap-2">
-						<dt class="legend text-ink/45">{fact.label}</dt>
-						<dd class="font-poster text-[clamp(1.75rem,2.8vw,2.75rem)] leading-none uppercase">{fact.value}</dd>
-					</div>
-				))
-			}
-		</dl>
 	</div>
 </AboutSection>

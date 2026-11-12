@@ -1,26 +1,19 @@
 ---
 /*
- * One section of the About page: its title in a rail on the left (it stays put while the content scrolls past on
- * wide screens), the content on the right. No numbers, no rules: space alone separates sections, and the text is
- * simply there, with no reveal on scroll.
+ * One section of the About page. On wide screens its title is carried by the shared rail beside the sections
+ * (AboutRail), so the section's own heading is kept for assistive technology only; on a phone, where there is no
+ * rail, the heading shows above the content. No numbers, no rules: space alone separates sections.
  */
 
 const { id, title } = Astro.props as { id: string; title: string };
 ---
 
-<section
-	data-about-section={id}
-	aria-labelledby={`about-${id}`}
-	class="px-[clamp(1.5rem,7vw,10rem)] py-[clamp(5rem,14vh,10rem)]"
->
-	<div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,2.6fr)] md:gap-20">
-		<header class="md:sticky md:top-32 md:self-start">
-			<h2 id={`about-${id}`} class="font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-none font-semibold tracking-[-0.03em]">
-				{title}
-			</h2>
-		</header>
-		<div class="min-w-0">
-			<slot />
-		</div>
-	</div>
+<section data-about-section={id} aria-labelledby={`about-${id}`} class="scroll-mt-32 py-[clamp(4rem,12vh,8rem)]">
+	<h2
+		id={`about-${id}`}
+		class="mb-10 font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-none font-semibold tracking-[-0.03em] md:sr-only"
+	>
+		{title}
+	</h2>
+	<slot />
 </section>

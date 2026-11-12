@@ -20,11 +20,8 @@ test.describe('about sections', () => {
 	test('says where he comes from and what he is like', async ({ page }) => {
 		await page.goto('/about');
 		const who = page.locator('[data-about-section="who"]');
-		for (const [label, value] of [['Born', 'Dénia'], ['Runs on', 'Coffee']]) {
-			await expect(who.locator('dt', { hasText: label })).toHaveCount(1);
-			await expect(who.locator('dd', { hasText: value })).toHaveCount(1);
-		}
-		await expect(who.locator('dt')).toHaveCount(2);
+		// No fact list any more: just the words.
+		await expect(who.locator('dl')).toHaveCount(0);
 		await expect(who).toContainText('Public Works Engineering');
 		await expect(who).toContainText('almost anything for a coffee');
 	});
@@ -47,8 +44,49 @@ test.describe('about sections', () => {
 		await expect(life).toContainText('triathlon');
 		await expect(life).toContainText('clarinet');
 		await expect(life).toContainText('conservatory');
-		for (const word of ['History', 'mythology', 'video games']) await expect(life).toContainText(word);
+		for (const word of ['History', 'mythology', 'travelling', 'video games']) await expect(life).toContainText(word);
+		await expect(life.getByRole('heading', { level: 3, name: 'Hobbies' })).toBeVisible();
+		await expect(life).not.toContainText('History & myth');
 		await expect(life).toContainText('one coffee');
+	});
+
+	test('keeps one title fixed beside the sections, rolling it to each section as it arrives', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/about');
+		const rail = page.locator('[data-about-rail]');
+		const to = (id: string) =>
+			page.locator(`[data-about-section="${id}"]`).evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY - innerHeight * 0.25, behavior: 'instant' }));
+
+		await to('who');
+		await expect(rail).toHaveAttribute('data-title', 'Who I am');
+		await expect(rail).toBeInViewport();
+
+		// Once the sections are under way, it is pinned.
+		await to('life');
+		await expect(rail).toHaveText('Off the clock');
+		const fixedAt = (await rail.boundingBox())!.y;
+
+		await to('process');
+		await expect(rail).toHaveAttribute('data-title', 'How I work');
+		// It rolls there, letter by letter, then settles on the plain words.
+		await expect(rail.locator('[data-swap-word]').first()).toBeAttached();
+		await expect(rail).toHaveText('How I work');
+		// And it never moved: it stayed put while the sections scrolled past.
+		expect(Math.abs((await rail.boundingBox())!.y - fixedAt)).toBeLessThan(2);
+
+		await to('faq');
+		await expect(rail).toHaveText('Questions');
+		// Each section keeps its own heading for assistive technology.
+		await expect(page.locator('[data-about-section="faq"] h2')).toHaveText('Questions');
+		// Kept for screen readers only: the rail shows it on screen.
+		expect((await page.locator('[data-about-section="faq"] h2').boundingBox())!.width).toBeLessThanOrEqual(1);
+	});
+
+	test('shows each section its own title on a phone, where there is no rail', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/about');
+		await expect(page.locator('[data-about-rail]')).toBeHidden();
+		await expect(page.locator('[data-about-section="process"] h2')).toBeVisible();
 	});
 
 	test('numbers the steps of the process', async ({ page }) => {
@@ -141,6 +179,9 @@ test.describe('about sections', () => {
 		const [first, second] = [await paragraphs.nth(0).boundingBox(), await paragraphs.nth(1).boundingBox()];
 		expect(Math.abs(first!.x - second!.x)).toBeLessThan(1);
 		expect(second!.y).toBeGreaterThan(first!.y + first!.height - 1);
+		// As wide as the opening line above them, not half of it.
+		const lead = (await page.locator('[data-about-section="who"] > div > p').first().boundingBox())!;
+		expect(Math.abs(first!.width - lead.width)).toBeLessThan(2);
 	});
 
 	test('fills "the things people actually touch" with green lines that drift', async ({ page }) => {

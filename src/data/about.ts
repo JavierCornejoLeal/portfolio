@@ -10,10 +10,6 @@ export const who = {
     "I'm curious in the hands-on way: I take things apart, poke at them and move them around to see what happens. That's where the creative side comes from. I rarely start from a blank page; I reshape components that already exist and build new ones out of others.",
     "At work I'm the one asking why. I take problems apart, dig until I understand them and explain what I find, because a team that understands its code moves faster. I like helping, I like teaching, and I'll do almost anything for a coffee.",
   ],
-  facts: [
-    { label: "Born", value: "Dénia" },
-    { label: "Runs on", value: "Coffee" },
-  ],
 }
 
 /** Off the clock: the person behind the code. */
@@ -29,9 +25,9 @@ export const life = [
     text: "I studied clarinet at the conservatory. Music has come with me ever since: at work, while training, and on the bad days too.",
   },
   {
-    label: "Curiosity",
-    title: "History & myth",
-    text: "History, mythology and video games. Blame them for the statue at the top of this page.",
+    label: "Likes",
+    title: "Hobbies",
+    text: "History, mythology, travelling and video games. Blame them for the statue at the top of this page.",
   },
   {
     label: "Character",

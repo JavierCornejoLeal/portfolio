@@ -8,6 +8,17 @@ import AboutProcess from '@/components/about/AboutProcess.astro';
 import AboutExperience from '@/components/about/AboutExperience.astro';
 import AboutStack from '@/components/about/AboutStack.astro';
 import AboutFaq from '@/components/about/AboutFaq.astro';
+import AboutRail from '@/components/about/AboutRail';
+
+// The sections in page order, for the rail's title.
+const sections = [
+	{ id: 'who', title: 'Who I am' },
+	{ id: 'life', title: 'Off the clock' },
+	{ id: 'process', title: 'How I work' },
+	{ id: 'experience', title: 'Experience' },
+	{ id: 'stack', title: 'Stack' },
+	{ id: 'faq', title: 'Questions' },
+];
 ---
 
 <!-- About: it opens on a statue in the dark, relit by a light that follows the cursor (DepthImage), with the page's
@@ -41,12 +52,25 @@ import AboutFaq from '@/components/about/AboutFaq.astro';
 				class="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[38%] bg-[linear-gradient(to_bottom,rgba(0,0,0,0),#000)]"
 			></div>
 		</section>
-		<!-- Then who he is, who he is off the clock, how he works, where, with what, and the questions people ask. -->
-		<AboutWho />
-		<AboutLife />
-		<AboutProcess />
-		<AboutExperience />
-		<AboutStack />
-		<AboutFaq />
+		<!-- Then who he is, who he is off the clock, how he works, where, with what, and the questions people ask. On wide
+		     screens one title stays put on the left and rolls to each section as it arrives. -->
+		<div
+			data-about-body
+			class="px-[clamp(1.5rem,7vw,10rem)] pb-[clamp(4rem,12vh,8rem)] md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,2.6fr)] md:gap-20"
+		>
+			<div class="hidden md:block">
+				<div class="sticky top-[clamp(7rem,20vh,10rem)] py-[clamp(4rem,12vh,8rem)]">
+					<AboutRail client:load sections={sections} />
+				</div>
+			</div>
+			<div class="min-w-0">
+				<AboutWho />
+				<AboutLife />
+				<AboutProcess />
+				<AboutExperience />
+				<AboutStack />
+				<AboutFaq />
+			</div>
+		</div>
 	</main>
 </Layout>

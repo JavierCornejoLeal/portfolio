@@ -93,8 +93,8 @@ test.describe('about page', () => {
 		const box = (await title.boundingBox())!;
 		const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!;
 		// Set in from the edge, on the right edge of the page's content below, under the menu.
-		const content = (await page.locator('[data-about-section="who"] h2').evaluate(element => element.closest('section')!.getBoundingClientRect()));
-		const inset = parseFloat(await page.locator('[data-about-section="who"]').evaluate(element => getComputedStyle(element).paddingRight));
+		const content = await page.locator('[data-about-body]').evaluate(element => element.getBoundingClientRect());
+		const inset = parseFloat(await page.locator('[data-about-body]').evaluate(element => getComputedStyle(element).paddingRight));
 		expect(Math.abs(box.x + box.width - (content.right - inset))).toBeLessThan(4);
 		expect(viewport.width - (box.x + box.width)).toBeGreaterThan(viewport.width - (menu.x + menu.width) + 20);
 		expect(box.y).toBeGreaterThan(menu.y + menu.height);
