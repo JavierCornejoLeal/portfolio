@@ -3,6 +3,9 @@
  * motion still jumps. Shared by in-page links (Layout.astro), the menu and arrivals from other pages.
  */
 
+/** How long a glide waits for a target that has not mounted yet (the footer, in the contact portal) before giving up. */
+export const GLIDE_PATIENCE_MS = 8000
+
 /** Sections whose content mounts on approach: head for the section that mounts it, and the target appears. */
 const VIA: Record<string, string> = {
   // The footer lives in the contact portal, which mounts on approach.
@@ -48,7 +51,7 @@ export function glideTo(hash: string, { instant = false, onArrive }: { instant?:
         return
       }
     }
-    if (performance.now() - started < 8000) requestAnimationFrame(arrive)
+    if (performance.now() - started < GLIDE_PATIENCE_MS) requestAnimationFrame(arrive)
   }
   requestAnimationFrame(arrive)
   return true

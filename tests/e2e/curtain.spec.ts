@@ -186,6 +186,35 @@ test.describe('page curtain', () => {
 		expect(new URL(page.url()).hash).toBe('');
 	});
 
+	test('keeps the curtain shut for a late footer, as long as the way down to it is still waiting', async ({ page }) => {
+		// A slow device: home's footer lives in the contact portal, which here takes five seconds to arrive.
+		await page.route(/ContactPortal[^/]*\.js/, async route => {
+			await new Promise(resolve => setTimeout(resolve, 5000));
+			await route.continue();
+		});
+		await page.goto('/projects/ocaive');
+		const button = page.getByRole('button', { name: 'Open menu' });
+		await expect(page.locator('astro-island[ssr]', { has: button })).toHaveCount(0, { timeout: 15_000 });
+		await button.click();
+		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Contact', exact: true }).click();
+		await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
+		// The moment it opens, the footer is already there and on screen: not the empty portal, with the footer
+		// arriving after.
+		const atOpen = await page.evaluate(
+			() =>
+				new Promise<{ footer: boolean; onScreen: boolean }>(resolve => {
+					const check = () => {
+						if (document.documentElement.classList.contains('curtain-hold')) return requestAnimationFrame(check);
+						const footer = document.querySelector('footer#contact-inside');
+						const rect = footer?.getBoundingClientRect();
+						resolve({ footer: Boolean(footer), onScreen: Boolean(rect && rect.top < innerHeight && rect.bottom > 0) });
+					};
+					check();
+				})
+		);
+		expect(atOpen).toEqual({ footer: true, onScreen: true });
+	});
+
 	test('opens the black curtain on the page the browser\'s Back button returns to', async ({ page }) => {
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Open menu' }).click();
