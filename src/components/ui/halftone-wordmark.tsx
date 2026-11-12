@@ -30,6 +30,8 @@ export function HalftoneWordmark({
   dotGap = 6,
   radius = 80,
   crop = 0,
+  lowercase = false,
+  dotlessJ = false,
 }: {
   word: string
   /** The dots at rest. */
@@ -42,6 +44,10 @@ export function HalftoneWordmark({
   radius?: number
   /** How much of the word's cap height hangs below the box's bottom edge, 0–0.6: cropped, like a print run off. */
   crop?: number
+  /** Set the word in lowercase, scaled to the width the box's own setting of it takes. */
+  lowercase?: boolean
+  /** Leave the dot off every j. */
+  dotlessJ?: boolean
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
 
@@ -83,16 +89,36 @@ export function HalftoneWordmark({
       mask.height = h
       const m = mask.getContext("2d", { willReadFrequently: true })
       if (!m) return
-      m.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
-      const text = style.textTransform === "uppercase" ? word.toUpperCase() : word
+      const size = parseFloat(style.fontSize)
+      const face = (px: number) => `${style.fontWeight} ${px}px ${style.fontFamily}`
+      m.font = face(size)
+      const boxText = style.textTransform === "uppercase" ? word.toUpperCase() : word
+      let text = boxText
+      if (lowercase) {
+        // As wide as the box's own setting of the word, so the lowercase word takes the same room.
+        text = word.toLowerCase()
+        m.font = face((size * m.measureText(boxText).width) / m.measureText(text).width)
+      }
       const metrics = m.measureText(text)
       const ascent = metrics.actualBoundingBoxAscent
       const descent = metrics.actualBoundingBoxDescent
+      // Lowercase crops against the body of its letters (x-height), not the dots above them.
+      const xHeight = m.measureText("x").actualBoundingBoxAscent
+      const body = lowercase ? xHeight : ascent
       m.textBaseline = "alphabetic"
       // Centred on its ink; a crop lowers it so its foot runs off the bottom edge.
       const hang = Math.min(0.6, Math.max(0, crop))
-      const baseline = hang > 0 ? h + ascent * hang : (h + ascent - descent) / 2
-      m.fillText(text, (w - metrics.width) / 2, baseline)
+      const baseline = hang > 0 ? h + body * hang : (h + ascent - descent) / 2
+      const left = (w - metrics.width) / 2
+      m.fillText(text, left, baseline)
+      if (dotlessJ) {
+        // Wipe the tittle off every j: whatever sits above the body of the letters, across the j's own advance.
+        const jWidth = m.measureText("j").width
+        for (let i = text.indexOf("j"); i >= 0; i = text.indexOf("j", i + 1)) {
+          const x = left + m.measureText(text.slice(0, i)).width
+          m.clearRect(x - 2, 0, jWidth + 4, baseline - xHeight * 1.04)
+        }
+      }
       const img = m.getImageData(0, 0, w, h).data
 
       const gap = Math.max(3, dotGap)
@@ -256,7 +282,7 @@ export function HalftoneWordmark({
       canvas.removeEventListener("pointerleave", onLeave)
       canvas.removeEventListener("pointerdown", onDown)
     }
-  }, [word, ink, lift, dotGap, radius, crop])
+  }, [word, ink, lift, dotGap, radius, crop, lowercase, dotlessJ])
 
-  return <canvas ref={canvasRef} data-halftone data-lift={lift} aria-hidden="true" className="absolute inset-0 size-full" />
+  return <canvas ref={canvasRef} data-halftone data-word={lowercase ? word.toLowerCase() : word} data-lift={lift} aria-hidden="true" className="absolute inset-0 size-full" />
 }

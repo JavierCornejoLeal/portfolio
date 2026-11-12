@@ -76,6 +76,8 @@ for (const path of ['/projects/ocaive', '/about']) {
 			// Only the dots show: the name's own letters, there for its box, are invisible.
 			await expect(name).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
 			await expect(name).toHaveCSS('text-shadow', 'none');
+			// Lowercase, like the halftone reference.
+			await expect(dots).toHaveAttribute('data-word', 'javier');
 			// Pushed dots turn green.
 			await expect(dots).toHaveAttribute('data-lift', '#5bff2e');
 		});

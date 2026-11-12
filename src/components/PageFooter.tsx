@@ -21,8 +21,8 @@ export default function PageFooter() {
           // Inline, because .footer-name's own colour and shadow (global.css, unlayered) outrank utility classes.
           <p data-footer-name aria-hidden="true" className="footer-name relative" style={{ color: "transparent", textShadow: "none" }}>
             Javier
-            {/* White dots that turn green when pushed, the word cropped by the footer's bottom edge. */}
-            <HalftoneWordmark word="Javier" ink="#e9efe6" lift="#5bff2e" crop={0.22} />
+            {/* White dots that turn green when pushed: lowercase, its j without a dot, cropped by the footer's bottom edge. */}
+            <HalftoneWordmark word="Javier" ink="#e9efe6" lift="#5bff2e" crop={0.22} lowercase dotlessJ />
           </p>
         }
       />
