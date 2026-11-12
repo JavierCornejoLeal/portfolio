@@ -1,0 +1,43 @@
+---
+import AboutSection from './AboutSection.astro';
+import { education, experience } from '@/data/portfolio';
+---
+
+<AboutSection id="experience" number={3} title="Experience">
+	<div class="flex flex-col gap-16">
+		<!-- A ledger: when, where, what. -->
+		<ol class="border-t border-ink/15">
+			{
+				experience.map((role) => (
+					<li data-reveal class="grid gap-3 border-b border-ink/15 py-8 md:grid-cols-[13rem_minmax(0,1fr)_minmax(0,1.3fr)] md:gap-10">
+						<span class="legend pt-2 text-ink/50">{role.period}</span>
+						<div class="flex flex-col gap-1">
+							<h3 class="font-display text-[clamp(1.5rem,2.4vw,2.25rem)] leading-tight font-semibold tracking-[-0.02em]">{role.company}</h3>
+							<p class="text-ink/70">
+								{role.title}
+								{role.place && <span class="text-ink/45"> · {role.place}</span>}
+							</p>
+						</div>
+						<p class="leading-relaxed text-pretty text-ink/70 md:pt-2">{role.detail}</p>
+					</li>
+				))
+			}
+		</ol>
+		<div data-reveal class="flex flex-col gap-6">
+			<span class="legend text-ink/45">Before and alongside</span>
+			<ul class="flex flex-col">
+				{
+					education.map((study) => (
+						<li class="grid gap-1 border-b border-ink/10 py-4 sm:grid-cols-[13rem_minmax(0,1fr)] sm:gap-10">
+							<span class="legend pt-1 text-ink/45">{study.period}</span>
+							<p>
+								{study.title}
+								<span class="text-ink/45"> · {study.company}</span>
+							</p>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</div>
+</AboutSection>

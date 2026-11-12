@@ -1,0 +1,26 @@
+---
+/*
+ * One section of the About page: its number and title in a rail on the left (it stays put while the content scrolls
+ * past on wide screens), the content on the right. Blocks inside mark themselves data-reveal.
+ */
+
+const { id, number, title } = Astro.props as { id: string; number: number; title: string };
+---
+
+<section
+	data-about-section={id}
+	aria-labelledby={`about-${id}`}
+	class="border-t border-ink/10 px-[clamp(1.5rem,7vw,10rem)] py-[clamp(5rem,14vh,10rem)]"
+>
+	<div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,2.6fr)] md:gap-20">
+		<header data-reveal class="flex flex-col gap-4 md:sticky md:top-32 md:self-start">
+			<span class="legend text-ink/45">{String(number).padStart(2, '0')} / 05</span>
+			<h2 id={`about-${id}`} class="font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-none font-semibold tracking-[-0.03em]">
+				{title}
+			</h2>
+		</header>
+		<div class="min-w-0">
+			<slot />
+		</div>
+	</div>
+</section>

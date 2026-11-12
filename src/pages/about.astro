@@ -2,11 +2,17 @@
 import Layout from '@/layouts/Layout.astro';
 import SiteMenu from '@/components/SiteMenu';
 import DepthImage from '@/components/DepthImage';
+import RevealOnScroll from '@/components/RevealOnScroll.astro';
+import AboutWho from '@/components/about/AboutWho.astro';
+import AboutProcess from '@/components/about/AboutProcess.astro';
+import AboutExperience from '@/components/about/AboutExperience.astro';
+import AboutStack from '@/components/about/AboutStack.astro';
+import AboutFaq from '@/components/about/AboutFaq.astro';
 ---
 
 <!-- About: it opens on a statue in the dark, relit by a light that follows the cursor (DepthImage), with the page's
-     name and a Roman boast top right catching the same light. The rest fills in step by step; kept out of search
-     until it has content. -->
+     name and a Roman boast top right catching the same light; then five sections about Javier. Kept out of search
+     until the page is finished. -->
 <Layout title="About · Javier Cornejo" noindex siteLoader={false}>
 	<!-- The site's glass menu, pinned top right as everywhere; its section links lead back home. -->
 	<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
@@ -28,5 +34,12 @@ import DepthImage from '@/components/DepthImage';
 				</div>
 			</DepthImage>
 		</section>
+		<!-- Then who he is, how he works, where, with what, and the questions people ask. -->
+		<AboutWho />
+		<AboutProcess />
+		<AboutExperience />
+		<AboutStack />
+		<AboutFaq />
 	</main>
+	<RevealOnScroll />
 </Layout>
