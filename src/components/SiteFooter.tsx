@@ -137,12 +137,12 @@ function RoleSwap() {
 export default function SiteFooter({
   background,
   home = "",
-  showName = true,
+  name,
 }: {
   background: string
   home?: string
-  /** The big JAVIER set into the footer; the pages away from home leave it out. */
-  showName?: boolean
+  /** Replaces the big JAVIER set into the footer (the pages away from home print it in halftone dots). */
+  name?: React.ReactNode
 }) {
   // The footer only ever renders in the browser (the portal mounts once Anton has loaded), so this is the
   // visitor's current year, never the year the site was built.
@@ -182,7 +182,7 @@ export default function SiteFooter({
 
       <div className="flex flex-col gap-4">
         {/* Decorative: the name is read once, in the bottom line. */}
-        {showName && (
+        {name ?? (
           <p data-footer-name aria-hidden="true" className="footer-name">
             Javier
           </p>

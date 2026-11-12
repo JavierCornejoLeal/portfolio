@@ -42,17 +42,46 @@ for (const path of ['/projects/ocaive', '/about']) {
 			await expect.poll(() => page.evaluate(() => scrollY), { timeout: 5000 }).toBeLessThan(5);
 		});
 
-		test('drops the big name, and keeps its buttons liquid glass with the bars behind them to bend', async ({ page }) => {
+		test('prints JAVIER in green halftone dots, where home sets it solid', async ({ page }) => {
+			await page.emulateMedia({ reducedMotion: 'no-preference' });
 			await page.goto(path);
 			const footer = page.getByRole('contentinfo');
 			await footer.scrollIntoViewIfNeeded();
-			await expect(footer.locator('[data-footer-name]')).toHaveCount(0);
+			const name = footer.locator('[data-footer-name]');
+			await expect(name).toHaveCount(1);
+			await expect(name).toHaveClass(/footer-name/);
+			const dots = name.locator('canvas[data-halftone]');
+			await expect(dots).toHaveAttribute('data-ready', 'true');
+			// The dots fill the name's own box, the same box home's JAVIER takes.
+			const [box, canvas] = [await name.boundingBox(), await dots.boundingBox()];
+			expect(Math.abs(box!.width - canvas!.width)).toBeLessThan(1);
+			expect(Math.abs(box!.height - canvas!.height)).toBeLessThan(1);
+			// Green dots, with clear canvas between them: the bars behind show through.
+			const pixels = await dots.evaluate(element => {
+				const c = element as HTMLCanvasElement;
+				const data = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+				let green = 0, clear = 0;
+				for (let i = 0; i < data.length; i += 4 * 7) {
+					if (data[i + 3] === 0) clear++;
+					else if (data[i + 1] > 180 && data[i] < 160) green++;
+				}
+				return { green, clear };
+			});
+			expect(pixels.green).toBeGreaterThan(200);
+			expect(pixels.clear).toBeGreaterThan(pixels.green);
+		});
+
+		test('keeps its buttons liquid glass, with no glow painted in the middle', async ({ page }) => {
+			await page.goto(path);
+			const footer = page.getByRole('contentinfo');
+			await footer.scrollIntoViewIfNeeded();
 			for (const pill of await footer.locator('[data-footer-pill]').all()) {
-				// The refracting glass (Chromium), not the frosted fallback.
 				await expect(pill.locator('[data-refract]').first()).toHaveAttribute('data-refract', 'true');
 			}
-			// The bars reach all the way up, faintly, so the glass has something to bend.
-			await expect(page.locator('[data-gradient-bars] [data-bar]').first()).toHaveCSS('background-image', /rgba\(91, 255, 46, 0\.0\d+\)\)$/);
+			const glows = await page.evaluate(() =>
+				[...document.querySelectorAll('[data-page-footer] *')].filter(element => getComputedStyle(element).backgroundImage.includes('radial-gradient')).length
+			);
+			expect(glows).toBe(0);
 		});
 
 		test('holds the bars still under reduced motion', async ({ page }) => {
