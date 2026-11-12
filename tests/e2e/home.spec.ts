@@ -14,7 +14,7 @@ test.describe('home page', () => {
 		const name = page.getByRole('heading', { level: 1, name: 'Javier Cornejo' });
 		await expect(name).toBeVisible();
 		await expect(name).toHaveCSS('font-family', /Anton/);
-		const slogan = page.locator('main p', { hasText: 'Code you can see through: clear, honest software' });
+		const slogan = page.locator('main p', { hasText: 'Code you can see through: sharp on the surface, solid all the way down.' });
 		await expect(slogan).toBeVisible();
 		await expect(slogan).not.toContainText('“');
 		// No role line: the name stands alone.
@@ -488,15 +488,14 @@ test.describe('home page', () => {
 		expect(pinnedFor).toBeGreaterThanOrEqual(viewport.height * 0.8);
 	});
 
-	test('flips the highlighted word in the statement title', async ({ page }) => {
-		await page.emulateMedia({ reducedMotion: 'no-preference' });
+	test('titles the statement "I build worlds", flush left with the text below it', async ({ page }) => {
 		await page.goto('/');
-		const title = page.locator('[data-statement]').getByRole('heading', { level: 2 });
-		await expect(title).toHaveAccessibleName('I build websites, platforms, dashboards and APIs');
-
-		const word = title.locator('[aria-hidden="true"] span.relative span');
-		const first = await word.first().textContent();
-		await expect.poll(() => word.last().textContent(), { timeout: 8000 }).not.toBe(first);
+		const section = page.locator('[data-statement]');
+		const title = section.getByRole('heading', { level: 2 });
+		await expect(title).toHaveAccessibleName('I build worlds');
+		const titleLeft = (await title.boundingBox())!.x;
+		const leadLeft = (await section.locator('p').first().boundingBox())!.x;
+		expect(Math.abs(titleLeft - leadLeft)).toBeLessThan(2);
 	});
 
 	test('runs one living backdrop behind the whole page, which the hero melts into', async ({ page }) => {

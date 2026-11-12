@@ -1,9 +1,11 @@
 import * as React from "react"
 import { ArrowRight } from "lucide-react"
+import { useReducedMotion } from "motion/react"
 
 import { SOCIALS } from "@/components/SiteMenu"
 import { GlassLayer } from "@/components/ui/glass-layer"
 import { HoverRollLabel, useHoverRoll } from "@/components/ui/hover-roll"
+import { TextSwapRoll } from "@/components/ui/text-swap-roll"
 
 /*
  * Footer: it waits in the near-black green the contact portal opens onto. A big line and liquid-glass pills top
@@ -65,6 +67,52 @@ function ElsewhereLink({ link }: { link: { label: string; href: string } }) {
   )
 }
 
+const ROLE = "full creative developer"
+const ROLE_REVEALED = "full stack developer"
+
+/**
+ * Easter egg in the bottom line: hovering "full creative developer" rolls its letters into "full stack developer",
+ * and leaving rolls them back. Under reduced motion the words just swap.
+ */
+function RoleSwap() {
+  const reduce = useReducedMotion()
+  const [label, setLabel] = React.useState(ROLE)
+  const [swap, setSwap] = React.useState<{ from: string; to: string; id: number } | null>(null)
+
+  const go = (to: string) => {
+    if (to === label) return
+    setLabel(to)
+    // A roll still playing starts the next one from where it was heading.
+    setSwap(reduce ? null : (current) => ({ from: current?.to ?? label, to, id: (current?.id ?? 0) + 1 }))
+  }
+
+  return (
+    // A fixed box, as wide as the longer role: the shorter one never slips out from under the pointer, and the
+    // roll, laid over it, never reflows the line (on a phone a wider line would wrap and shrink JAVIER above).
+    <span
+      data-footer-role
+      onPointerEnter={() => go(ROLE_REVEALED)}
+      onPointerLeave={() => go(ROLE)}
+      className="relative inline-block whitespace-nowrap"
+    >
+      {/* Sizer: drawn by a pseudo-element, so it adds nothing to the line's text. */}
+      <span aria-hidden="true" data-size={ROLE} className="invisible before:content-[attr(data-size)]" />
+      <span className="absolute top-0 left-0">
+        {swap ? (
+          <>
+            <span className="sr-only">{label}</span>
+            <span aria-hidden="true">
+              <TextSwapRoll key={swap.id} from={swap.from} to={swap.to} onAnimationComplete={() => setSwap(null)} />
+            </span>
+          </>
+        ) : (
+          label
+        )}
+      </span>
+    </span>
+  )
+}
+
 /**
  * `background` is the contact portal's flat green: the footer is as tall as the screen and outlasts the portal's
  * pinned view, so it paints that same green itself.
@@ -112,7 +160,9 @@ export default function SiteFooter({ background }: { background: string }) {
           Javier
         </p>
         <div className="flex flex-col gap-3 text-sm text-ink/75 sm:flex-row sm:items-center sm:justify-between">
-          <p>©{year} — Javier Cornejo, full stack developer</p>
+          <p>
+            ©{year} — Javier Cornejo, <RoleSwap />
+          </p>
           <nav aria-label="Footer">
             <ul className="legend flex gap-6 text-ink/75">
               <li>

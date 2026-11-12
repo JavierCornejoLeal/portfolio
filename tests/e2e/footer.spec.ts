@@ -174,6 +174,89 @@ test.describe('footer', () => {
 		}
 	});
 
+	test('rolls "full creative developer" into "full stack developer" on hover, and back on leaving', async ({ page }) => {
+		await openFooter(page);
+		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+		const role = page.locator(footer).locator('[data-footer-role]');
+		await expect(role).toHaveText('full creative developer');
+		await expect(role.locator('[data-swap-letter]')).toHaveCount(0);
+
+		await role.hover();
+		// The letters roll: one slot per letter of the longer text, while readers already get the new words.
+		await expect(role.locator('[data-swap-letter]')).toHaveCount('full creative developer'.length);
+		await expect(role.locator('.sr-only')).toHaveText('full stack developer');
+		// Once it has rolled, it settles into plain text.
+		await expect(role).toHaveText('full stack developer');
+		await expect(role.locator('[data-swap-letter]')).toHaveCount(0);
+
+		await page.mouse.move(0, 0);
+		await expect(role).toHaveText('full creative developer');
+	});
+
+	test('keeps the role revealed while the pointer rests at its far end, which "stack" is too short to reach', async ({ page }) => {
+		await openFooter(page);
+		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+		const role = page.locator(footer).locator('[data-footer-role]');
+		const box = (await role.boundingBox())!;
+		await page.mouse.move(box.x + box.width - 3, box.y + box.height / 2);
+		await expect(role.getByText('full stack developer', { exact: true })).toBeVisible();
+		// Settled and still revealed: the box did not shrink out from under the pointer.
+		await page.waitForTimeout(1500);
+		await expect(role.locator('[data-swap-letter]')).toHaveCount(0);
+		await expect(role).toHaveText('full stack developer');
+		expect(await role.boundingBox()).toEqual(box);
+	});
+
+	test('moves nothing else while the role rolls, least of all JAVIER, even on a narrow phone', async ({ page }) => {
+		// A narrow phone: the bottom line only just fits, so a roll that widened it would wrap it and shrink JAVIER.
+		await page.setViewportSize({ width: 360, height: 740 });
+		await openFooter(page);
+		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+		const role = page.locator(footer).locator('[data-footer-role]');
+		const name = page.locator(footer).locator('[data-footer-name]');
+		const before = await name.boundingBox();
+		await role.hover();
+		await expect(role.locator('[data-swap-letter]').first()).toBeAttached();
+		for (let i = 0; i < 6; i++) {
+			expect(await name.boundingBox()).toEqual(before);
+			await page.waitForTimeout(120);
+		}
+	});
+
+	test('never shifts the role\'s letters up or down while it rolls, in either direction', async ({ page }) => {
+		await openFooter(page);
+		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+		const role = page.locator(footer).locator('[data-footer-role]');
+		// Every frame, the top of each rolling letter's slot, and of the settled text.
+		await role.evaluate(element => {
+			const tops: number[] = [];
+			(window as unknown as { tops: number[] }).tops = tops;
+			const sample = () => {
+				for (const slot of element.querySelectorAll('[data-swap-letter]')) tops.push(Math.round(slot.getBoundingClientRect().top * 10) / 10);
+				tops.push(Math.round(element.getBoundingClientRect().top * 10) / 10);
+				requestAnimationFrame(sample);
+			};
+			sample();
+		});
+		await role.hover();
+		await expect(role).toHaveText('full stack developer');
+		await page.mouse.move(0, 0);
+		await expect(role).toHaveText('full creative developer');
+		const tops = await page.evaluate(() => (window as unknown as { tops: number[] }).tops);
+		expect(new Set(tops).size).toBe(1);
+	});
+
+	test('swaps the role without rolling under reduced motion', async ({ page }) => {
+		// The portal only flies in with motion, so arrive first, then ask for less of it.
+		await openFooter(page);
+		await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		const role = page.locator(footer).locator('[data-footer-role]');
+		await role.hover();
+		await expect(role).toHaveText('full stack developer');
+		await expect(role.locator('[data-swap-letter]')).toHaveCount(0);
+	});
+
 	test('lists every social profile, the same ones as the menu', async ({ page }) => {
 		await openFooter(page);
 
@@ -225,9 +308,9 @@ test.describe('footer', () => {
 		await page.clock.setFixedTime(new Date('2031-05-01T12:00:00'));
 		await page.goto('/');
 		await page.locator('[data-contact]').evaluate(element => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY, behavior: 'instant' }));
-		await expect(page.locator(footer)).toContainText('©2031 — Javier Cornejo, full stack developer');
+		await expect(page.locator(footer)).toContainText('©2031 — Javier Cornejo, full creative developer');
 		// The bottom line holds only the year and the name; the phone lives with the profiles.
-		await expect(page.locator(footer).getByText(/©2031 — Javier Cornejo, full stack developer$/)).toHaveCount(1);
+		await expect(page.locator(footer).getByText(/©2031 — Javier Cornejo, full creative developer$/)).toHaveCount(1);
 		const nav = page.locator(footer).getByRole('navigation', { name: 'Footer' });
 		await expect(nav.getByRole('link', { name: 'Projects' })).toHaveAttribute('href', '#projects');
 		await expect(nav.getByRole('link', { name: 'Back to top' })).toHaveAttribute('href', '#top');
