@@ -65,6 +65,8 @@ export default function PageLoader() {
       className="size-[min(360px,100vw)] cursor-default"
       loop={false}
       tileSize={180}
+      // The same solid black as the overlay around it, so no tile of another shade shows.
+      background="#000000"
       onRevealEnd={() => finishReveal.current()}
     />
   )

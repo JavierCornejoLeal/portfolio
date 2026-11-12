@@ -206,7 +206,8 @@
 	z-index: 100;
 	display: grid;
 	place-items: center;
-	background-color: var(--color-ground);
+	/* Solid black, the same as the logo's own canvas (PageLoader.tsx). */
+	background-color: #000;
 	opacity: 0;
 	visibility: hidden;
 	pointer-events: none;
@@ -492,4 +493,20 @@ html.curtain-in .letter {
 	html.curtain-in .page-curtain-in {
 		display: none;
 	}
+}
+
+/* The 404's number, pressed into the black like the footer's name: a dark grey fill barely off the black, a lower lip
+   catching a little light and a shaded upper edge. Sized by height and width alike; its line box sits on the ink. */
+.not-found-number {
+	display: block;
+	font-family: var(--font-poster);
+	font-size: min(calc((100vw - 3rem) / 1.6), 58svh);
+	line-height: 0.87;
+	overflow-y: clip;
+	overflow-clip-margin: 0.02em;
+	color: #141514;
+	text-shadow:
+		0 0.006em 0.002em rgb(255 255 255 / 0.09),
+		0 -0.004em 0.004em rgb(0 0 0 / 0.9);
+	user-select: none;
 }

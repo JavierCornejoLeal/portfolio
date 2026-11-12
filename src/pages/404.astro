@@ -1,11 +1,19 @@
 ---
 import Layout from '@/layouts/Layout.astro';
+import { GlassCta } from '@/components/ui/glass-cta';
 ---
 
-<Layout title="Page not found · Javier Cornejo" noindex>
-	<main class="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6">
-		<h1 class="text-4xl font-bold tracking-tight sm:text-6xl">404</h1>
-		<p class="mt-4 text-lg text-zinc-400">This page does not exist.</p>
-		<a href="/" class="mt-8 text-zinc-100 underline underline-offset-4 hover:text-zinc-300">Back home</a>
+<!--
+	Not found: one solid black, a big 404 pressed into it like the name in the footer, and a liquid-glass way back home.
+	It opens with the black curtain drawing back, and Back home leaves behind the same curtain (lib/curtain.ts).
+-->
+<Layout title="Page not found · Javier Cornejo" noindex siteLoader={false} revealOnLoad>
+	<main class="flex min-h-dvh w-full flex-col items-center justify-center gap-8 bg-black px-6 text-center">
+		<h1>
+			<span class="sr-only">404</span>
+			<span data-not-found-number aria-hidden="true" class="not-found-number">404</span>
+		</h1>
+		<p class="text-lg text-ink/60">This page does not exist.</p>
+		<GlassCta client:load href="/">Back home</GlassCta>
 	</main>
 </Layout>

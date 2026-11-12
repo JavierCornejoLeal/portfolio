@@ -1,8 +1,7 @@
 import * as React from "react"
-import { useReducedMotion } from "motion/react"
 
 import { LiquidGlass } from "@/components/ui/liquid-glass"
-import { TextRoll } from "@/components/ui/text-roll"
+import { HoverRollLabel, useHoverRoll } from "@/components/ui/hover-roll"
 import { cn } from "@/lib/utils"
 
 /*
@@ -58,11 +57,7 @@ function MenuGlass({ radius, className }: { radius: number; className?: string }
 
 /** A menu link whose letters roll on hover or keyboard focus, every time; the plain word is what screen readers get. */
 function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; onNavigate: () => void }) {
-  const reduce = useReducedMotion()
-  const [roll, setRoll] = React.useState(0)
-  const play = () => {
-    if (!reduce) setRoll((count) => count + 1)
-  }
+  const { roll, play } = useHoverRoll()
   const external = link.href.startsWith("https://")
 
   return (
@@ -75,25 +70,7 @@ function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; 
         onFocus={play}
         className="menu-item block w-fit"
       >
-        {roll === 0 ? (
-          link.label
-        ) : (
-          <>
-            <span className="sr-only">{link.label}</span>
-            {/* Remounted on every hover, so it plays again. */}
-            <span aria-hidden="true">
-              <TextRoll
-                key={roll}
-                duration={0.35}
-                getEnterDelay={(i) => i * 0.025}
-                getExitDelay={(i) => i * 0.025 + 0.08}
-                transition={{ ease: "easeOut" }}
-              >
-                {link.label}
-              </TextRoll>
-            </span>
-          </>
-        )}
+        <HoverRollLabel label={link.label} roll={roll} />
         {external && <span className="sr-only"> (opens in a new tab)</span>}
       </a>
     </li>

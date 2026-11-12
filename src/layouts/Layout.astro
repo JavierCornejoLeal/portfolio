@@ -9,13 +9,15 @@ interface Props {
 	noindex?: boolean;
 	/** The site's first-visit loader. Pages with a loader of their own (the orb on about and projects) turn it off. */
 	siteLoader?: boolean;
+	/** Open the black page curtain on every load, not only after a curtain page change (the 404). */
+	revealOnLoad?: boolean;
 }
 
 const SITE_NAME = 'Javier Cornejo';
 const DEFAULT_DESCRIPTION =
 	'Javier Cornejo, full stack developer. Code you can see through: clear, honest software from database to pixel.';
 
-const { title = SITE_NAME, description = DEFAULT_DESCRIPTION, noindex = false, siteLoader = true } = Astro.props;
+const { title = SITE_NAME, description = DEFAULT_DESCRIPTION, noindex = false, siteLoader = true, revealOnLoad = false } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL('/og-image.png', Astro.site);
@@ -55,6 +57,7 @@ const person = {
 				}
 			} catch (e) {}
 		</script>
+		{revealOnLoad && <script is:inline>document.documentElement.classList.add('curtain-in');</script>}
 		{siteLoader && <script is:inline>
 			(function () {
 				var root = document.documentElement;
