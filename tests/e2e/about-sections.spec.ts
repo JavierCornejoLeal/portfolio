@@ -277,6 +277,8 @@ test.describe('about life previews', () => {
 
 	/** Brings the life section on screen and puts the pointer in the middle of one of its sides. */
 	async function hover(page: Page, title: string) {
+		// Mounted first: a pointer that moves before the preview hydrates is never seen by it.
+		await expect(preview(page)).toBeAttached({ timeout: 15_000 });
 		const target = side(page, title);
 		await target.scrollIntoViewIfNeeded();
 		const box = (await target.boundingBox())!;
@@ -286,7 +288,8 @@ test.describe('about life previews', () => {
 	test('shows a photo of each side under the pointer, and puts it away when the pointer leaves', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/about');
-		await expect(preview(page)).toHaveAttribute('data-visible', 'false');
+		// It mounts with the page, which a slow runner hydrates late beside the statue's WebGL.
+		await expect(preview(page)).toHaveAttribute('data-visible', 'false', { timeout: 15_000 });
 
 		await hover(page, 'Clarinet');
 		await expect(preview(page)).toHaveAttribute('data-visible', 'true');
@@ -296,8 +299,9 @@ test.describe('about life previews', () => {
 		await expect.poll(() => current.evaluate(element => getComputedStyle(element).clipPath)).toMatch(/^inset\(0(px|%)?\)$|^none$/);
 		await expect(current).toHaveCSS('opacity', '1');
 		// Every photo is the same upright rectangle, 3:4, with square corners.
-		const frame = () => preview(page).locator('[data-life-frame]').boundingBox();
-		const first = (await frame())!;
+		// Its own size, not its box on screen: the frame leans as it follows the pointer, and a tilted box is larger.
+		const frame = () => preview(page).locator('[data-life-frame]').evaluate(element => ({ width: (element as HTMLElement).offsetWidth, height: (element as HTMLElement).offsetHeight }));
+		const first = await frame();
 		expect(Math.abs(first.width / first.height - 3 / 4)).toBeLessThan(0.02);
 		await expect(preview(page).locator('[data-life-frame]')).toHaveCSS('border-radius', '0px');
 		await expect(current).toHaveCSS('border-radius', '0px');
@@ -305,9 +309,7 @@ test.describe('about life previews', () => {
 		// Another side swaps the photo, in the same frame.
 		await hover(page, 'Hobbies');
 		await expect(preview(page).locator('[data-life-photo][data-current] img')).toHaveAttribute('src', '/about/life/hobbies.webp');
-		const second = (await frame())!;
-		expect(Math.round(second.width)).toBe(Math.round(first.width));
-		expect(Math.round(second.height)).toBe(Math.round(first.height));
+		expect(await frame()).toEqual(first);
 
 		await page.mouse.move(5, 5);
 		await expect(preview(page)).toHaveAttribute('data-visible', 'false');
@@ -317,7 +319,7 @@ test.describe('about life previews', () => {
 		await page.goto('/about');
 		for (const [title, file] of [['Triathlon', 'triathlon'], ['Clarinet', 'clarinet'], ['Hobbies', 'hobbies'], ['All in', 'allin']])
 			await expect(side(page, title)).toHaveAttribute('data-life-image', `/about/life/${file}.webp`);
-		await expect(preview(page)).toHaveAttribute('aria-hidden', 'true');
+		await expect(preview(page)).toHaveAttribute('aria-hidden', 'true', { timeout: 15_000 });
 		// The normal cursor stays: the photo sits beside it, it does not replace it.
 		await hover(page, 'All in');
 		await expect(side(page, 'All in')).not.toHaveCSS('cursor', 'none');
