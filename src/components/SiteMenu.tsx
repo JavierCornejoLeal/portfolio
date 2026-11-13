@@ -112,6 +112,10 @@ export default function SiteMenu({ home = "" }: { home?: string }) {
     }
   }, [open, close])
 
+  // Away from home, Home leads the list: visitors who land straight on a page have no home in their history to go
+  // back to. Like any link to another page of the site, it leaves through the page curtain (Layout.astro).
+  const sections = home ? [{ label: "Home", href: home }, ...SECTIONS] : SECTIONS
+
   const line = "absolute left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-ink transition-transform duration-300 ease-out motion-reduce:transition-none"
 
   return (
@@ -139,7 +143,7 @@ export default function SiteMenu({ home = "" }: { home?: string }) {
         <MenuGlass radius={28} className="menu-reveal" />
         <div className="menu-reveal relative flex h-full flex-col justify-between gap-10 px-8 pt-28 pb-12 sm:justify-start sm:gap-12 sm:px-10 sm:pt-28 sm:pb-10">
           <ul className="flex flex-col gap-2 text-6xl leading-[1.05] font-medium tracking-[-0.03em] sm:text-[3.25rem]">
-            {SECTIONS.map((link, index) => (
+            {sections.map((link, index) => (
               <RollLink
                 key={link.href}
                 link={link.href.startsWith("#") ? { ...link, href: home + link.href } : link}
@@ -150,7 +154,7 @@ export default function SiteMenu({ home = "" }: { home?: string }) {
           </ul>
           <ul className="flex flex-col gap-1.5 text-3xl leading-snug font-medium tracking-[-0.01em] text-ink/80 sm:text-2xl">
             {SOCIALS.map((link, index) => (
-              <RollLink key={link.href} link={link} index={SECTIONS.length + index} onNavigate={() => close(false)} />
+              <RollLink key={link.href} link={link} index={sections.length + index} onNavigate={() => close(false)} />
             ))}
           </ul>
         </div>

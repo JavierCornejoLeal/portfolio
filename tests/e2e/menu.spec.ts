@@ -188,6 +188,28 @@ test.describe('menu', () => {
 		await expect(page).toHaveURL(/\/about\/?$/);
 	});
 
+	test('leads with Home on the other pages, and leaves it out at home', async ({ page }) => {
+		await page.goto('/');
+		await menuButton(page).click();
+		await expect(menu(page).getByRole('link', { name: 'Home', exact: true })).toHaveCount(0);
+
+		for (const path of ['/about', '/projects/portfolio']) {
+			await page.goto(path);
+			await menuButton(page).click();
+			const home = menu(page).getByRole('link', { name: 'Home', exact: true });
+			await expect(home).toHaveAttribute('href', '/');
+			await expect(menu(page).getByRole('link').first()).toHaveAccessibleName('Home');
+		}
+	});
+
+	test('takes Home back to the home page', async ({ page }) => {
+		await page.goto('/about');
+		await menuButton(page).click();
+		await menu(page).getByRole('link', { name: 'Home', exact: true }).click();
+		await expect(page).toHaveURL(/\/$/);
+		await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+	});
+
 	test('rolls a link\'s letters on hover, keeping its name for screen readers', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
