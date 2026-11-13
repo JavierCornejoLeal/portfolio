@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 /*
  * The About page after its hero: who, how, where, with what, and the questions people ask.
@@ -263,5 +263,82 @@ test.describe('about sections', () => {
 		await expect(phrase).not.toHaveCSS('animation-name', 'none');
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await expect(phrase).toHaveCSS('animation-name', 'none');
+	});
+});
+
+test.describe('about life previews', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+	});
+
+	const preview = (page: Page) => page.locator('[data-life-preview]');
+	const side = (page: Page, title: string) =>
+		page.locator('[data-about-section="life"] article').filter({ has: page.getByRole('heading', { level: 3, name: title }) });
+
+	/** Brings the life section on screen and puts the pointer in the middle of one of its sides. */
+	async function hover(page: Page, title: string) {
+		const target = side(page, title);
+		await target.scrollIntoViewIfNeeded();
+		const box = (await target.boundingBox())!;
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
+	}
+
+	test('shows a photo of each side under the pointer, and puts it away when the pointer leaves', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'no-preference' });
+		await page.goto('/about');
+		await expect(preview(page)).toHaveAttribute('data-visible', 'false');
+
+		await hover(page, 'Clarinet');
+		await expect(preview(page)).toHaveAttribute('data-visible', 'true');
+		const current = preview(page).locator('[data-life-photo][data-current]');
+		await expect(current.locator('img')).toHaveAttribute('src', '/about/life/clarinet.webp');
+		// Wiped open, not faded: it settles fully uncovered and fully opaque.
+		await expect.poll(() => current.evaluate(element => getComputedStyle(element).clipPath)).toMatch(/^inset\(0(px|%)?\)$|^none$/);
+		await expect(current).toHaveCSS('opacity', '1');
+		// Every photo is the same upright rectangle, 3:4, with square corners.
+		const frame = () => preview(page).locator('[data-life-frame]').boundingBox();
+		const first = (await frame())!;
+		expect(Math.abs(first.width / first.height - 3 / 4)).toBeLessThan(0.02);
+		await expect(preview(page).locator('[data-life-frame]')).toHaveCSS('border-radius', '0px');
+		await expect(current).toHaveCSS('border-radius', '0px');
+
+		// Another side swaps the photo, in the same frame.
+		await hover(page, 'Hobbies');
+		await expect(preview(page).locator('[data-life-photo][data-current] img')).toHaveAttribute('src', '/about/life/hobbies.webp');
+		const second = (await frame())!;
+		expect(Math.round(second.width)).toBe(Math.round(first.width));
+		expect(Math.round(second.height)).toBe(Math.round(first.height));
+
+		await page.mouse.move(5, 5);
+		await expect(preview(page)).toHaveAttribute('data-visible', 'false');
+	});
+
+	test('pairs every photo with its side and keeps it decorative', async ({ page }) => {
+		await page.goto('/about');
+		for (const [title, file] of [['Triathlon', 'triathlon'], ['Clarinet', 'clarinet'], ['Hobbies', 'hobbies'], ['All in', 'allin']])
+			await expect(side(page, title)).toHaveAttribute('data-life-image', `/about/life/${file}.webp`);
+		await expect(preview(page)).toHaveAttribute('aria-hidden', 'true');
+		// The normal cursor stays: the photo sits beside it, it does not replace it.
+		await hover(page, 'All in');
+		await expect(side(page, 'All in')).not.toHaveCSS('cursor', 'none');
+	});
+
+	test('appears at once under reduced motion', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		await page.goto('/about');
+		await hover(page, 'Hobbies');
+		const current = preview(page).locator('[data-life-photo][data-current]');
+		await expect(current).toBeVisible();
+		expect(await current.evaluate(element => getComputedStyle(element).clipPath)).toMatch(/^inset\(0(px|%)?\)$|^none$/);
+	});
+
+	test('stays out of the way on touch screens', async ({ browser }) => {
+		const touch = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+		const page = await touch.newPage();
+		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
+		await page.goto('/about');
+		await page.locator('[data-about-section="life"]').scrollIntoViewIfNeeded();
+		await expect(page.locator('[data-life-preview]')).toHaveCount(0);
+		await touch.close();
 	});
 });
