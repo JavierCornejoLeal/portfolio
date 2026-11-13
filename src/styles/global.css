@@ -447,11 +447,6 @@ html[data-cursor-ready] [data-cursor] * {
 
 /* About (components/about): the process numbers are hollow, drawn in outline, and fill as the pointer reaches their
    step (group-hover). */
-.process-number {
-	color: transparent;
-	-webkit-text-stroke: 1px color-mix(in srgb, var(--color-ink) 40%, transparent);
-}
-
 /* "the things people actually touch" (AboutWho): the letters are filled with fine wavy green lines, opaque to faint,
    drifting sideways over a faint green fill, so the phrase reads as green and moves. A background clipped to the
    text rather than a canvas, so it follows the phrase across a line break. Still under reduced motion. */

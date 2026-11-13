@@ -13,12 +13,21 @@ import { education, experience } from '@/data/portfolio';
 						<span class="legend pt-2 text-ink/50">{role.period}</span>
 						<div class="flex flex-col gap-1">
 							<h3 class="font-display text-[clamp(1.5rem,2.4vw,2.25rem)] leading-tight font-semibold tracking-[-0.02em]">{role.company}</h3>
-							<p class="text-ink/70">
-								{role.title}
-								{role.place && <span class="text-ink/45"> · {role.place}</span>}
-							</p>
+							<p class="text-ink/70">{role.title}</p>
+							{role.place && <p class="text-ink/45">{role.place}</p>}
 						</div>
-						<p class="leading-relaxed text-pretty text-ink/70 md:pt-2">{role.detail}</p>
+						<div class="flex flex-col gap-5 md:pt-2">
+							<p class="leading-relaxed text-pretty text-ink/70">{role.detail}</p>
+							{role.highlights && (
+								<ul class="flex flex-col gap-2.5">
+									{role.highlights.map((point) => (
+										<li class="relative pl-5 leading-relaxed text-pretty text-ink/70 before:absolute before:top-[0.7em] before:left-0 before:h-px before:w-2.5 before:bg-ink/40">
+											{point}
+										</li>
+									))}
+								</ul>
+							)}
+						</div>
 					</li>
 				))
 			}

@@ -109,6 +109,8 @@ export interface Role {
 	period: string;
 	place: string;
 	detail: string;
+	/** What the work involved, in the order it matters. */
+	highlights?: string[];
 }
 
 export const experience: Role[] = [
@@ -116,15 +118,29 @@ export const experience: Role[] = [
 		company: 'Huming',
 		title: 'Front-end Developer',
 		period: 'Aug 2025 – Aug 2026',
-		place: 'Pedreguer',
-		detail: 'New products from scratch and evolution of live ones: Next.js, TypeScript, WordPress and PHP.'
+		place: 'Pedreguer · Hybrid',
+		detail: 'Building new web products from scratch and evolving live ones, making the technical calls on my own across the whole cycle.',
+		highlights: [
+			'Built ocaive.com end to end in Next.js and TypeScript, from the first commit to production',
+			'Advanced GSAP animation: scroll-driven effects and visual storytelling, kept smooth on every device',
+			'Responsive interfaces in Tailwind CSS, with performance and accessibility first',
+			'Forms and automated email delivery through Resend',
+			'New features, bug fixing and ongoing maintenance on WordPress and PHP sites such as culturacabanyal.com'
+		]
 	},
 	{
 		company: 'Baleària',
-		title: 'Full Stack Developer',
+		title: 'Full Stack Developer · Internship',
 		period: 'Feb 2025 – Jun 2025',
-		place: 'Dénia',
-		detail: 'Internal applications in React and Java / Spring Boot, on code already in production.'
+		place: 'Dénia · On site',
+		detail: 'Internal applications used across the company, front end and back end, on code already in production.',
+		highlights: [
+			'Built an internal system to view and manage employee information, on Baleària’s own component libraries',
+			'Added and extended features in the tools used by the Call Center area',
+			'Maintained and evolved REST APIs in Java and Spring Boot, connected to React front ends',
+			'Debugged live services and refactored existing code so it is easier to maintain',
+			'Worked within the team’s architecture, standards and Git workflow'
+		]
 	}
 ];
 
@@ -153,7 +169,9 @@ export const education: Role[] = [
 ];
 
 export const stack: { group: string; items: string[] }[] = [
-	{ group: 'Frontend', items: ['React', 'TypeScript', 'Next.js', 'Astro', 'Tailwind CSS', 'GSAP'] },
+	{ group: 'Frontend', items: ['React', 'TypeScript', 'Next.js', 'Astro', 'Tailwind CSS', 'Bootstrap'] },
+	// Motion is the library formerly called Framer Motion: one tool, named both ways so either reads.
+	{ group: 'Motion & design', items: ['GSAP', 'Motion (Framer Motion)', 'WebGL', 'Figma'] },
 	{ group: 'Backend', items: ['Java', 'Spring Boot', 'Node.js', 'PHP', 'Laravel', 'REST APIs'] },
 	{ group: 'Data', items: ['PostgreSQL', 'MariaDB', 'Supabase'] },
 	{ group: 'Delivery', items: ['Git', 'Docker', 'Playwright', 'GitHub Actions', 'Vercel'] }

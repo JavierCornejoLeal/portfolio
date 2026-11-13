@@ -23,8 +23,9 @@ function Question({ question, answer }: { question: string; answer: string }) {
     const element = details.current!
     const panel = body.current!
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    // Start from wherever a running animation has got to.
-    const from = panel.getBoundingClientRect().height
+    // Start from wherever a running animation has got to. A closed answer starts from nothing: Chrome can still report
+    // its full height while it is folded away, and growing from there would make the first open jump.
+    const from = element.open ? panel.getBoundingClientRect().height : 0
     running.current?.cancel()
 
     if (!open) {
