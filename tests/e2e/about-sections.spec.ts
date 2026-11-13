@@ -186,10 +186,22 @@ test.describe('about sections', () => {
 		// Slow enough to read as smooth, with the text arriving after the room for it.
 		expect(growth.duration).toBeGreaterThanOrEqual(700);
 		expect(growth.textDelay).toBeGreaterThan(0);
-		// And that is what gets painted: early on, the room is still a sliver of the answer's height.
-		const body = open.locator('[data-faq-body]');
-		await page.waitForTimeout(120);
-		expect((await body.boundingBox())!.height).toBeLessThan(growth.to * 0.6);
+		// And that is what gets painted. Read at fixed points of the animation, not after a wait: the ease starts fast,
+		// so on a slow runner a timed read lands late. Paused at its start the room is empty; a little later it is
+		// still well short of the answer.
+		const painted = await open.evaluate(details => {
+			const body = details.querySelector('[data-faq-body]')!;
+			const [animation] = body.getAnimations();
+			animation.pause();
+			animation.currentTime = 0;
+			const start = body.getBoundingClientRect().height;
+			animation.currentTime = 40;
+			const early = body.getBoundingClientRect().height;
+			animation.play();
+			return { start, early };
+		});
+		expect(painted.start).toBeLessThan(1);
+		expect(painted.early).toBeLessThan(growth.to * 0.9);
 		const answer = open.getByText(/Remote, hybrid, or on site/);
 		await expect(open.locator('summary')).toContainText('Are you open to new roles?');
 		await expect(answer).toBeVisible();
