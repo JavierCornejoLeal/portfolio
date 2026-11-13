@@ -205,6 +205,8 @@ export const stories: Record<string, Story> = {
       { kind: "image", src: media("portfolio", "mobile.webp"), alt: "The hero on a phone", size: "phone" },
       { kind: "image", src: media("portfolio", "carousel.webp"), alt: "The projects carousel", size: "wide" },
       { kind: "image", src: media("portfolio", "footer.webp"), alt: "The footer, inside the letter", size: "wide" },
+      { kind: "image", src: media("portfolio", "about-statue.webp"), alt: "The About page: a marble statue lit by the pointer", size: "half" },
+      { kind: "image", src: media("portfolio", "about-footer.webp"), alt: "The footer of the inner pages: JAVIER in halftone dots over green bars", size: "half" },
     ],
     curiosities: [
       "The contact section is a letter: scrolling flies into the O of HELLO until its green fills the screen, and the footer waits inside.",

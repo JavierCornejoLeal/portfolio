@@ -23,7 +23,12 @@ test.describe('about sections', () => {
 		// No fact list any more: just the words.
 		await expect(who.locator('dl')).toHaveCount(0);
 		await expect(who).toContainText('Public Works Engineering');
-		await expect(who).toContainText('almost anything for a coffee');
+		await expect(who).toContainText('I like teaching');
+	});
+
+	test('does not lean on coffee anywhere', async ({ page }) => {
+		await page.goto('/about');
+		await expect(page.locator('main')).not.toContainText(/coffee/i);
 	});
 
 	test('has no section numbers and no divider lines', async ({ page }) => {
@@ -44,10 +49,12 @@ test.describe('about sections', () => {
 		await expect(life).toContainText('triathlon');
 		await expect(life).toContainText('clarinet');
 		await expect(life).toContainText('conservatory');
-		for (const word of ['History', 'mythology', 'travelling', 'video games']) await expect(life).toContainText(word);
+		for (const word of ['books on history', 'statue', 'video games', 'sport', 'travelling']) await expect(life).toContainText(word);
 		await expect(life.getByRole('heading', { level: 3, name: 'Hobbies' })).toBeVisible();
-		await expect(life).not.toContainText('History & myth');
-		await expect(life).toContainText('one coffee');
+		await expect(life).not.toContainText(/mythology/i);
+		// All in: slow to open up, quick to trust, then everything.
+		await expect(life).toContainText('take a while to open up');
+		await expect(life).toContainText('all in');
 	});
 
 	test('keeps one title fixed beside the sections, rolling it to each section as it arrives', async ({ page }) => {
@@ -98,6 +105,30 @@ test.describe('about sections', () => {
 		await expect(steps.last()).toContainText('05');
 	});
 
+	test('draws each step number in outline and lights it green under the pointer', async ({ page }) => {
+		await page.goto('/about');
+		const numbers = page.locator('[data-about-section="process"] [data-step-number]');
+		await expect(numbers).toHaveCount(5);
+		await expect(numbers.first().locator('text').first()).toHaveText('01');
+		// Each number has its own gradient and mask, so the five never borrow one another's.
+		const ids = await numbers.evaluateAll(svgs => svgs.flatMap(svg => [...svg.querySelectorAll('[id]')].map(element => element.id)));
+		expect(new Set(ids).size).toBe(ids.length);
+		const first = numbers.first();
+		await expect(first.locator('linearGradient stop')).toHaveCount(0);
+		// At rest the outline is already full white; the pointer adds only the green, nothing flashes brighter.
+		const outlines = first.locator('text:not([mask])');
+		await expect(outlines).toHaveCount(1);
+		await expect(outlines).toHaveCSS('stroke', 'rgb(233, 239, 230)');
+		await first.scrollIntoViewIfNeeded();
+		await first.hover();
+		const stops = first.locator('linearGradient stop');
+		await expect(stops).not.toHaveCount(0);
+		for (const color of await stops.evaluateAll(list => list.map(stop => stop.getAttribute('stop-color')!.toLowerCase())))
+			expect(['#abff90', '#5bff2e', '#2fbf1a']).toContain(color);
+		// Only the numbers: the step's title and text stay as they are.
+		await expect(page.locator('[data-about-section="process"] h3 svg, [data-about-section="process"] p svg')).toHaveCount(0);
+	});
+
 	test('lists the companies and the studies from the CV', async ({ page }) => {
 		await page.goto('/about');
 		const experience = page.locator('[data-about-section="experience"]');
@@ -107,24 +138,35 @@ test.describe('about sections', () => {
 		await expect(experience).toContainText('Front-end Developer');
 		await expect(experience).toContainText('Public Works Engineering');
 		await expect(experience).toContainText('Master’s in Cybersecurity');
+		// What he did there, not just where.
+		// No tool lists under the roles: the Stack section has them.
+		await expect(experience.getByText(/Next\.js · React/)).toHaveCount(0);
+		const huming = experience.locator('li').filter({ has: page.getByRole('heading', { level: 3, name: 'Huming' }) });
+		await expect(huming.locator('ul li').first()).toBeVisible();
+		for (const fact of ['ocaive.com', 'GSAP', 'Resend', 'WordPress']) await expect(huming).toContainText(fact);
+		const balearia = experience.locator('li').filter({ has: page.getByRole('heading', { level: 3, name: 'Baleària' }) });
+		for (const fact of ['Call Center', 'Spring Boot', 'REST']) await expect(balearia).toContainText(fact);
 	});
 
 	test('groups the stack', async ({ page }) => {
 		await page.goto('/about');
 		const stack = page.locator('[data-about-section="stack"]');
-		for (const group of ['Frontend', 'Backend', 'Data', 'Delivery']) await expect(stack.getByRole('heading', { level: 3, name: group })).toBeVisible();
-		for (const item of ['Next.js', 'Spring Boot', 'Supabase', 'Playwright']) await expect(stack.getByText(item, { exact: true })).toBeVisible();
+		for (const group of ['Frontend', 'Motion & design', 'Backend', 'Data', 'Delivery']) await expect(stack.getByRole('heading', { level: 3, name: group })).toBeVisible();
+		for (const item of ['Next.js', 'Spring Boot', 'Supabase', 'Playwright', 'Figma', 'WebGL', 'Motion (Framer Motion)', 'Bootstrap'])
+			await expect(stack.getByText(item, { exact: true })).toBeVisible();
 	});
 
 	test('answers the questions one at a time, opening and closing smoothly', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/about');
 		const faq = page.locator('[data-about-section="faq"]');
-		const open = faq.getByRole('group').filter({ hasText: 'Are you open to new roles?' });
-		const answer = open.getByText(/Remote, hybrid, or on site/);
-		await expect(answer).toBeHidden();
+		// Found by its place, not its role or text: those queries make Chrome measure the closed answer again, which
+		// hid a first open that did not grow at all (the closed answer already reported its full height).
+		const open = faq.locator('details').first();
 		await open.scrollIntoViewIfNeeded();
 		await expect(page.locator('[data-about-section="faq"] astro-island[ssr]')).toHaveCount(0);
+		// A visitor reads the question before clicking it: by then the closed answer has been laid out at full height.
+		await page.waitForTimeout(500);
 		// It grows open rather than jumping: the click starts an eased height animation from nothing to the answer.
 		const growth = await open.evaluate(details => {
 			details.querySelector('summary')!.click();
@@ -144,6 +186,12 @@ test.describe('about sections', () => {
 		// Slow enough to read as smooth, with the text arriving after the room for it.
 		expect(growth.duration).toBeGreaterThanOrEqual(700);
 		expect(growth.textDelay).toBeGreaterThan(0);
+		// And that is what gets painted: early on, the room is still a sliver of the answer's height.
+		const body = open.locator('[data-faq-body]');
+		await page.waitForTimeout(120);
+		expect((await body.boundingBox())!.height).toBeLessThan(growth.to * 0.6);
+		const answer = open.getByText(/Remote, hybrid, or on site/);
+		await expect(open.locator('summary')).toContainText('Are you open to new roles?');
 		await expect(answer).toBeVisible();
 		await expect(faq.getByText(/freelance/i).first()).toBeVisible();
 		await open.locator('summary').click();

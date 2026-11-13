@@ -8,7 +8,7 @@ export const who = {
   lead: "I started out studying Public Works Engineering. Somewhere between the bridges and the concrete, I found I'd rather build the things people actually touch.",
   paragraphs: [
     "I'm curious in the hands-on way: I take things apart, poke at them and move them around to see what happens. That's where the creative side comes from. I rarely start from a blank page; I reshape components that already exist and build new ones out of others.",
-    "At work I'm the one asking why. I take problems apart, dig until I understand them and explain what I find, because a team that understands its code moves faster. I like helping, I like teaching, and I'll do almost anything for a coffee.",
+    "At work I'm the one asking why. I take problems apart, dig until I understand them and explain what I find, because a team that understands its code moves faster. I like helping, and I like teaching.",
   ],
 }
 
@@ -17,7 +17,7 @@ export const life = [
   {
     label: "Sport",
     title: "Triathlon",
-    text: "I've done sport since I was a kid, triathlon above all: swim, bike, run, and a coffee at the finish line.",
+    text: "I've done sport since I was a kid, triathlon above all: swim, bike, run, and then do it all again.",
   },
   {
     label: "Music",
@@ -27,12 +27,12 @@ export const life = [
   {
     label: "Likes",
     title: "Hobbies",
-    text: "History, mythology, travelling and video games. Blame them for the statue at the top of this page.",
+    text: "I read a lot of books on history, the older the better; that's where the statue at the top of this page comes from. Then video games, sport of any kind, and travelling whenever I get the chance.",
   },
   {
     label: "Character",
     title: "All in",
-    text: "I'm always up for helping. I take a little while to open up, but give it a few days, or one coffee, and we're friends. When I'm in, I give it everything.",
+    text: "I'll admit I take a while to open up at first. But I build trust quickly, and once I have it I'm all in: I'm the first to help, I say what I think, and I give whatever I'm part of everything I've got.",
   },
 ]
 
@@ -71,6 +71,6 @@ export const faqs = [
   },
   {
     question: "How do I get in touch?",
-    answer: "By email or phone, both in the footer of the home page. Coffee optional, but appreciated.",
+    answer: "By email or phone, both in the footer of every page.",
   },
 ]
