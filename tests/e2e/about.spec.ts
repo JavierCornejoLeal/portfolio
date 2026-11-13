@@ -83,13 +83,14 @@ test.describe('about page', () => {
 		await expect(depth(page).locator('canvas')).toHaveCount(0);
 	});
 
-	test('titles the page top right, set in from the edge, under the menu, with a Roman slogan', async ({ page }) => {
+	test('titles the page top right, set in from the edge, under the menu, with no slogan', async ({ page }) => {
 		await page.goto('/about');
 		const viewport = page.viewportSize()!;
 		const title = page.getByRole('heading', { level: 1, name: 'About' });
 		await expect(title).toBeVisible();
 		await expect(title).toHaveCSS('font-family', /Anton/);
-		await expect(page.getByText('Veni, vidi, deployed.')).toBeVisible();
+		await expect(page.getByText(/Veni, vidi/)).toHaveCount(0);
+		await expect(page.locator('section#top p')).toHaveCount(0);
 		const box = (await title.boundingBox())!;
 		const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!;
 		// Set in from the edge, on the right edge of the page's content below, under the menu.

@@ -34,8 +34,8 @@ test.describe('project pages', () => {
 			expect(box.y + box.height).toBeGreaterThan(viewport.height * 0.7);
 			expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
 			expect(box.x).toBeLessThan(viewport.width * 0.25);
-			// A hairline under it.
-			await expect(page.locator('[data-project-rule]')).toBeVisible();
+			// No rule under it.
+			await expect(page.locator('main hr')).toHaveCount(0);
 		});
 	}
 
