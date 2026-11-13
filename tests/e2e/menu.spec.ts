@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { GLIDE_PATIENCE_MS } from '../../src/lib/glide';
+
 /** The glass marks itself refracting once its displacement map is built: heavy JavaScript that a CI runner, which
  *  also renders the page's WebGL in software, can take well past the default 5s to finish. */
 const GLASS_READY = 15_000;
@@ -246,8 +248,12 @@ test.describe('menu', () => {
 		await page.goto('/');
 		await menuButton(page).click();
 		await menu(page).getByRole('link', { name: 'Contact', exact: true }).click();
+		// As patient as the glide itself: the footer mounts late on a slow runner (it waits for its font), and the glide
+		// keeps going for up to GLIDE_PATIENCE_MS. Waiting less failed CI while the page was still on its way there.
 		await expect
-			.poll(() => page.evaluate(() => Math.round(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1), { timeout: 10_000 })
+			.poll(() => page.evaluate(() => Math.round(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1), {
+				timeout: GLIDE_PATIENCE_MS + 3_000
+			})
 			.toBe(true);
 		await expect(page.locator('footer#contact-inside').getByText(/©\d{4} — Javier Cornejo/)).toBeInViewport({ ratio: 1 });
 		await short.close();
