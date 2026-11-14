@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { settleMenu } from './support/menu';
+
 const curtain = '[data-curtain]';
 
 /** Records every curtain that appears, with its columns' colour and timing, before the page leaves. */
@@ -36,6 +38,7 @@ test.describe('page curtain', () => {
 		await watchCurtain(page);
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About', exact: true }).click();
 
 		// The curtain covers the page while it is still home.
@@ -75,6 +78,7 @@ test.describe('page curtain', () => {
 	test('leaves in-page links to their glide', async ({ page }) => {
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Projects', exact: true }).click();
 		await expect(page.locator(curtain)).toHaveCount(0);
 		await expect.poll(() => page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top))).toBe(0);
@@ -85,6 +89,7 @@ test.describe('page curtain', () => {
 		await watchCurtain(page);
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About', exact: true }).click();
 		await expect(page).toHaveURL(/\/about\/?$/);
 		expect(await recorded(page)).toHaveLength(0);
@@ -93,6 +98,7 @@ test.describe('page curtain', () => {
 	test('is gone when Back restores the page', async ({ page }) => {
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About', exact: true }).click();
 		await expect(page).toHaveURL(/\/about\/?$/);
 		await page.goBack();
@@ -103,6 +109,7 @@ test.describe('page curtain', () => {
 	test('opens again on the page it lands on, the columns drawing back up to reveal it', async ({ page }) => {
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About', exact: true }).click();
 		await expect(page).toHaveURL(/\/about\/?$/);
 
@@ -145,6 +152,7 @@ test.describe('page curtain', () => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About', exact: true }).click();
 		await expect(page).toHaveURL(/\/about\/?$/);
 		await expect(page.locator('[data-curtain-in]')).toBeHidden();
@@ -154,6 +162,7 @@ test.describe('page curtain', () => {
 		await watchCurtain(page);
 		await page.goto('/about');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Projects', exact: true }).click();
 
 		// Leaving: one black curtain rises, the same as on the way out.
@@ -176,6 +185,7 @@ test.describe('page curtain', () => {
 	test('takes Contact from a project back home, opening on the whole footer once it is there', async ({ page }) => {
 		await page.goto('/projects/ocaive');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Contact', exact: true }).click();
 		// The menu's glass, the curtain and home's load chain up: a CI runner rendering WebGL in software needs room.
 		await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
@@ -197,6 +207,7 @@ test.describe('page curtain', () => {
 		const button = page.getByRole('button', { name: 'Open menu' });
 		await expect(page.locator('astro-island[ssr]', { has: button })).toHaveCount(0, { timeout: 15_000 });
 		await button.click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Contact', exact: true }).click();
 		await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
 		// The moment it opens, the footer is already there and on screen: not the empty portal, with the footer
@@ -219,6 +230,7 @@ test.describe('page curtain', () => {
 	test('opens the black curtain on the page the browser\'s Back button returns to', async ({ page }) => {
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About', exact: true }).click();
 		await expect(page).toHaveURL(/\/about\/?$/);
 		await expect(page.locator('[data-curtain-in]')).toBeHidden({ timeout: 3_000 });
@@ -237,6 +249,7 @@ test.describe('page curtain', () => {
 	test('opens it when Back returns to a project page too', async ({ page }) => {
 		await page.goto('/projects/ocaive');
 		await page.getByRole('button', { name: 'Open menu' }).click();
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About', exact: true }).click();
 		await expect(page).toHaveURL(/\/about\/?$/);
 		await page.goBack();

@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { settleMenu } from './support/menu';
+
 /** Opens the menu once its island has hydrated (Astro drops `ssr`): a click before that is lost on a slow runner. */
 async function openMenu(page: Page) {
 	const button = page.getByRole('button', { name: 'Open menu' });
@@ -113,6 +115,7 @@ test.describe('project pages', () => {
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await page.goto('/projects/eduardo-calabuig');
 		await openMenu(page);
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Projects', exact: true }).click();
 		// The curtain, home's load and its jump chain up: a CI runner rendering WebGL in software needs room.
 		await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
@@ -125,6 +128,7 @@ test.describe('project pages', () => {
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await page.goto('/projects/eduardo-calabuig');
 		await openMenu(page);
+		await settleMenu(page);
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Contact', exact: true }).click();
 		// Home mounts the footer only once Anton has loaded: on a CI runner, seconds after the page itself. Until then
 		// the page already ends at the portal's placeholder, so "at the bottom" alone proves nothing: wait for the footer.
