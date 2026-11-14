@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { settleMenu } from './support/menu';
+
 import { GLIDE_PATIENCE_MS } from '../../src/lib/glide';
 
 /** The glass marks itself refracting once its displacement map is built: heavy JavaScript that a CI runner, which
@@ -67,18 +69,29 @@ test.describe('menu', () => {
 		expect(closed.top).toBeCloseTo(0, 0);
 		expect(closed.right).toBeCloseTo(0, 0);
 
-		await button.click();
+		// Open it and hold the spread at 40% of its transition in one go, whatever the machine's frame rate: on a slow
+		// runner the transition could otherwise be over (or not started) by the time a later step looked for it.
+		const held = await button.evaluate(async element => {
+			(element as HTMLButtonElement).click();
+			const spread = document.querySelector('#site-menu .menu-reveal')!;
+			for (let frame = 0; frame < 30; frame++) {
+				// The first look waits only for React's render (a microtask); later ones, a frame each.
+				await (frame === 0 ? Promise.resolve() : new Promise(resolve => requestAnimationFrame(resolve)));
+				const transition = spread.getAnimations().find(animation => (animation as CSSTransition).transitionProperty === 'clip-path');
+				if (transition) {
+					transition.pause();
+					transition.currentTime = Number(transition.effect!.getComputedTiming().duration) * 0.4;
+					return true;
+				}
+			}
+			return false;
+		});
+		expect(held).toBe(true);
 		await expect(button).toHaveAccessibleName('Close menu');
 		await expect(button).toHaveAttribute('aria-expanded', 'true');
 		await expect(menu(page)).toBeVisible();
 		const panel = (await page.locator('#site-menu').boundingBox())!;
-		// Part way (held at 40% of its transition, whatever the machine's frame rate) it is a rounded shape between
-		// the two, grown in both directions at once.
-		await page.locator('#site-menu .menu-reveal').first().evaluate(element => {
-			const transition = element.getAnimations().find(animation => (animation as CSSTransition).transitionProperty === 'clip-path')!;
-			transition.pause();
-			transition.currentTime = Number(transition.effect!.getComputedTiming().duration) * 0.4;
-		});
+		// Part way it is a rounded shape between the two, grown in both directions at once.
 		const mid = await reveal(page);
 		expect(mid.width).toBeGreaterThan(buttonBox.width + 4);
 		expect(mid.width).toBeLessThan(panel.width - 4);
@@ -186,6 +199,7 @@ test.describe('menu', () => {
 	test('takes About to its own page', async ({ page }) => {
 		await page.goto('/');
 		await menuButton(page).click();
+		await settleMenu(page);
 		await menu(page).getByRole('link', { name: 'About', exact: true }).click();
 		await expect(page).toHaveURL(/\/about\/?$/);
 	});
@@ -207,6 +221,7 @@ test.describe('menu', () => {
 	test('takes Home back to the home page', async ({ page }) => {
 		await page.goto('/about');
 		await menuButton(page).click();
+		await settleMenu(page);
 		await menu(page).getByRole('link', { name: 'Home', exact: true }).click();
 		await expect(page).toHaveURL(/\/$/);
 		await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
@@ -247,6 +262,7 @@ test.describe('menu', () => {
 		await page.addInitScript(() => sessionStorage.setItem('loader-seen', '1'));
 		await page.goto('/');
 		await menuButton(page).click();
+		await settleMenu(page);
 		await menu(page).getByRole('link', { name: 'Contact', exact: true }).click();
 		// As patient as the glide itself: the footer mounts late on a slow runner (it waits for its font), and the glide
 		// keeps going for up to GLIDE_PATIENCE_MS. Waiting less failed CI while the page was still on its way there.
@@ -273,6 +289,7 @@ test.describe('menu', () => {
 			};
 			requestAnimationFrame(tick);
 		});
+		await settleMenu(page);
 		await menu(page).getByRole('link', { name: 'Contact', exact: true }).click();
 
 		await expect(menu(page)).toHaveCount(0);
@@ -327,6 +344,7 @@ test.describe('menu', () => {
 		await expect(menu(page)).toHaveCount(0);
 
 		await menuButton(page).click();
+		await settleMenu(page);
 		await menu(page).getByRole('link', { name: 'Projects', exact: true }).click();
 		await expect(menu(page)).toHaveCount(0);
 		await expect.poll(() => page.locator('#projects').evaluate(element => Math.round(element.getBoundingClientRect().top))).toBe(0);
