@@ -12,27 +12,40 @@ export const who = {
   ],
 }
 
+/** A photo shown beside the pointer over one side of him (LifePreview). All share one upright 3:4 frame. */
+export interface LifePhoto {
+  src: string
+  width: number
+  height: number
+}
+
+const photo = (file: string): LifePhoto => ({ src: `/about/life/${file}.webp`, width: 480, height: 640 })
+
 /** Off the clock: the person behind the code. */
-export const life = [
+export const life: { label: string; title: string; text: string; photo?: LifePhoto }[] = [
   {
     label: "Sport",
     title: "Triathlon",
     text: "I've done sport since I was a kid, triathlon above all: swim, bike, run, and then do it all again.",
+    photo: photo("triathlon"),
   },
   {
     label: "Music",
     title: "Clarinet",
     text: "I studied clarinet at the conservatory. Music has come with me ever since: at work, while training, and on the bad days too.",
+    photo: photo("clarinet"),
   },
   {
     label: "Likes",
     title: "Hobbies",
     text: "I read a lot of books on history, the older the better; that's where the statue at the top of this page comes from. Then video games, sport of any kind, and travelling whenever I get the chance.",
+    photo: photo("hobbies"),
   },
   {
     label: "Character",
     title: "All in",
     text: "I'll admit I take a while to open up at first. But I build trust quickly, and once I have it I'm all in: I'm the first to help, I say what I think, and I give whatever I'm part of everything I've got.",
+    photo: photo("allin"),
   },
 ]
 

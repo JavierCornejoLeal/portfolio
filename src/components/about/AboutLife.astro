@@ -1,14 +1,17 @@
 ---
 import AboutSection from './AboutSection.astro';
+import LifePreview from './LifePreview';
 import { life } from '@/data/about';
+
+const photos = life.flatMap((side) => (side.photo ? [side.photo] : []));
 ---
 
 <AboutSection id="life" title="Off the clock">
-	<!-- The person behind the code: one big word per side of him, and a line about it. -->
+	<!-- The person behind the code: one big word per side of him, a line about it, and a photo under the pointer. -->
 	<div class="grid gap-x-[clamp(2rem,5vw,5rem)] gap-y-[clamp(3rem,8vh,5rem)] sm:grid-cols-2">
 		{
 			life.map((side) => (
-				<article class="flex flex-col gap-4">
+				<article data-life-image={side.photo?.src} class="flex flex-col gap-4">
 					<span class="legend text-ink/45">{side.label}</span>
 					<h3 class="font-poster text-[clamp(2.5rem,4.6vw,4.5rem)] leading-[0.95] uppercase">{side.title}</h3>
 					<p class="max-w-md text-lg leading-relaxed text-pretty text-ink/75">{side.text}</p>
@@ -16,4 +19,6 @@ import { life } from '@/data/about';
 			))
 		}
 	</div>
+	<!-- A photo of each side rides beside the pointer over it (mouse and pen only). -->
+	<LifePreview client:load photos={photos} />
 </AboutSection>
