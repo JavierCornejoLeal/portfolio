@@ -3,6 +3,7 @@ import * as React from "react"
 import { MenuGlass } from "@/components/SiteMenu"
 import { LOCALE_NAMES, LOCALES, type Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
+import { uiFor } from "@/data/ui"
 
 /*
  * EN / ES, beside the menu button and in the same glass: the language being read sits filled in, the other is a link
@@ -14,7 +15,7 @@ export default function LanguageSwitch({ locale, paths }: { locale: Locale; path
 
   return (
     // The menu's smoke (global.css sets it on .site-menu only): the resting button's, at every width.
-    <nav aria-label="Language" className="relative isolate" style={{ "--menu-smoke": 0.65 } as React.CSSProperties}>
+    <nav aria-label={uiFor(locale).language.label} className="relative isolate" style={{ "--menu-smoke": 0.65 } as React.CSSProperties}>
       <MenuGlass radius={32} />
       <ul className="flex h-14 items-center gap-0.5 px-2 sm:h-16">
         {LOCALES.map((option) => (

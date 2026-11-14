@@ -5,6 +5,7 @@ import StoryMedia from './StoryMedia.astro';
 import NextProjectLink from './NextProjectLink';
 import RevealOnScroll from '@/components/RevealOnScroll.astro';
 import { DEFAULT_LOCALE, localePath, type Locale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
 
 /*
  * The story under a project's title screen: a line of context with the role, stack and site beside it, a lead clip
@@ -14,6 +15,7 @@ import { DEFAULT_LOCALE, localePath, type Locale } from '@/lib/i18n';
  */
 
 const { project, story, next, locale = DEFAULT_LOCALE } = Astro.props as { project: Project; story: Story; next: Project; locale?: Locale };
+const ui = uiFor(locale).project;
 const number = (i: number) => String(i + 1).padStart(2, '0');
 ---
 
@@ -22,29 +24,29 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 	aria-labelledby="story-title"
 	class="flex flex-col gap-[clamp(4rem,12vh,9rem)] px-[clamp(1.5rem,7vw,10rem)] pt-[clamp(4rem,12vh,8rem)] pb-[clamp(5rem,16vh,11rem)]"
 >
-	<h2 id="story-title" class="sr-only">About {project.name}</h2>
+	<h2 id="story-title" class="sr-only">{ui.about(project.name)}</h2>
 
 	<div data-reveal class="grid gap-10 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] md:gap-20">
 		<p class="text-[clamp(1.5rem,2.6vw,2.5rem)] leading-[1.2] font-medium tracking-[-0.015em] text-pretty">{story.intro}</p>
 		<dl class="grid content-start gap-6 text-base">
 			<div class="flex flex-col gap-1.5">
-				<dt class="legend text-ink/50">Role</dt>
+				<dt class="legend text-ink/50">{ui.role}</dt>
 				<dd>{story.role}</dd>
 			</div>
 			<div class="flex flex-col gap-1.5">
-				<dt class="legend text-ink/50">Stack</dt>
+				<dt class="legend text-ink/50">{ui.stack}</dt>
 				<dd>{story.stack.map((choice) => choice.name).join(' · ')}</dd>
 			</div>
 			<div class="flex flex-col gap-1.5">
-				<dt class="legend text-ink/50">Site</dt>
+				<dt class="legend text-ink/50">{ui.site}</dt>
 				<dd>
 					{
 						project.url ? (
 							<a href={project.url} target="_blank" rel="noopener noreferrer" class="underline decoration-ink/30 underline-offset-4 transition-colors hover:decoration-ink">
-								{project.domain} ↗<span class="sr-only"> (opens in a new tab)</span>
+								{project.domain} ↗<span class="sr-only">{uiFor(locale).site.newTab}</span>
 							</a>
 						) : (
-							'Private tool'
+							ui.private
 						)
 					}
 				</dd>
@@ -57,7 +59,7 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 	</div>
 
 	<div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-20">
-		<h2 data-reveal class="font-display text-[clamp(1.75rem,3vw,2.75rem)] leading-none font-semibold tracking-[-0.03em]">Why this stack</h2>
+		<h2 data-reveal class="font-display text-[clamp(1.75rem,3vw,2.75rem)] leading-none font-semibold tracking-[-0.03em]">{ui.whyStack}</h2>
 		<ul class="border-t border-ink/15">
 			{
 				story.stack.map((choice) => (
@@ -75,7 +77,7 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 	</div>
 
 	<div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-20">
-		<h2 data-reveal class="font-display text-[clamp(1.75rem,3vw,2.75rem)] leading-none font-semibold tracking-[-0.03em]">Curiosities</h2>
+		<h2 data-reveal class="font-display text-[clamp(1.75rem,3vw,2.75rem)] leading-none font-semibold tracking-[-0.03em]">{ui.curiosities}</h2>
 		<ol class="border-t border-ink/15">
 			{
 				story.curiosities.map((note, i) => (
@@ -89,7 +91,7 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 	</div>
 
 	<div data-reveal class="flex justify-end">
-		<NextProjectLink client:visible name={next.name} href={localePath(locale, `/projects/${next.slug}`)} />
+		<NextProjectLink client:visible label={ui.next(next.name)} href={localePath(locale, `/projects/${next.slug}`)} />
 	</div>
 </section>
 

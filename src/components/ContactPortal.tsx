@@ -3,6 +3,8 @@ import * as React from "react"
 import GlyphPortal from "@/components/ui/glyph-portal"
 import { GlassCta } from "@/components/ui/glass-cta"
 import SiteFooter from "@/components/SiteFooter"
+import { uiFor } from "@/data/ui"
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n"
 
 /*
  * Contact: a quiet HELLO in Anton. Scrolling carries a camera into one of its letters until a near-black green
@@ -23,7 +25,7 @@ function Field() {
   return <div className="absolute inset-0" style={{ backgroundColor: FIELD_COLOUR }} />
 }
 
-function Front() {
+function Front({ eyebrow, cta }: { eyebrow: string; cta: string }) {
   return (
     <>
       <p
@@ -31,39 +33,42 @@ function Front() {
         className="absolute inset-x-6 text-center font-display text-sm font-medium tracking-[0.08em] text-ink-muted uppercase sm:text-base"
         style={{ bottom: "calc(100% - var(--gp-word-top, 35%) + 2rem)" }}
       >
-        Got something worth building?
+        {eyebrow}
       </p>
       <div className="absolute inset-x-6 flex justify-center" style={{ top: "calc(var(--gp-word-bottom, 60%) + 2.5rem)" }}>
-        <GlassCta href="#contact-inside">Let's talk</GlassCta>
+        <GlassCta href="#contact-inside">{cta}</GlassCta>
       </div>
     </>
   )
 }
 
-export default function ContactPortal() {
+export default function ContactPortal({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
+  const { word, eyebrow, cta } = uiFor(locale).contact
   // The portal freezes its face on mount, so mount it only once Anton is ready; a late swap would move the ink
   // out from under the camera.
   const [ready, setReady] = React.useState(false)
   React.useEffect(() => {
     let live = true
     const done = () => live && setReady(true)
-    document.fonts.load(`400 100px ${FONT}`, "HELLO").then(done, done)
+    document.fonts.load(`400 100px ${FONT}`, word).then(done, done)
     return () => {
       live = false
     }
-  }, [])
+  }, [word])
 
   if (!ready) return <div className="min-h-svh" aria-hidden="true" />
 
   return (
     <GlyphPortal
-      word="HELLO"
+      word={word}
+      // The camera flies into the O: HELLO's, or HOLA's.
+      focusChar="O"
       interactive={false}
       fontFamily={FONT}
       fontWeight={400}
       scrollLength={1.4}
       background={<Field />}
-      front={<Front />}
+      front={<Front eyebrow={eyebrow} cta={cta} />}
       style={{
         // The portal defaults its section to Arial; keep the site's reading face for what sits inside it.
         fontFamily: "var(--font-sans)",
@@ -74,7 +79,7 @@ export default function ContactPortal() {
       }}
     >
       {/* The footer, in the green the camera opens onto (#contact-inside). */}
-      <SiteFooter background={FIELD_COLOUR} />
+      <SiteFooter background={FIELD_COLOUR} locale={locale} />
     </GlyphPortal>
   )
 }

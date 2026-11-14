@@ -28,13 +28,13 @@ export default defineConfig({
     }
   },
 
-  // The about and project pages stay out of the sitemap (and noindex) until they have content; so do the Spanish
-  // pages (/es/…) until their copy is translated.
+  // The about and project pages stay out of the sitemap (and noindex) until they have content. Every page lists its
+  // other languages (English at the root, Spanish under /es) as alternates.
   integrations: [
     react(),
     sitemap({
-      filter: (page) =>
-        !page.includes('/about') && !page.includes('/projects/') && !new URL(page).pathname.startsWith('/es/')
+      filter: (page) => !page.includes('/about') && !page.includes('/projects/'),
+      i18n: { defaultLocale: 'en', locales: { en: 'en', es: 'es' } }
     })
   ]
 });

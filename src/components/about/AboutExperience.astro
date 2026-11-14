@@ -1,9 +1,15 @@
 ---
 import AboutSection from './AboutSection.astro';
-import { education, experience } from '@/data/portfolio';
+import { cvFor } from '@/data/portfolio';
+import type { Locale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
+
+const { locale } = Astro.props as { locale: Locale };
+const { education, experience } = cvFor(locale);
+const ui = uiFor(locale).about;
 ---
 
-<AboutSection id="experience" title="Experience">
+<AboutSection id="experience" title={ui.sections.experience}>
 	<div class="flex flex-col gap-16">
 		<!-- A ledger: when, where, what. -->
 		<ol>
@@ -33,7 +39,7 @@ import { education, experience } from '@/data/portfolio';
 			}
 		</ol>
 		<div class="flex flex-col gap-6">
-			<span class="legend text-ink/45">Before and alongside</span>
+			<span class="legend text-ink/45">{ui.education}</span>
 			<ul class="flex flex-col">
 				{
 					education.map((study) => (
