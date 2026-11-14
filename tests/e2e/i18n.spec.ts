@@ -163,7 +163,8 @@ test.describe('languages', () => {
 		await expect(page.getByText('¿Tienes algo que merezca la pena construir?')).toBeAttached({ timeout: 15_000 });
 		await expect(page.getByRole('link', { name: 'Hablemos' })).toBeAttached();
 		await expect(footer).toContainText('Construyamos');
-		await expect(footer.getByRole('link', { name: /^Escríbeme un email/ })).toHaveAttribute('href', /^mailto:/);
+		await expect(footer.getByRole('link', { name: /^Escríbeme/ })).toHaveAttribute('href', /^mailto:/);
+		await expect(footer.getByRole('link', { name: /^Ver el código/ })).toHaveAttribute('href', 'https://github.com/JavierCornejoLeal/portfolio');
 		await expect(footer.getByRole('list', { name: 'En otros sitios' })).toBeAttached();
 		await expect(footer.getByRole('navigation', { name: 'Pie de página' }).getByRole('link', { name: 'Volver arriba' })).toBeAttached();
 		await expect(footer).toContainText('desarrollador full creative');

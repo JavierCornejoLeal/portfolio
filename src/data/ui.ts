@@ -139,8 +139,8 @@ const es: UI = {
   },
   footer: {
     heading: ["Construyamos", "algo claro."],
-    email: "Escríbeme un email",
-    code: "Mira este código",
+    email: "Escríbeme",
+    code: "Ver el código",
     elsewhere: "En otros sitios",
     role: "desarrollador full creative",
     roleRevealed: "desarrollador full stack",
