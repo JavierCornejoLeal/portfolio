@@ -19,25 +19,6 @@ PRE always carries the next release; PRO only receives what has already been ver
 | Testing   | Playwright end-to-end tests against the production build               |
 | Delivery  | GitHub Actions, Docker, Vercel                                         |
 
-## Design notes
-
-The visual language and its tokens are documented in `DESIGN.md`; the audience and goals behind them in `PRODUCT.md`. A few details worth knowing:
-
-- **Islands, not a SPA.** Pages ship as static HTML. React is loaded only for the components that render WebGL, so the text content is readable before any JavaScript runs.
-- **Survey ground palette.** The background is a near-black with a faint green cast (`#070907`), never pure black. The accent scale, named *harlequin*, runs from `#ecffe4` to `#063400`.
-- **Three typefaces with fixed roles.** Anton for monumental condensed display, Unbounded for uppercase labels, DM Sans for reading text.
-- **Cover name.** The name is white at the top and fades to more transparent towards its foot, stretched like a magazine cover (12% wider, 1.5x taller), so the liquid stirred behind the fluted glass shows through the lower half.
-- **Poster hero.** The name is sized by whichever runs out first, the width (Anton measures 6.05 em, times the stretch) or the height left after the slogan, the call to action and the insets, so it runs edge to edge without crowding them. Insets grow with the screen; only the menu stays close to its corner.
-- **Favicon.** The same green J as the loader, rendered from its SVG path for every icon size.
-- **Top-down entrance.** Hero elements arrive in the order they sit on the page, top to bottom, each sliding a little into place out of a soft blur, with no overshoot. It is CSS only, waits for the loader, and is skipped under reduced motion.
-- **Fluted glass hero.** The hero backdrop is coloured liquid seen through a pane of reeded glass: a small fluid simulation the pointer stirs, refracted flute by flute with colour split at the seams. It is written from scratch in WebGL2, stays black until the cursor stirs it, autoplays along a slow path on touch screens, and freezes on a still frame under reduced motion. It is the same material as the loader, a nod to transparent code.
-- **Liquid glass controls.** The menu button, the dock it opens and the call to action bend whatever sits behind them through an SVG displacement map used as a `backdrop-filter` (Aceternity's Liquid Glass), finished with layered rim highlights. Chromium refracts; Safari and Firefox fall back to dark frosted glass (independent of the OS colour scheme), and reduced transparency to an opaque surface. The dock body is smoked so white icons stay legible over white type.
-- **Dock menu.** The `=` button turns into a cross and opens a glass dock to its left with the sections and social profiles, labelled on hover and focus. It closes with Escape, an outside click or a followed link, and hands focus back to the button. On phones the menu is a glass dock pinned to the bottom of the screen, always visible with the four sections only, clearing the home indicator through the safe-area inset.
-- **Living backdrop.** One fixed backdrop runs behind the whole page: ribbons of harlequin light flowing like a livelier aurora (simplex noise warping the space twice, written for this site). It is subtle behind the hero and grows to full brightness over the first screen of scroll, and the hero's transparent fluted glass fades out at its foot, so sections flow into each other with no seam.
-- **Statement.** After the hero, a section several screens tall pins its content over that backdrop while a paragraph reveals word by word with the scroll. Its title flips one word at a time through websites, platforms, dashboards and APIs (Aceternity's Layout Text Flip). The section only scrolls away once the last word is white.
-- **Glass loader.** On the first visit of a session, a liquid glass tile refracts a "J" mark built on a block grid before the page appears. It runs in a bounded canvas, is skipped without JavaScript, and lifts after at most a few seconds even on devices without a GPU.
-- **Progressive enhancement.** Animations are gated behind a `js` class and `prefers-reduced-motion`, so content stays visible and usable when scripts are disabled or motion is reduced.
-
 ## Run locally
 
 Requires Node.js 22.22 or newer and [pnpm](https://pnpm.io). The pnpm version is pinned in `package.json`; run `corepack enable` to use it automatically.
@@ -100,3 +81,22 @@ GitHub Actions runs these checks on every pull request and before every deploy:
 - Docker image build
 
 If any check fails, nothing is deployed. Results appear in the pull request **Checks** tab and in **Actions**.
+
+## Design notes
+
+The visual language and its tokens are documented in `DESIGN.md`; the audience and goals behind them in `PRODUCT.md`. A few details worth knowing:
+
+- **Islands, not a SPA.** Pages ship as static HTML. React is loaded only for the components that render WebGL, so the text content is readable before any JavaScript runs.
+- **Survey ground palette.** The background is a near-black with a faint green cast (`#070907`), never pure black. The accent scale, named *harlequin*, runs from `#ecffe4` to `#063400`.
+- **Three typefaces with fixed roles.** Anton for monumental condensed display, Unbounded for uppercase labels, DM Sans for reading text.
+- **Cover name.** The name is white at the top and fades to more transparent towards its foot, stretched like a magazine cover (12% wider, 1.5x taller), so the liquid stirred behind the fluted glass shows through the lower half.
+- **Poster hero.** The name is sized by whichever runs out first, the width (Anton measures 6.05 em, times the stretch) or the height left after the slogan, the call to action and the insets, so it runs edge to edge without crowding them. Insets grow with the screen; only the menu stays close to its corner.
+- **Favicon.** The same green J as the loader, rendered from its SVG path for every icon size.
+- **Top-down entrance.** Hero elements arrive in the order they sit on the page, top to bottom, each sliding a little into place out of a soft blur, with no overshoot. It is CSS only, waits for the loader, and is skipped under reduced motion.
+- **Fluted glass hero.** The hero backdrop is coloured liquid seen through a pane of reeded glass: a small fluid simulation the pointer stirs, refracted flute by flute with colour split at the seams. It is written from scratch in WebGL2, stays black until the cursor stirs it, autoplays along a slow path on touch screens, and freezes on a still frame under reduced motion. It is the same material as the loader, a nod to transparent code.
+- **Liquid glass controls.** The menu button, the dock it opens and the call to action bend whatever sits behind them through an SVG displacement map used as a `backdrop-filter` (Aceternity's Liquid Glass), finished with layered rim highlights. Chromium refracts; Safari and Firefox fall back to dark frosted glass (independent of the OS colour scheme), and reduced transparency to an opaque surface. The dock body is smoked so white icons stay legible over white type.
+- **Dock menu.** The `=` button turns into a cross and opens a glass dock to its left with the sections and social profiles, labelled on hover and focus. It closes with Escape, an outside click or a followed link, and hands focus back to the button. On phones the menu is a glass dock pinned to the bottom of the screen, always visible with the four sections only, clearing the home indicator through the safe-area inset.
+- **Living backdrop.** One fixed backdrop runs behind the whole page: ribbons of harlequin light flowing like a livelier aurora (simplex noise warping the space twice, written for this site). It is subtle behind the hero and grows to full brightness over the first screen of scroll, and the hero's transparent fluted glass fades out at its foot, so sections flow into each other with no seam.
+- **Statement.** After the hero, a section several screens tall pins its content over that backdrop while a paragraph reveals word by word with the scroll. Its title flips one word at a time through websites, platforms, dashboards and APIs (Aceternity's Layout Text Flip). The section only scrolls away once the last word is white.
+- **Glass loader.** On the first visit of a session, a liquid glass tile refracts a "J" mark built on a block grid before the page appears. It runs in a bounded canvas, is skipped without JavaScript, and lifts after at most a few seconds even on devices without a GPU.
+- **Progressive enhancement.** Animations are gated behind a `js` class and `prefers-reduced-motion`, so content stays visible and usable when scripts are disabled or motion is reduced.
