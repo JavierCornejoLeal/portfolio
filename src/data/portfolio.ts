@@ -214,7 +214,7 @@ const es: Cv = {
 			place: 'Dénia · Presencial',
 			detail: 'Aplicaciones internas que se usan en toda la empresa, front end y back end, sobre código que ya estaba en producción.',
 			highlights: [
-				'Desarrollé un sistema interno para consultar y gestionar la información de los empleados, sobre las librerías de componentes propias de Baleària',
+				'Desarrollé un sistema interno para consultar y gestionar la información de los empleados con las librerías de componentes propias de Baleària',
 				'Añadí y amplié funcionalidades en las herramientas del área de Call Center',
 				'Mantuve y evolucioné APIs REST en Java y Spring Boot, conectadas a front ends en React',
 				'Depuré servicios en producción y refactoricé código existente para que fuera más fácil de mantener',

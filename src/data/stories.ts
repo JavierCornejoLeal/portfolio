@@ -228,7 +228,7 @@ const es: Record<string, Story> = {
     stack: [
       { name: "React + Vite", why: "Una web de una sola página, rápida, con transiciones CSS entre rutas, compilada a archivos estáticos para el hosting del propio estudio." },
       { name: "React Bootstrap, recortado", why: "Componentes conocidos, y un plugin de Vite a medida que elimina cada regla de Bootstrap que la web no usa." },
-      { name: "GSAP", why: "Mueve el storytelling: escenas guiadas por el scroll que se descargan solo cuando el visitante se acerca, para que la primera pantalla siga siendo ligera." },
+      { name: "GSAP", why: "Da forma al storytelling: escenas guiadas por el scroll que se descargan solo cuando el visitante se acerca, para que la primera pantalla siga siendo ligera." },
       { name: "i18next", why: "Español e inglés desde los mismos componentes, detectando el idioma del visitante al llegar." },
     ],
     gallery: [
@@ -246,7 +246,7 @@ const es: Record<string, Story> = {
     ],
     curiosities: [
       "Produje yo mismo con IA cada imagen y vídeo del storytelling, y después optimicé cada uno para la web.",
-      "Las visitas se registran diez segundos después de cargar y en un momento de calma, para que la analítica nunca compita con la página.",
+      "Las visitas se ponen en cola hasta que han pasado diez segundos desde la carga y llega un momento de inactividad, para que la analítica nunca compita con la página.",
       "Publica un llms.txt y un catálogo para IA, para que los agentes de IA lean el estudio como lo hace la gente.",
     ],
   },
@@ -254,10 +254,10 @@ const es: Record<string, Story> = {
   ocaive: {
     role: "Diseño y desarrollo",
     intro:
-      "La casa de un estudio que une desarrollo tecnológico, producción audiovisual y una agencia de música 360: una página larga y cinematográfica que cuenta las tres historias.",
+      "La web de un estudio que une desarrollo tecnológico, producción audiovisual y una agencia de música 360: una página larga y cinematográfica que cuenta las tres historias.",
     lead: { ...en.ocaive.lead, alt: "Bajando por la página de inicio de ocaive.com" },
     stack: [
-      { name: "Next.js", why: "Páginas renderizadas en el servidor para una home larga y cargada de media que aun así tiene que cargar rápido y encontrarse en buscadores." },
+      { name: "Next.js", why: "Páginas renderizadas en el servidor para una home larga y con mucho contenido multimedia que aun así tiene que cargar rápido y aparecer en buscadores." },
       { name: "Tailwind CSS", why: "Un mismo conjunto de utilidades para escenas muy distintas, para que toda la página mantenga los mismos espacios y la misma tipografía." },
     ],
     gallery: [
@@ -269,7 +269,7 @@ const es: Record<string, Story> = {
     curiosities: [
       "Tres negocios, una página: desarrollo tecnológico, una productora audiovisual y una agencia de música 360.",
       "La home se cuenta como una historia: escenas a pantalla completa, una detrás de otra, a medida que haces scroll.",
-      "Cada imagen y cada vídeo se optimizaron para que la página siga siendo ligera y se reproduzca sin tirones hasta el final.",
+      "Cada imagen y cada vídeo se optimizaron para pesar poco y reproducirse sin tirones a lo largo de una página muy extensa.",
       "El diseño y el desarrollo son míos; después el estudio cambió un par de cosas, como el vídeo de entrada.",
     ],
   },
@@ -303,7 +303,7 @@ const es: Record<string, Story> = {
     lead: { ...en["crm-eduardo"].lead, alt: "El panel de control: visitas, actividad, páginas más vistas y clics" },
     stack: [
       { name: "Next.js", why: "Sus rutas de API se encargan del login, las subidas, la analítica y las traducciones, así que una sola app es a la vez el panel y su backend." },
-      { name: "Supabase", why: "Postgres, almacenamiento y políticas por fila: el contenido y las imágenes que lee la web pública, en un solo sitio." },
+      { name: "Supabase", why: "Postgres, almacenamiento y políticas a nivel de fila: el contenido y las imágenes que lee la web pública, en un solo sitio." },
       { name: "Resend", why: "Los formularios de contacto de la web pública envían un aviso al estudio y una respuesta al visitante." },
     ],
     gallery: [
@@ -342,7 +342,7 @@ const es: Record<string, Story> = {
       { name: "Astro", why: "Páginas estáticas por defecto; solo las piezas interactivas cargan como islas de React." },
       { name: "Three.js", why: "El cristal acanalado tras el hero, el carrusel de proyectos que se curva y el portal de HOLA." },
       { name: "Motion", why: "Apariciones ligadas al scroll, letras que ruedan al pasar el cursor y los títulos de proyecto que suben." },
-      { name: "Playwright", why: "Cada comportamiento de la página está fijado por un test end-to-end, que se ejecuta en CI en una imagen Linux." },
+      { name: "Playwright", why: "Cada comportamiento de la página queda fijado con un test end-to-end, ejecutado en CI sobre una imagen de Linux." },
     ],
     gallery: [
       { kind: "image", src: media("portfolio", "statement.webp"), alt: "La declaración I build worlds", size: "half" },

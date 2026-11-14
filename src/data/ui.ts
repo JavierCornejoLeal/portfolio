@@ -116,9 +116,9 @@ const es: UI = {
   statement: {
     title: "Construyo",
     word: "mundos",
-    lead: "Mucho software se ve bien por fuera y se cae a pedazos por dentro. Yo diseño y desarrollo el conjunto entero, de la base de datos y la API a la interfaz que tocas, para que cada capa esté hecha con el mismo cuidado.",
+    lead: "Mucho software se ve bien por fuera y se cae a pedazos por dentro. Yo lo diseño y lo desarrollo todo, desde la base de datos y la API hasta la interfaz que tocas, para que cada capa tenga el mismo nivel.",
     body: [
-      "Sin traspasos entre equipos ni detalles perdidos de camino a producción. Una sola persona que sabe cómo encaja todo, con un código claro que puedes leer, cambiar y en el que puedes confiar mucho después del lanzamiento.",
+      "Sin traspasos entre equipos ni detalles perdidos de camino a producción. Una sola persona que sabe cómo encaja todo y escribe código claro que puedes leer, cambiar y en el que puedes confiar mucho después del lanzamiento.",
       "Si tienes algo que merece la pena construir, construyámoslo bien.",
     ],
   },
@@ -161,7 +161,7 @@ const es: UI = {
       faq: "Preguntas",
     },
     education: "Antes y en paralelo",
-    stackNote: "Lo que más uso. La herramienta adecuada para cada trabajo gana a la favorita.",
+    stackNote: "Lo que más uso. La herramienta adecuada para cada trabajo vale más que la favorita.",
   },
   project: {
     about: (name) => `Sobre ${name}`,

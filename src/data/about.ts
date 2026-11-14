@@ -127,7 +127,7 @@ const es: About = {
     lead: "Empecé estudiando Ingeniería de Obras Públicas. Entre puentes y hormigón descubrí que prefería construir las cosas que la gente toca de verdad.",
     turn: "las cosas que la gente toca de verdad",
     paragraphs: [
-      "Soy curioso de los que tocan: desmonto las cosas, las pruebo y las cambio de sitio para ver qué pasa. De ahí sale mi lado creativo. Casi nunca parto de una página en blanco; transformo componentes que ya existen y construyo otros nuevos a partir de ellos.",
+      "Soy curioso de una forma muy práctica: desmonto las cosas, trasteo con ellas y las cambio de sitio para ver qué pasa. De ahí sale mi lado creativo. Casi nunca parto de una página en blanco; transformo componentes que ya existen y construyo otros nuevos a partir de ellos.",
       "En el trabajo soy el que pregunta por qué. Desmonto los problemas, investigo hasta entenderlos y explico lo que encuentro, porque un equipo que entiende su código avanza más rápido. Me gusta ayudar, y me gusta enseñar.",
     ],
   },
@@ -160,7 +160,7 @@ const es: About = {
   process: [
     { title: "Preguntar", text: "Antes de escribir código, preguntas: para qué sirve, quién lo usa y qué no puede romperse nunca." },
     { title: "Desmontar", text: "Miro lo que ya existe, mío o no, y lo desmonto para ver qué merece la pena conservar." },
-    { title: "Diseñar y construir a la vez", text: "El diseño y el código crecen juntos, así que lo que apruebas es lo que se publica." },
+    { title: "Diseñar y construir a la vez", text: "El diseño y el código crecen juntos, así que lo que apruebas es lo que llega a producción." },
     { title: "Construir cada capa", text: "Interfaz, API, datos y panel de administración: una sola persona en todo el stack, para que nada se pierda entre traspasos." },
     { title: "Probar, pulir, explicar", text: "Tests end-to-end, recursos más ligeros, una última pasada a los detalles y una entrega que explica cómo funciona todo." },
   ],
@@ -177,10 +177,10 @@ const es: About = {
     {
       question: "¿Eres diseñador o desarrollador?",
       answer:
-        "Las dos cosas, a propósito. Diseñé y desarrollé la web de ÒCAIVE y esta. Diseñar pensando en el código ahorra muchas idas y venidas.",
+        "Las dos, y es intencionado. Diseñé y desarrollé la web de ÒCAIVE y esta. Diseñar pensando en el código ahorra muchas idas y venidas.",
     },
     {
-      question: "¿Puedes incorporarte a un código que ya existe?",
+      question: "¿Puedes trabajar sobre una base de código existente?",
       answer:
         "Sí. En Baleària trabajé en aplicaciones internas que ya estaban en producción, siguiendo la arquitectura del equipo y sus propias librerías de componentes.",
     },
