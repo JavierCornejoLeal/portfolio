@@ -51,8 +51,9 @@ test.describe('page loader', () => {
 
 	test('keeps the covered links out of keyboard reach until the loader lifts', async ({ page }) => {
 		await page.goto('/');
-		// Located by CSS: while hidden the button is out of the accessibility tree, so a role query finds nothing.
-		const firstLink = page.locator('button[aria-controls="site-menu"]');
+		// Located by CSS: while hidden the controls are out of the accessibility tree, so a role query finds nothing.
+		// The language switch comes first, just before the menu button.
+		const firstLink = page.locator('nav[aria-label="Language"] a');
 
 		await page.keyboard.press('Tab');
 		await expect(firstLink).not.toBeFocused();
