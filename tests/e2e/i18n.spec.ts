@@ -145,7 +145,7 @@ test.describe('languages', () => {
 
 	test('speaks Spanish on the Spanish home', async ({ page }) => {
 		await page.goto('/es/');
-		await expect(page.getByText('Código que se ve por dentro: cuidado en la superficie, sólido hasta el fondo.')).toBeVisible();
+		await expect(page.getByText('Código transparente: nítido por fuera, sólido por dentro.')).toBeVisible();
 		await expect(page.getByRole('link', { name: 'Ver proyectos' })).toBeVisible();
 		await expect(page.getByRole('heading', { level: 2, name: 'Construyo mundos' })).toBeAttached();
 		await expect(page.getByText('Si tienes algo que merece la pena construir, construyámoslo bien.')).toBeAttached();

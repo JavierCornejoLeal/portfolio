@@ -94,7 +94,7 @@ export type UI = typeof en
 const es: UI = {
   site: {
     description:
-      "Javier Cornejo, desarrollador full stack. Código que se ve por dentro: software claro y honesto, de la base de datos al último píxel.",
+      "Javier Cornejo, desarrollador full stack. Código transparente: software claro y honesto, de la base de datos al último píxel.",
     imageAlt: "Javier Cornejo, desarrollador full stack",
     loading: "Cargando",
     newTab: " (se abre en una pestaña nueva)",
@@ -110,7 +110,7 @@ const es: UI = {
     contact: "Contacto",
   },
   hero: {
-    slogan: "Código que se ve por dentro: cuidado en la superficie, sólido hasta el fondo.",
+    slogan: "Código transparente: nítido por fuera, sólido por dentro.",
     cta: "Ver proyectos",
   },
   statement: {
