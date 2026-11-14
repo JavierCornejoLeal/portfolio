@@ -1,21 +1,14 @@
 import * as React from "react"
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react"
 
+import { uiFor } from "@/data/ui"
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n"
+
 /*
  * Statement: the section after the hero. It is several screens tall, but its content is pinned (sticky) to
  * the viewport over the page's living backdrop, so scrolling reveals the paragraphs word by word instead of
  * moving the page. Only once the last word is white does the section scroll away.
  */
-
-/** The lead, flush left under the title. */
-const LEAD =
-  "Most software looks fine on the surface and falls apart underneath. I design and develop the whole thing, from the database and the API to the interface you actually touch, so every layer is built to the same standard."
-
-/** The rest, indented under the lead, at the same size. */
-const BODY = [
-  "No handoffs between teams, no details lost on the way to production. One person who knows how it all fits together, writing clear code you can read, change and trust long after launch.",
-  "If you have something worth building, let's build it properly.",
-]
 
 /** Share of the section's scroll spent revealing words; the rest holds the finished text before leaving. */
 const REVEAL_START = 0.04
@@ -33,7 +26,9 @@ function Word({ children, progress, range }: { children: string; progress: Motio
   return <motion.span style={{ opacity }}>{children}</motion.span>
 }
 
-export default function Statement() {
+export default function Statement({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
+  // The lead sits flush left under the title; the rest is indented under it, at the same size.
+  const { title, word, lead: LEAD, body: BODY } = uiFor(locale).statement
   const sectionRef = React.useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] })
   const step = (REVEAL_END - REVEAL_START) / [LEAD, ...BODY].join(" ").split(" ").length
@@ -63,20 +58,21 @@ export default function Statement() {
     <section ref={sectionRef} data-statement aria-labelledby="statement-title" className="relative h-[200vh]">
       <div className="sticky top-0 h-dvh overflow-hidden">
         {/* Same side insets as the hero (its --inset-x), so the title lines up with the slogan above it. Sized by
-            width and height, so everything always fits the pinned screen. */}
-        <div className="relative z-10 flex h-full flex-col justify-center gap-[clamp(1.75rem,6svh,4rem)] px-[clamp(2rem,7vw,10rem)] pb-24 sm:pb-0">
+            width and height, so everything always fits the pinned screen. On phones it keeps clear of the language
+            switch and the menu pinned top right, whose row the title would otherwise run under. */}
+        <div className="relative z-10 flex h-full flex-col justify-center gap-[clamp(1.75rem,6svh,4rem)] px-[clamp(2rem,7vw,10rem)] pt-24 pb-6 sm:py-0">
           <h2
             id="statement-title"
-            className="flex flex-wrap items-center gap-x-[0.3em] gap-y-2 font-display text-[clamp(2.75rem,min(7vw,11svh),6.5rem)] leading-none font-semibold tracking-[-0.03em]"
+            className="flex flex-wrap items-center gap-x-[0.3em] gap-y-2 font-display text-[clamp(2.5rem,min(7vw,11svh),6.5rem)] leading-none font-semibold tracking-[-0.03em]"
           >
-            I build{" "}
+            {title}{" "}
             <span className="rounded-[0.22em] bg-ground/55 px-[0.25em] pt-[0.08em] pb-[0.14em] text-harlequin-200 ring-1 ring-white/10 backdrop-blur-md">
-              worlds
+              {word}
             </span>
           </h2>
-          <div className="flex flex-col gap-[1.6em] text-[clamp(1.25rem,min(2.3vw,3.7svh),2.5rem)] leading-[1.25] font-medium tracking-[-0.015em] text-ink">
+          <div className="flex flex-col gap-[1.3em] sm:gap-[1.6em] text-[clamp(1.125rem,min(2.3vw,3.7svh),2.5rem)] leading-[1.25] font-medium tracking-[-0.015em] text-ink">
             {reveal(LEAD, "text-pretty")}
-            <div className="flex flex-col gap-[1.6em] sm:ml-[12%]">
+            <div className="flex flex-col gap-[1.3em] sm:ml-[12%] sm:gap-[1.6em]">
               {BODY.map((text) => (
                 <React.Fragment key={text}>{reveal(text, "text-pretty")}</React.Fragment>
               ))}

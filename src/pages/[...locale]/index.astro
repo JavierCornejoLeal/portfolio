@@ -1,26 +1,33 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import FlutedGlass from '@/components/FlutedGlass';
-import SiteMenu from '@/components/SiteMenu';
+import SiteControls from '@/components/SiteControls.astro';
 import CursorLabel from '@/components/CursorLabel';
 import { GlassSplitLink } from '@/components/ui/glass-split-link';
 import Statement from '@/components/Statement';
 import LivingGradient from '@/components/LivingGradient';
 import ProjectsCarousel from '@/components/ProjectsCarousel';
 import ContactPortal from '@/components/ContactPortal';
+import { localeParams, toLocale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
+
+export function getStaticPaths() {
+	return localeParams().map((params) => ({ params }));
+}
+
+const locale = toLocale(Astro.params.locale);
+const ui = uiFor(locale);
 ---
 
-<Layout>
+<Layout locale={locale}>
 	<!-- One living backdrop behind the whole page, so sections flow into each other with no seam. It is
 	     subtle behind the hero and grows to full brightness over the first screen of scroll. -->
 	<div class="fixed inset-0 -z-10" aria-hidden="true">
 		<LivingGradient client:only="react" className="size-full" scrollIntensity={[0.5, 1]} />
 	</div>
 	<main class="relative overflow-x-clip">
-		<!-- The menu, pinned top right over every section, and first in the tab order. Only its button runs the entrance (see SiteMenu.tsx). -->
-		<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
-			<SiteMenu client:load />
-		</div>
+		<!-- The language switch and the menu, pinned top right over every section, and first in the tab order. -->
+		<SiteControls locale={locale} />
 
 		<!-- The hero owns its backdrop: the fluted glass covers this first screen only. -->
 		<div class="relative">
@@ -59,26 +66,26 @@ import ContactPortal from '@/components/ContactPortal';
 					<p
 						class="font-display text-lg leading-[1.25] font-semibold tracking-[-0.01em] text-pretty uppercase sm:text-xl"
 					>
-						Code you can see through: sharp on the surface, solid all the way down.
+						{ui.hero.slogan}
 					</p>
 				</div>
 				<div class="place-in pointer-events-auto shrink-0" style="--place-delay: 0.95s">
-					<GlassSplitLink client:load href="#projects">Discover works</GlassSplitLink>
+					<GlassSplitLink client:load href="#projects">{ui.hero.cta}</GlassSplitLink>
 				</div>
 			</div>
 		</section>
 		</div>
 
-		<Statement client:load />
+		<Statement client:load locale={locale} />
 
 		<!-- Hydrates ahead of arrival so the covers are ready to rise in when the section scrolls into view. -->
-		<ProjectsCarousel client:visible={{ rootMargin: '600px' }} />
+		<ProjectsCarousel client:visible={{ rootMargin: '600px' }} locale={locale} />
 
 		<!-- A quiet HELLO the camera flies into, and the footer in its green. Hydrated on approach, not on load: the
 		     portal turns its motion off for good if its first frame comes more than 2.5s after mounting, which a page
 		     still busy with the hero's WebGL can cause. The menu's Contact link finds its way here anyway. -->
 		<div id="contact" data-contact>
-			<ContactPortal client:visible={{ rootMargin: '600px' }} />
+			<ContactPortal client:visible={{ rootMargin: '600px' }} locale={locale} />
 		</div>
 
 	</main>

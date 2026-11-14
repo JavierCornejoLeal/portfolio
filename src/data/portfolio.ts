@@ -3,6 +3,8 @@
  * nothing is invented. Add metrics only once they are confirmed.
  */
 
+import type { Locale } from '@/lib/i18n';
+
 export interface Project {
 	id: string;
 	title: string;
@@ -113,7 +115,7 @@ export interface Role {
 	highlights?: string[];
 }
 
-export const experience: Role[] = [
+const experience: Role[] = [
 	{
 		company: 'Huming',
 		title: 'Front-end Developer',
@@ -144,7 +146,7 @@ export const experience: Role[] = [
 	}
 ];
 
-export const education: Role[] = [
+const education: Role[] = [
 	{
 		company: 'IES Enric Valor',
 		title: 'Master’s in Cybersecurity',
@@ -168,7 +170,12 @@ export const education: Role[] = [
 	}
 ];
 
-export const stack: { group: string; items: string[] }[] = [
+export interface StackGroup {
+	group: string;
+	items: string[];
+}
+
+const stack: StackGroup[] = [
 	{ group: 'Frontend', items: ['React', 'TypeScript', 'Next.js', 'Astro', 'Tailwind CSS', 'Bootstrap'] },
 	// Motion is the library formerly called Framer Motion: one tool, named both ways so either reads.
 	{ group: 'Motion & design', items: ['GSAP', 'Motion (Framer Motion)', 'WebGL', 'Figma'] },
@@ -177,3 +184,71 @@ export const stack: { group: string; items: string[] }[] = [
 	{ group: 'Delivery', items: ['Git', 'Docker', 'Playwright', 'GitHub Actions', 'Vercel'] }
 ];
 
+export interface Cv {
+	experience: Role[];
+	education: Role[];
+	stack: StackGroup[];
+}
+
+const es: Cv = {
+	experience: [
+		{
+			company: 'Huming',
+			title: 'Desarrollador Front-end',
+			period: 'ago 2025 – ago 2026',
+			place: 'Pedreguer · Híbrido',
+			detail:
+				'Construyendo productos web nuevos desde cero y haciendo evolucionar los que ya están en marcha, tomando yo las decisiones técnicas en todo el ciclo.',
+			highlights: [
+				'Desarrollé ocaive.com de principio a fin con Next.js y TypeScript, del primer commit a producción',
+				'Animación avanzada con GSAP: efectos guiados por el scroll y storytelling visual, fluidos en cualquier dispositivo',
+				'Interfaces responsive con Tailwind CSS, con el rendimiento y la accesibilidad por delante',
+				'Formularios y envío automático de emails con Resend',
+				'Nuevas funcionalidades, corrección de errores y mantenimiento en webs WordPress y PHP como culturacabanyal.com'
+			]
+		},
+		{
+			company: 'Baleària',
+			title: 'Desarrollador Full Stack · Prácticas',
+			period: 'feb 2025 – jun 2025',
+			place: 'Dénia · Presencial',
+			detail: 'Aplicaciones internas que se usan en toda la empresa, front end y back end, sobre código que ya estaba en producción.',
+			highlights: [
+				'Desarrollé un sistema interno para consultar y gestionar la información de los empleados con las librerías de componentes propias de Baleària',
+				'Añadí y amplié funcionalidades en las herramientas del área de Call Center',
+				'Mantuve y evolucioné APIs REST en Java y Spring Boot, conectadas a front ends en React',
+				'Depuré servicios en producción y refactoricé código existente para que fuera más fácil de mantener',
+				'Trabajé dentro de la arquitectura, los estándares y el flujo de Git del equipo'
+			]
+		}
+	],
+	education: [
+		{ company: 'IES Enric Valor', title: 'Máster en Ciberseguridad', period: 'oct 2025 – jun 2026', place: '', detail: '' },
+		{
+			company: 'IES Enric Valor',
+			title: 'Técnico Superior en Desarrollo de Aplicaciones Web',
+			period: 'sep 2023 – jun 2025',
+			place: '',
+			detail: ''
+		},
+		{
+			company: 'Universitat Politècnica de València',
+			title: 'Ingeniería de Obras Públicas',
+			period: 'sep 2019 – jun 2022',
+			place: 'València',
+			detail: ''
+		}
+	],
+	stack: [
+		{ group: 'Frontend', items: ['React', 'TypeScript', 'Next.js', 'Astro', 'Tailwind CSS', 'Bootstrap'] },
+		{ group: 'Motion y diseño', items: ['GSAP', 'Motion (Framer Motion)', 'WebGL', 'Figma'] },
+		{ group: 'Backend', items: ['Java', 'Spring Boot', 'Node.js', 'PHP', 'Laravel', 'APIs REST'] },
+		{ group: 'Datos', items: ['PostgreSQL', 'MariaDB', 'Supabase'] },
+		{ group: 'Despliegue', items: ['Git', 'Docker', 'Playwright', 'GitHub Actions', 'Vercel'] }
+	]
+};
+
+const CV_BY_LOCALE: Record<Locale, Cv> = { en: { experience, education, stack }, es };
+
+/** Experience, education and stack in a language. */
+export const cvFor = (locale: Locale): Cv => CV_BY_LOCALE[locale];

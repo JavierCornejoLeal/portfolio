@@ -1,10 +1,15 @@
 ---
 import AboutSection from './AboutSection.astro';
-import { process } from '@/data/about';
+import { aboutFor } from '@/data/about';
+import type { Locale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
 import { TextHoverEffect } from '@/components/ui/text-hover-effect';
+
+const { locale } = Astro.props as { locale: Locale };
+const { process } = aboutFor(locale);
 ---
 
-<AboutSection id="process" title="How I work">
+<AboutSection id="process" title={uiFor(locale).about.sections.process}>
 	<!-- Hollow numbers, drawn in as they arrive, that light up green under the pointer (the numbers only). -->
 	<ol>
 		{

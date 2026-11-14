@@ -1,0 +1,29 @@
+---
+import SiteMenu from '@/components/SiteMenu';
+import LanguageSwitch from '@/components/LanguageSwitch';
+import { LOCALES, basePath, localePath, type Locale } from '@/lib/i18n';
+
+/*
+ * The controls pinned top right over every page: the EN/ES switch, then the glass menu. Only their own wrappers run
+ * the entrance (see SiteMenu.tsx: an animated ancestor would unpin the menu's phone panel). The menu comes later in
+ * the page, so its open panel covers the switch.
+ */
+
+interface Props {
+	locale: Locale;
+	/** Where the page's sections live: "" on home itself, home's address elsewhere (see SiteMenu.tsx). */
+	home?: string;
+}
+
+const { locale, home = '' } = Astro.props;
+// This same page in every language.
+const page = basePath(Astro.url.pathname);
+const paths = Object.fromEntries(LOCALES.map((option) => [option, localePath(option, page)])) as Record<Locale, string>;
+---
+
+<div class="fixed top-6 right-6 z-40 flex items-center gap-3 sm:top-8 sm:right-10">
+	<div class="place-in" style="--place-delay: 0.05s">
+		<LanguageSwitch client:load locale={locale} paths={paths} />
+	</div>
+	<SiteMenu client:load home={home} locale={locale} />
+</div>

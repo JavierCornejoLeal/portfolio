@@ -1,9 +1,15 @@
 ---
 import AboutSection from './AboutSection.astro';
-import { stack } from '@/data/portfolio';
+import { cvFor } from '@/data/portfolio';
+import type { Locale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
+
+const { locale } = Astro.props as { locale: Locale };
+const { stack } = cvFor(locale);
+const ui = uiFor(locale).about;
 ---
 
-<AboutSection id="stack" title="Stack">
+<AboutSection id="stack" title={ui.sections.stack}>
 	<div class="flex flex-col gap-12">
 		<div class="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-3">
 			{
@@ -19,6 +25,6 @@ import { stack } from '@/data/portfolio';
 				))
 			}
 		</div>
-		<p class="text-ink/50">What I reach for most. The right tool for the job beats a favourite one.</p>
+		<p class="text-ink/50">{ui.stackNote}</p>
 	</div>
 </AboutSection>

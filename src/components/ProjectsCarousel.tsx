@@ -3,6 +3,8 @@ import * as React from "react"
 import { projects } from "@/data/projects"
 import { LensCarousel } from "@/components/projects/lens-carousel"
 import { leaveTo } from "@/lib/curtain"
+import { DEFAULT_LOCALE, localePath, type Locale } from "@/lib/i18n"
+import { uiFor, type UI } from "@/data/ui"
 import { RollingTitle } from "@/components/ui/rolling-title"
 
 /*
@@ -12,22 +14,20 @@ import { RollingTitle } from "@/components/ui/rolling-title"
  * it gives keyboard and screen-reader access, and Enter on it opens the page.
  */
 
-const pageOf = (slug: string) => `/projects/${slug}`
-
-function StaticStrip() {
+function StaticStrip({ pageOf, ui }: { pageOf: (slug: string) => string; ui: UI }) {
   return (
     <div data-projects-static className="flex h-full snap-x snap-mandatory items-center gap-2.5 overflow-x-auto px-[10vw] sm:gap-3.5">
       {projects.map((project) => (
         <a
           key={project.slug}
           href={pageOf(project.slug)}
-          aria-label={`Open ${project.name}`}
+          aria-label={ui.projects.open(project.name)}
           className="w-[90vw] shrink-0 snap-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-harlequin-300 sm:w-[min(45vw,1100px)]"
           style={{ borderRadius: 3 }}
         >
           <img
             src={project.cover}
-            alt={`${project.name} website`}
+            alt={ui.projects.cover(project.name)}
             className="block aspect-[1.509] w-full object-cover"
             style={{ borderRadius: 3 }}
           />
@@ -37,7 +37,9 @@ function StaticStrip() {
   )
 }
 
-export default function ProjectsCarousel() {
+export default function ProjectsCarousel({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
+  const pageOf = (slug: string) => localePath(locale, `/projects/${slug}`)
+  const ui = uiFor(locale)
   const stageRef = React.useRef<HTMLDivElement>(null)
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const engineRef = React.useRef<LensCarousel | null>(null)
@@ -88,7 +90,7 @@ export default function ProjectsCarousel() {
     // the middle. Between the cards it says nothing and the arrow stays. The same hit test as a tap decides it.
     const describe = (event: PointerEvent) => {
       const hit = engine.cardAt(event.clientX, event.clientY)
-      if (hit) stage.dataset.cursor = hit.openable ? "View project" : hit.side < 0 ? "Previous" : "Next"
+      if (hit) stage.dataset.cursor = hit.openable ? ui.projects.cursorOpen : hit.side < 0 ? ui.projects.cursorPrevious : ui.projects.cursorNext
       else delete stage.dataset.cursor
     }
     stage.addEventListener("pointermove", describe)
@@ -110,12 +112,12 @@ export default function ProjectsCarousel() {
         tabIndex={fallback ? -1 : 0}
         role="group"
         aria-roledescription="carousel"
-        aria-label="Projects"
+        aria-label={ui.projects.label}
         aria-describedby="projects-hint"
         className="relative h-svh w-full touch-pan-y outline-none select-none focus-visible:outline-2 focus-visible:-outline-offset-8 focus-visible:outline-harlequin-300/60"
       >
         {fallback ? (
-          <StaticStrip />
+          <StaticStrip pageOf={pageOf} ui={ui} />
         ) : (
           <>
             <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 size-full cursor-grab active:cursor-grabbing" />
@@ -127,7 +129,7 @@ export default function ProjectsCarousel() {
                 }}
                 data-project-anchor
                 href={pageOf(project.slug)}
-                aria-label={`Open ${project.name}`}
+                aria-label={ui.projects.open(project.name)}
                 // Tabbing to a project brings its card to the middle; Enter opens its page.
                 onFocus={() => {
                   const engine = engineRef.current
@@ -140,13 +142,13 @@ export default function ProjectsCarousel() {
           </>
         )}
         <div className="pointer-events-none absolute inset-x-0 top-[13%] z-10 flex justify-center px-6 text-center sm:top-[11%]">
-          <RollingTitle id="projects-title" text="Featured projects" className="pointer-events-auto" />
+          <RollingTitle id="projects-title" text={ui.projects.title} className="pointer-events-auto" />
         </div>
         <p
           id="projects-hint"
           className="pointer-events-none absolute inset-x-0 bottom-[14%] text-center text-[0.7rem] font-medium tracking-[0.2em] text-ink/70 uppercase"
         >
-          Drag or swipe to explore
+          {ui.projects.hint}
         </p>
       </div>
     </section>

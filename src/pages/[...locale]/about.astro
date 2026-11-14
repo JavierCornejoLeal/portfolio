@@ -1,6 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import SiteMenu from '@/components/SiteMenu';
+import SiteControls from '@/components/SiteControls.astro';
 import DepthImage from '@/components/DepthImage';
 import AboutWho from '@/components/about/AboutWho.astro';
 import AboutLife from '@/components/about/AboutLife.astro';
@@ -10,38 +10,40 @@ import AboutStack from '@/components/about/AboutStack.astro';
 import AboutFaq from '@/components/about/AboutFaq.astro';
 import AboutRail from '@/components/about/AboutRail';
 import PageFooter from '@/components/PageFooter';
+import { localeParams, localePath, toLocale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
 
+export function getStaticPaths() {
+	return localeParams().map((params) => ({ params }));
+}
+
+const locale = toLocale(Astro.params.locale);
+const home = localePath(locale, '/');
+const ui = uiFor(locale).about;
 // The sections in page order, for the rail's title.
-const sections = [
-	{ id: 'who', title: 'Who I am' },
-	{ id: 'life', title: 'Off the clock' },
-	{ id: 'process', title: 'How I work' },
-	{ id: 'experience', title: 'Experience' },
-	{ id: 'stack', title: 'Stack' },
-	{ id: 'faq', title: 'Questions' },
-];
+const sections = (['who', 'life', 'process', 'experience', 'stack', 'faq'] as const).map((id) => ({ id, title: ui.sections[id] }));
+
+
 ---
 
 <!-- About: it opens on a statue in the dark, relit by a light that follows the cursor (DepthImage), with the page's
      name and a Roman boast top right catching the same light; then six sections about Javier. Kept out of search
      until the page is finished. -->
-<Layout title="About · Javier Cornejo" noindex siteLoader={false}>
-	<!-- The site's glass menu, pinned top right as everywhere; its section links lead back home. -->
-	<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
-		<SiteMenu client:load home="/" />
-	</div>
+<Layout title={ui.title} locale={locale} noindex siteLoader={false}>
+	<!-- The language switch and the site's glass menu, pinned top right as everywhere; its section links lead back home. -->
+	<SiteControls locale={locale} home={home} />
 	<main class="min-h-dvh bg-black">
 		<section id="top" class="relative h-dvh">
 			<DepthImage
 				client:load
 				image="/about/statue.webp"
-				alt="A marble statue in the dark, looking up past its raised arm"
+				alt={ui.statueAlt}
 				backgroundColor="#000000"
 				className="size-full"
 			>
 				<!-- Top right, under the menu and set in to the content's edge: the page's name, lit by the statue's light. -->
 				<div class="pointer-events-none flex size-full flex-col items-end px-[clamp(1.5rem,7vw,10rem)] pt-[clamp(7rem,16dvh,10rem)] text-right">
-					<h1 data-light-catch class="light-catch font-poster text-[clamp(4rem,10vw,9rem)] leading-none uppercase">About</h1>
+					<h1 data-light-catch class="light-catch font-poster text-[clamp(4rem,10vw,9rem)] leading-none uppercase">{ui.heading}</h1>
 				</div>
 			</DepthImage>
 			<!-- The statue sinks into the black below it, so the page carries on without a seam. -->
@@ -63,15 +65,15 @@ const sections = [
 				</div>
 			</div>
 			<div class="min-w-0">
-				<AboutWho />
-				<AboutLife />
-				<AboutProcess />
-				<AboutExperience />
-				<AboutStack />
-				<AboutFaq />
+				<AboutWho locale={locale} />
+				<AboutLife locale={locale} />
+				<AboutProcess locale={locale} />
+				<AboutExperience locale={locale} />
+				<AboutStack locale={locale} />
+				<AboutFaq locale={locale} />
 			</div>
 		</div>
 	</main>
 	<!-- The year comes from the visitor's clock, so the footer renders in the browser. -->
-	<PageFooter client:only="react" />
+	<PageFooter client:only="react" home={home} locale={locale} />
 </Layout>

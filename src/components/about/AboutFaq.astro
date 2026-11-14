@@ -1,10 +1,15 @@
 ---
 import AboutSection from './AboutSection.astro';
 import FaqList from './FaqList';
-import { faqs } from '@/data/about';
+import { aboutFor } from '@/data/about';
+import type { Locale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
+
+const { locale } = Astro.props as { locale: Locale };
+const { faqs } = aboutFor(locale);
 ---
 
-<AboutSection id="faq" title="Questions">
+<AboutSection id="faq" title={uiFor(locale).about.sections.faq}>
 	<!-- Hydrated with the page: a first click before then would fall through to the browser's instant toggle. -->
 	<FaqList client:load faqs={faqs} />
 </AboutSection>
