@@ -3,6 +3,7 @@ import * as React from "react"
 import { LiquidGlass } from "@/components/ui/liquid-glass"
 import { HoverRollLabel, useHoverRoll } from "@/components/ui/hover-roll"
 import { cn } from "@/lib/utils"
+import { DEFAULT_LOCALE, localePath, type Locale } from "@/lib/i18n"
 
 /*
  * Site menu: a "=" pinned top right that turns into a cross. Opening it stretches the button's own circle into a
@@ -40,7 +41,7 @@ const PHONE = "(width < 40rem)"
  * chromatic aberration at the rim over a dark body (--menu-smoke, set on .site-menu), lit along its top edge.
  * Being the same material is what lets the circle hand over to the panel without a visible change.
  */
-function MenuGlass({ radius, className }: { radius: number; className?: string }) {
+export function MenuGlass({ radius, className }: { radius: number; className?: string }) {
   return (
     <LiquidGlass
       aria-hidden="true"
@@ -81,7 +82,7 @@ function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; 
  * `home` is where the page's sections live. On the home page it is "" and the links glide in place; elsewhere (a
  * project's page) it is "/", so Projects and Contact lead back home, which glides on to them (lib/glide.ts).
  */
-export default function SiteMenu({ home = "" }: { home?: string }) {
+export default function SiteMenu({ home = "", locale = DEFAULT_LOCALE }: { home?: string; locale?: Locale }) {
   const [open, setOpen] = React.useState(false)
   const rootRef = React.useRef<HTMLDivElement>(null)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
@@ -114,7 +115,9 @@ export default function SiteMenu({ home = "" }: { home?: string }) {
 
   // Away from home, Home leads the list: visitors who land straight on a page have no home in their history to go
   // back to. Like any link to another page of the site, it leaves through the page curtain (Layout.astro).
-  const sections = home ? [{ label: "Home", href: home }, ...SECTIONS] : SECTIONS
+  // Pages of the site (About) stay in the language being read.
+  const pages = SECTIONS.map((link) => (link.href.startsWith("/") ? { ...link, href: localePath(locale, link.href) } : link))
+  const sections = home ? [{ label: "Home", href: home }, ...pages] : pages
 
   const line = "absolute left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-ink transition-transform duration-300 ease-out motion-reduce:transition-none"
 

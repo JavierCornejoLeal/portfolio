@@ -3,6 +3,7 @@ import * as React from "react"
 import { projects } from "@/data/projects"
 import { LensCarousel } from "@/components/projects/lens-carousel"
 import { leaveTo } from "@/lib/curtain"
+import { DEFAULT_LOCALE, localePath, type Locale } from "@/lib/i18n"
 import { RollingTitle } from "@/components/ui/rolling-title"
 
 /*
@@ -12,9 +13,7 @@ import { RollingTitle } from "@/components/ui/rolling-title"
  * it gives keyboard and screen-reader access, and Enter on it opens the page.
  */
 
-const pageOf = (slug: string) => `/projects/${slug}`
-
-function StaticStrip() {
+function StaticStrip({ pageOf }: { pageOf: (slug: string) => string }) {
   return (
     <div data-projects-static className="flex h-full snap-x snap-mandatory items-center gap-2.5 overflow-x-auto px-[10vw] sm:gap-3.5">
       {projects.map((project) => (
@@ -37,7 +36,8 @@ function StaticStrip() {
   )
 }
 
-export default function ProjectsCarousel() {
+export default function ProjectsCarousel({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
+  const pageOf = (slug: string) => localePath(locale, `/projects/${slug}`)
   const stageRef = React.useRef<HTMLDivElement>(null)
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const engineRef = React.useRef<LensCarousel | null>(null)
@@ -115,7 +115,7 @@ export default function ProjectsCarousel() {
         className="relative h-svh w-full touch-pan-y outline-none select-none focus-visible:outline-2 focus-visible:-outline-offset-8 focus-visible:outline-harlequin-300/60"
       >
         {fallback ? (
-          <StaticStrip />
+          <StaticStrip pageOf={pageOf} />
         ) : (
           <>
             <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 size-full cursor-grab active:cursor-grabbing" />

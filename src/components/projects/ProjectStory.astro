@@ -4,6 +4,7 @@ import type { Story } from '@/data/stories';
 import StoryMedia from './StoryMedia.astro';
 import NextProjectLink from './NextProjectLink';
 import RevealOnScroll from '@/components/RevealOnScroll.astro';
+import { DEFAULT_LOCALE, localePath, type Locale } from '@/lib/i18n';
 
 /*
  * The story under a project's title screen: a line of context with the role, stack and site beside it, a lead clip
@@ -12,7 +13,7 @@ import RevealOnScroll from '@/components/RevealOnScroll.astro';
  * scroll into view (RevealOnScroll); the script below plays clips only while they are on screen.
  */
 
-const { project, story, next } = Astro.props as { project: Project; story: Story; next: Project };
+const { project, story, next, locale = DEFAULT_LOCALE } = Astro.props as { project: Project; story: Story; next: Project; locale?: Locale };
 const number = (i: number) => String(i + 1).padStart(2, '0');
 ---
 
@@ -88,7 +89,7 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 	</div>
 
 	<div data-reveal class="flex justify-end">
-		<NextProjectLink client:visible name={next.name} href={`/projects/${next.slug}`} />
+		<NextProjectLink client:visible name={next.name} href={localePath(locale, `/projects/${next.slug}`)} />
 	</div>
 </section>
 

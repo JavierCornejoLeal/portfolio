@@ -1,10 +1,11 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import { projects, type Project } from '@/data/projects';
-import SiteMenu from '@/components/SiteMenu';
+import SiteControls from '@/components/SiteControls.astro';
 import ProjectStory from '@/components/projects/ProjectStory.astro';
 import { stories } from '@/data/stories';
 import PageFooter from '@/components/PageFooter';
+import { localeParams, localePath, toLocale } from '@/lib/i18n';
 
 /*
  * A project's page. Its opening screen: black, the site's glass menu top right, and the project's name set big at
@@ -13,10 +14,14 @@ import PageFooter from '@/components/PageFooter';
  */
 
 export function getStaticPaths() {
-	return projects.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+	return localeParams().flatMap(({ locale }) =>
+		projects.map((project) => ({ params: { locale, slug: project.slug }, props: { project } }))
+	);
 }
 
 const { project } = Astro.props as { project: Project };
+const locale = toLocale(Astro.params.locale);
+const home = localePath(locale, '/');
 const story = stories[project.slug];
 // The next project in the carousel's order; the last one leads back to the first.
 const next = projects[(projects.findIndex((entry) => entry.slug === project.slug) + 1) % projects.length];
@@ -25,12 +30,10 @@ let index = 0;
 const words = project.name.split(' ').map((word) => [...word].map((letter) => ({ letter, index: index++ })));
 ---
 
-<Layout title={`${project.name} · Javier Cornejo`} noindex siteLoader={false}>
+<Layout title={`${project.name} · Javier Cornejo`} locale={locale} noindex siteLoader={false}>
 	<main class="min-h-dvh bg-black text-ink">
-		<!-- The site's glass menu, pinned top right as on the home page; its section links lead back home. -->
-		<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
-			<SiteMenu client:load home="/" />
-		</div>
+		<!-- The language switch and the site's glass menu, pinned top right as on the home page; its section links lead back home. -->
+		<SiteControls locale={locale} home={home} />
 		<section id="top" class="flex min-h-dvh flex-col justify-end px-[clamp(1.5rem,7vw,10rem)] pb-10">
 
 			<div>
@@ -57,8 +60,8 @@ const words = project.name.split(' ').map((word) => [...word].map((letter) => ({
 				</h1>
 			</div>
 		</section>
-		{story && <ProjectStory project={project} story={story} next={next} />}
+		{story && <ProjectStory project={project} story={story} next={next} locale={locale} />}
 	</main>
 	<!-- The year comes from the visitor's clock, so the footer renders in the browser. -->
-	<PageFooter client:only="react" />
+	<PageFooter client:only="react" home={home} />
 </Layout>

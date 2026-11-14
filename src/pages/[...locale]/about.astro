@@ -1,6 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import SiteMenu from '@/components/SiteMenu';
+import SiteControls from '@/components/SiteControls.astro';
 import DepthImage from '@/components/DepthImage';
 import AboutWho from '@/components/about/AboutWho.astro';
 import AboutLife from '@/components/about/AboutLife.astro';
@@ -10,6 +10,14 @@ import AboutStack from '@/components/about/AboutStack.astro';
 import AboutFaq from '@/components/about/AboutFaq.astro';
 import AboutRail from '@/components/about/AboutRail';
 import PageFooter from '@/components/PageFooter';
+import { localeParams, localePath, toLocale } from '@/lib/i18n';
+
+export function getStaticPaths() {
+	return localeParams().map((params) => ({ params }));
+}
+
+const locale = toLocale(Astro.params.locale);
+const home = localePath(locale, '/');
 
 // The sections in page order, for the rail's title.
 const sections = [
@@ -25,11 +33,9 @@ const sections = [
 <!-- About: it opens on a statue in the dark, relit by a light that follows the cursor (DepthImage), with the page's
      name and a Roman boast top right catching the same light; then six sections about Javier. Kept out of search
      until the page is finished. -->
-<Layout title="About · Javier Cornejo" noindex siteLoader={false}>
-	<!-- The site's glass menu, pinned top right as everywhere; its section links lead back home. -->
-	<div class="fixed top-6 right-6 z-40 sm:top-8 sm:right-10">
-		<SiteMenu client:load home="/" />
-	</div>
+<Layout title="About · Javier Cornejo" locale={locale} noindex siteLoader={false}>
+	<!-- The language switch and the site's glass menu, pinned top right as everywhere; its section links lead back home. -->
+	<SiteControls locale={locale} home={home} />
 	<main class="min-h-dvh bg-black">
 		<section id="top" class="relative h-dvh">
 			<DepthImage
@@ -73,5 +79,5 @@ const sections = [
 		</div>
 	</main>
 	<!-- The year comes from the visitor's clock, so the footer renders in the browser. -->
-	<PageFooter client:only="react" />
+	<PageFooter client:only="react" home={home} />
 </Layout>
