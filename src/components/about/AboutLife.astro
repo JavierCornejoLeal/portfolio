@@ -1,12 +1,16 @@
 ---
 import AboutSection from './AboutSection.astro';
 import LifePreview from './LifePreview';
-import { life } from '@/data/about';
+import { aboutFor } from '@/data/about';
+import type { Locale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
 
+const { locale } = Astro.props as { locale: Locale };
+const { life } = aboutFor(locale);
 const photos = life.flatMap((side) => (side.photo ? [side.photo] : []));
 ---
 
-<AboutSection id="life" title="Off the clock">
+<AboutSection id="life" title={uiFor(locale).about.sections.life}>
 	<!-- The person behind the code: one big word per side of him, a line about it, and a photo under the pointer. -->
 	<div class="grid gap-x-[clamp(2rem,5vw,5rem)] gap-y-[clamp(3rem,8vh,5rem)] sm:grid-cols-2">
 		{

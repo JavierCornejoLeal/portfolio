@@ -7,6 +7,8 @@ import { GlassLayer } from "@/components/ui/glass-layer"
 import { HoverRollLabel, useHoverRoll } from "@/components/ui/hover-roll"
 import { TextSwapRoll } from "@/components/ui/text-swap-roll"
 import { cn } from "@/lib/utils"
+import { uiFor, type UI } from "@/data/ui"
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n"
 
 /*
  * Footer: it waits in the near-black green the contact portal opens onto. A big line and liquid-glass pills top
@@ -20,9 +22,9 @@ interface Pill {
   Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>
 }
 
-const PILLS: Pill[] = [
-  { label: "Drop me an email", href: "mailto:cornejolealjavier@gmail.com", Icon: ArrowRight },
-  { label: "See this code", href: "https://github.com/JavierCornejoLeal/portfolio", Icon: ArrowRight },
+const pillsOf = (ui: UI): Pill[] => [
+  { label: ui.footer.email, href: "mailto:cornejolealjavier@gmail.com", Icon: ArrowRight },
+  { label: ui.footer.code, href: "https://github.com/JavierCornejoLeal/portfolio", Icon: ArrowRight },
 ]
 
 /** Top right: the social profiles (shared with the menu), then the phone, set just like them. */
@@ -31,7 +33,7 @@ const ELSEWHERE = [
   { label: "+34 634 44 36 02", href: "tel:+34634443602" },
 ]
 
-function FooterPill({ pill }: { pill: Pill }) {
+function FooterPill({ pill, newTab }: { pill: Pill; newTab: string }) {
   const external = pill.href.startsWith("https://")
   return (
     <a
@@ -42,14 +44,14 @@ function FooterPill({ pill }: { pill: Pill }) {
     >
       <GlassLayer radius={28} className="-z-10" />
       {pill.label}
-      {external && <span className="sr-only"> (opens in a new tab)</span>}
+      {external && <span className="sr-only">{newTab}</span>}
       <pill.Icon aria-hidden className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none" />
     </a>
   )
 }
 
 /** A profile or the phone: its letters roll on hover, as in the menu. Profiles open a new tab; the phone dials. */
-function ElsewhereLink({ link }: { link: { label: string; href: string } }) {
+function ElsewhereLink({ link, newTab }: { link: { label: string; href: string }; newTab: string }) {
   const { roll, play } = useHoverRoll()
   const external = link.href.startsWith("https://")
   return (
@@ -62,20 +64,17 @@ function ElsewhereLink({ link }: { link: { label: string; href: string } }) {
         className="inline-block whitespace-nowrap"
       >
         <HoverRollLabel label={link.label} roll={roll} />
-        {external && <span className="sr-only"> (opens in a new tab)</span>}
+        {external && <span className="sr-only">{newTab}</span>}
       </a>
     </li>
   )
 }
 
-const ROLE = "full creative developer"
-const ROLE_REVEALED = "full stack developer"
-
 /**
  * Easter egg in the bottom line: hovering "full creative developer" rolls its letters into "full stack developer",
  * and leaving rolls them back. Under reduced motion the words just swap.
  */
-function RoleSwap() {
+function RoleSwap({ role: ROLE, revealed: ROLE_REVEALED }: { role: string; revealed: string }) {
   const reduce = useReducedMotion()
   const [label, setLabel] = React.useState(ROLE)
   const [swap, setSwap] = React.useState<{ from: string; to: string; id: number } | null>(null)
@@ -140,9 +139,11 @@ export default function SiteFooter({
   home = "",
   name,
   nameAtFoot = false,
+  locale = DEFAULT_LOCALE,
 }: {
   background: string
   home?: string
+  locale?: Locale
   /** Puts the name last, under the bottom line, its foot on the footer's bottom edge (to be cropped by it). */
   nameAtFoot?: boolean
   /** Replaces the big JAVIER set into the footer (the pages away from home print it in halftone dots). */
@@ -151,6 +152,7 @@ export default function SiteFooter({
   // The footer only ever renders in the browser (the portal mounts once Anton has loaded), so this is the
   // visitor's current year, never the year the site was built.
   const year = new Date().getFullYear()
+  const ui = uiFor(locale)
 
   return (
     <footer
@@ -168,22 +170,22 @@ export default function SiteFooter({
       <div className="flex flex-col gap-14 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-10">
           <h2 className="text-[clamp(2.75rem,5.5vw,5.25rem)] leading-[0.95] font-medium tracking-[-0.035em] text-balance">
-            Let's build
+            {ui.footer.heading[0]}
             <br />
-            something clear.
+            {ui.footer.heading[1]}
           </h2>
           <ul className="flex flex-wrap gap-3">
-            {PILLS.map((pill) => (
+            {pillsOf(ui).map((pill) => (
               <li key={pill.href}>
-                <FooterPill pill={pill} />
+                <FooterPill pill={pill} newTab={ui.site.newTab} />
               </li>
             ))}
           </ul>
         </div>
 
-        <ul aria-label="Elsewhere" className="flex flex-col gap-2 text-[clamp(1.5rem,2.2vw,2.125rem)] leading-tight font-medium tracking-[-0.02em] sm:pr-6">
+        <ul aria-label={ui.footer.elsewhere} className="flex flex-col gap-2 text-[clamp(1.5rem,2.2vw,2.125rem)] leading-tight font-medium tracking-[-0.02em] sm:pr-6">
           {ELSEWHERE.map((link) => (
-            <ElsewhereLink key={link.href} link={link} />
+            <ElsewhereLink key={link.href} link={link} newTab={ui.site.newTab} />
           ))}
         </ul>
       </div>
@@ -197,18 +199,18 @@ export default function SiteFooter({
         )}
         <div className="flex flex-col gap-3 text-sm text-ink/75 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            ©{year} — Javier Cornejo, <RoleSwap />
+            ©{year} — Javier Cornejo, <RoleSwap role={ui.footer.role} revealed={ui.footer.roleRevealed} />
           </p>
-          <nav aria-label="Footer">
+          <nav aria-label={ui.footer.nav}>
             <ul className="legend flex gap-6 text-ink/75">
               <li>
                 <a href={`${home}#projects`} className="transition-colors hover:text-ink">
-                  Projects
+                  {ui.footer.projects}
                 </a>
               </li>
               <li>
                 <a href="#top" className="transition-colors hover:text-ink">
-                  Back to top
+                  {ui.footer.top}
                 </a>
               </li>
             </ul>

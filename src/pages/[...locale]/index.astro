@@ -9,12 +9,14 @@ import LivingGradient from '@/components/LivingGradient';
 import ProjectsCarousel from '@/components/ProjectsCarousel';
 import ContactPortal from '@/components/ContactPortal';
 import { localeParams, toLocale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
 
 export function getStaticPaths() {
 	return localeParams().map((params) => ({ params }));
 }
 
 const locale = toLocale(Astro.params.locale);
+const ui = uiFor(locale);
 ---
 
 <Layout locale={locale}>
@@ -64,17 +66,17 @@ const locale = toLocale(Astro.params.locale);
 					<p
 						class="font-display text-lg leading-[1.25] font-semibold tracking-[-0.01em] text-pretty uppercase sm:text-xl"
 					>
-						Code you can see through: sharp on the surface, solid all the way down.
+						{ui.hero.slogan}
 					</p>
 				</div>
 				<div class="place-in pointer-events-auto shrink-0" style="--place-delay: 0.95s">
-					<GlassSplitLink client:load href="#projects">Discover works</GlassSplitLink>
+					<GlassSplitLink client:load href="#projects">{ui.hero.cta}</GlassSplitLink>
 				</div>
 			</div>
 		</section>
 		</div>
 
-		<Statement client:load />
+		<Statement client:load locale={locale} />
 
 		<!-- Hydrates ahead of arrival so the covers are ready to rise in when the section scrolls into view. -->
 		<ProjectsCarousel client:visible={{ rootMargin: '600px' }} locale={locale} />
@@ -83,7 +85,7 @@ const locale = toLocale(Astro.params.locale);
 		     portal turns its motion off for good if its first frame comes more than 2.5s after mounting, which a page
 		     still busy with the hero's WebGL can cause. The menu's Contact link finds its way here anyway. -->
 		<div id="contact" data-contact>
-			<ContactPortal client:visible={{ rootMargin: '600px' }} />
+			<ContactPortal client:visible={{ rootMargin: '600px' }} locale={locale} />
 		</div>
 
 	</main>

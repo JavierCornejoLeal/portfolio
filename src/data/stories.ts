@@ -5,6 +5,8 @@
  * short webm scrolls recorded from the live site.
  */
 
+import type { Locale } from "@/lib/i18n"
+
 export interface StoryMedia {
   kind: "image" | "video"
   src: string
@@ -42,7 +44,7 @@ export interface Story {
 
 const media = (slug: string, file: string) => `/projects/${slug}/${file}`
 
-export const stories: Record<string, Story> = {
+const en: Record<string, Story> = {
   "eduardo-calabuig": {
     role: "Design & development",
     intro:
@@ -215,3 +217,150 @@ export const stories: Record<string, Story> = {
     ],
   },
 }
+
+/** The same stories in Spanish: the same media, in the same order, with every word translated. */
+const es: Record<string, Story> = {
+  "eduardo-calabuig": {
+    role: "Diseño y desarrollo",
+    intro:
+      "La web de un estudio de interiorismo en Dénia: proyectos, journal y contacto, en español e inglés, con un panel privado detrás para tenerlo todo al día.",
+    lead: { ...en["eduardo-calabuig"].lead, alt: "Bajando por la página de inicio de eduardocalabuig.com" },
+    stack: [
+      { name: "React + Vite", why: "Una web de una sola página, rápida, con transiciones CSS entre rutas, compilada a archivos estáticos para el hosting del propio estudio." },
+      { name: "React Bootstrap, recortado", why: "Componentes conocidos, y un plugin de Vite a medida que elimina cada regla de Bootstrap que la web no usa." },
+      { name: "GSAP", why: "Mueve el storytelling: escenas guiadas por el scroll que se descargan solo cuando el visitante se acerca, para que la primera pantalla siga siendo ligera." },
+      { name: "i18next", why: "Español e inglés desde los mismos componentes, detectando el idioma del visitante al llegar." },
+    ],
+    gallery: [
+      { kind: "image", src: media("eduardo-calabuig", "home.webp"), alt: "Página de inicio: Gestionamos tu reforma, cuidamos cada detalle", size: "half" },
+      { kind: "image", src: media("eduardo-calabuig", "mobile.webp"), alt: "La página de inicio en un móvil", size: "phone" },
+      {
+        kind: "image",
+        src: media("eduardo-calabuig", "online.webp"),
+        alt: "La página de Interiorismo Online",
+        caption: "Interiorismo Online: AVIF responsive y animaciones CSS con el scroll, sin GSAP en esta ruta.",
+        size: "wide",
+      },
+      { kind: "image", src: media("eduardo-calabuig", "about-intro.webp"), alt: "Eduardo, presentado en la página de inicio", size: "half" },
+      { kind: "image", src: media("eduardo-calabuig", "about.webp"), alt: "La página sobre el estudio", size: "half" },
+    ],
+    curiosities: [
+      "Produje yo mismo con IA cada imagen y vídeo del storytelling, y después optimicé cada uno para la web.",
+      "Las visitas se registran diez segundos después de cargar y en un momento de calma, para que la analítica nunca compita con la página.",
+      "Publica un llms.txt y un catálogo para IA, para que los agentes de IA lean el estudio como lo hace la gente.",
+    ],
+  },
+
+  ocaive: {
+    role: "Diseño y desarrollo",
+    intro:
+      "La casa de un estudio que une desarrollo tecnológico, producción audiovisual y una agencia de música 360: una página larga y cinematográfica que cuenta las tres historias.",
+    lead: { ...en.ocaive.lead, alt: "Bajando por la página de inicio de ocaive.com" },
+    stack: [
+      { name: "Next.js", why: "Páginas renderizadas en el servidor para una home larga y cargada de media que aun así tiene que cargar rápido y encontrarse en buscadores." },
+      { name: "Tailwind CSS", why: "Un mismo conjunto de utilidades para escenas muy distintas, para que toda la página mantenga los mismos espacios y la misma tipografía." },
+    ],
+    gallery: [
+      { kind: "image", src: media("ocaive", "systems.webp"), alt: "Sistemas que hacen crecer tu negocio", size: "half" },
+      { kind: "image", src: media("ocaive", "mobile.webp"), alt: "La página de inicio en un móvil", size: "phone" },
+      { kind: "image", src: media("ocaive", "services.webp"), alt: "Las tres áreas: tecnología, producción audiovisual y agencia de música", size: "wide" },
+      { kind: "image", src: media("ocaive", "work.webp"), alt: "Hub Cultural Cabanyal entre los trabajos del estudio", size: "wide" },
+    ],
+    curiosities: [
+      "Tres negocios, una página: desarrollo tecnológico, una productora audiovisual y una agencia de música 360.",
+      "La home se cuenta como una historia: escenas a pantalla completa, una detrás de otra, a medida que haces scroll.",
+      "Cada imagen y cada vídeo se optimizaron para que la página siga siendo ligera y se reproduzca sin tirones hasta el final.",
+      "El diseño y el desarrollo son míos; después el estudio cambió un par de cosas, como el vídeo de entrada.",
+    ],
+  },
+
+  "hub-cultural-cabanyal": {
+    role: "Desarrollo",
+    intro:
+      "Una red viva para la cultura en los Poblats Marítims de València: espacios, una agenda y los profesionales que hay detrás, en valenciano.",
+    lead: { ...en["hub-cultural-cabanyal"].lead, alt: "Bajando por la página de inicio de culturacabanyal.com" },
+    stack: [
+      { name: "WordPress (PHP)", why: "El equipo y los agentes culturales publican espacios, eventos y perfiles por su cuenta, desde un editor que ya conocen." },
+    ],
+    gallery: [
+      { kind: "image", src: media("hub-cultural-cabanyal", "about.webp"), alt: "Sobre el Hub", size: "half" },
+      { kind: "image", src: media("hub-cultural-cabanyal", "mobile.webp"), alt: "La página de inicio en un móvil", size: "phone" },
+      { kind: "image", src: media("hub-cultural-cabanyal", "how.webp"), alt: "Com funciona", size: "wide" },
+      { kind: "image", src: media("hub-cultural-cabanyal", "join.webp"), alt: "La invitación a los agentes culturales para unirse", size: "wide" },
+    ],
+    curiosities: [
+      "Tres puertas en la página de inicio: Espais, Agenda y Professionals.",
+      "Los agentes culturales se registran para mostrar sus proyectos, conectar entre ellos y publicar sus propias actividades.",
+      "Está escrita en valenciano, la lengua del barrio al que sirve.",
+      "Desarrollé muchas de sus páginas y funcionalidades, dentro de la propia plataforma.",
+    ],
+  },
+
+  "crm-eduardo": {
+    role: "Diseño y desarrollo",
+    intro:
+      "La cara privada de eduardocalabuig.com: donde el estudio publica proyectos y noticias, gestiona usuarios y ve cómo le va a la web, sin tocar código.",
+    lead: { ...en["crm-eduardo"].lead, alt: "El panel de control: visitas, actividad, páginas más vistas y clics" },
+    stack: [
+      { name: "Next.js", why: "Sus rutas de API se encargan del login, las subidas, la analítica y las traducciones, así que una sola app es a la vez el panel y su backend." },
+      { name: "Supabase", why: "Postgres, almacenamiento y políticas por fila: el contenido y las imágenes que lee la web pública, en un solo sitio." },
+      { name: "Resend", why: "Los formularios de contacto de la web pública envían un aviso al estudio y una respuesta al visitante." },
+    ],
+    gallery: [
+      {
+        kind: "image",
+        src: media("crm-eduardo", "editor.webp"),
+        alt: "Editando el proyecto Casa Umbral: bloques de texto e imagen uno al lado del otro",
+        caption: "Un editor al estilo Notion: escribe / para títulos, imágenes, tablas, vídeos o menciones de Instagram.",
+        size: "wide",
+        natural: true,
+      },
+      {
+        kind: "image",
+        src: media("crm-eduardo", "projects.webp"),
+        alt: "La lista de proyectos con categoría, estado, traducciones EN y VA y acciones",
+        caption: "Cada proyecto con su estado y sus traducciones; el ojo abre una vista previa exacta de su página pública.",
+        size: "wide",
+        natural: true,
+      },
+      { kind: "image", src: media("crm-eduardo", "activity.webp"), alt: "Totales de visitas y clics sobre un gráfico de barras de los últimos 14 días", caption: "Las dos últimas semanas de un vistazo.", size: "wide", natural: true },
+      { kind: "image", src: media("crm-eduardo", "breakdown.webp"), alt: "Páginas más vistas, clics más frecuentes, países y dispositivos", size: "wide", natural: true },
+    ],
+    curiosities: [
+      "Los proyectos y las noticias se previsualizan exactamente como se verán en la web pública, antes de publicar nada.",
+      "Se escribe bloque a bloque, como en Notion: escribe / y elige un título, una imagen, una tabla, un vídeo o una mención de Instagram.",
+      "Cada proyecto guarda sus traducciones al inglés y al valenciano en el mismo registro.",
+      "Un cron diario lee proyectos publicados reales, para que el plan gratuito de Supabase nunca pause la base de datos.",
+    ],
+  },
+
+  portfolio: {
+    role: "Diseño y desarrollo",
+    intro: "Esta web: un portfolio que enseña el trabajo tal como lo construyo, de la tipografía al WebGL y a los tests.",
+    lead: { ...en.portfolio.lead, alt: "Haciendo scroll hacia la O de HOLA, que se abre al pie de página" },
+    stack: [
+      { name: "Astro", why: "Páginas estáticas por defecto; solo las piezas interactivas cargan como islas de React." },
+      { name: "Three.js", why: "El cristal acanalado tras el hero, el carrusel de proyectos que se curva y el portal de HOLA." },
+      { name: "Motion", why: "Apariciones ligadas al scroll, letras que ruedan al pasar el cursor y los títulos de proyecto que suben." },
+      { name: "Playwright", why: "Cada comportamiento de la página está fijado por un test end-to-end, que se ejecuta en CI en una imagen Linux." },
+    ],
+    gallery: [
+      { kind: "image", src: media("portfolio", "statement.webp"), alt: "La declaración I build worlds", size: "half" },
+      { kind: "image", src: media("portfolio", "mobile.webp"), alt: "El hero en un móvil", size: "phone" },
+      { kind: "image", src: media("portfolio", "carousel.webp"), alt: "El carrusel de proyectos", size: "wide" },
+      { kind: "image", src: media("portfolio", "footer.webp"), alt: "El pie de página, dentro de la letra", size: "wide" },
+      { kind: "image", src: media("portfolio", "about-statue.webp"), alt: "La página Sobre mí: una estatua de mármol iluminada por el cursor", size: "half" },
+      { kind: "image", src: media("portfolio", "about-footer.webp"), alt: "El pie de las páginas interiores: JAVIER en puntos de semitono sobre barras verdes", size: "half" },
+    ],
+    curiosities: [
+      "La sección de contacto es una letra: el scroll vuela hacia la O de HOLA hasta que su verde llena la pantalla, y el pie de página espera dentro.",
+      "El portal espera a su fuente antes de montarse: un cambio tardío movería la letra de debajo de la cámara.",
+      "El pie de página esconde un easter egg. Pasa el cursor por las últimas palabras.",
+    ],
+  },
+}
+
+const STORIES_BY_LOCALE: Record<Locale, Record<string, Story>> = { en, es }
+
+/** Every project's story in a language, by slug. */
+export const storiesFor = (locale: Locale): Record<string, Story> => STORIES_BY_LOCALE[locale]

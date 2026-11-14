@@ -4,6 +4,7 @@ import { LiquidGlass } from "@/components/ui/liquid-glass"
 import { HoverRollLabel, useHoverRoll } from "@/components/ui/hover-roll"
 import { cn } from "@/lib/utils"
 import { DEFAULT_LOCALE, localePath, type Locale } from "@/lib/i18n"
+import { uiFor, type UI } from "@/data/ui"
 
 /*
  * Site menu: a "=" pinned top right that turns into a cross. Opening it stretches the button's own circle into a
@@ -20,11 +21,11 @@ export interface MenuLink {
 }
 
 /** Sections of the page. Contact glides to the footer, where every way to get in touch is in view. */
-export const SECTIONS: MenuLink[] = [
-  { label: "About", href: "/about" },
-  { label: "Projects", href: "#projects" },
+const sectionsOf = (ui: UI): MenuLink[] => [
+  { label: ui.menu.about, href: "/about" },
+  { label: ui.menu.projects, href: "#projects" },
   // The footer mounts with the contact portal on approach; the page's link handling finds its way (lib/glide.ts).
-  { label: "Contact", href: "#contact-inside" },
+  { label: ui.menu.contact, href: "#contact-inside" },
 ]
 
 /** Social profiles, shared with the footer. */
@@ -57,7 +58,7 @@ export function MenuGlass({ radius, className }: { radius: number; className?: s
 }
 
 /** A menu link whose letters roll on hover or keyboard focus, every time; the plain word is what screen readers get. */
-function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; onNavigate: () => void }) {
+function RollLink({ link, index, onNavigate, newTab }: { link: MenuLink; index: number; onNavigate: () => void; newTab: string }) {
   const { roll, play } = useHoverRoll()
   const external = link.href.startsWith("https://")
 
@@ -72,7 +73,7 @@ function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; 
         className="menu-item block w-fit"
       >
         <HoverRollLabel label={link.label} roll={roll} />
-        {external && <span className="sr-only"> (opens in a new tab)</span>}
+        {external && <span className="sr-only">{newTab}</span>}
       </a>
     </li>
   )
@@ -84,6 +85,7 @@ function RollLink({ link, index, onNavigate }: { link: MenuLink; index: number; 
  */
 export default function SiteMenu({ home = "", locale = DEFAULT_LOCALE }: { home?: string; locale?: Locale }) {
   const [open, setOpen] = React.useState(false)
+  const ui = uiFor(locale)
   const rootRef = React.useRef<HTMLDivElement>(null)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
 
@@ -116,8 +118,8 @@ export default function SiteMenu({ home = "", locale = DEFAULT_LOCALE }: { home?
   // Away from home, Home leads the list: visitors who land straight on a page have no home in their history to go
   // back to. Like any link to another page of the site, it leaves through the page curtain (Layout.astro).
   // Pages of the site (About) stay in the language being read.
-  const pages = SECTIONS.map((link) => (link.href.startsWith("/") ? { ...link, href: localePath(locale, link.href) } : link))
-  const sections = home ? [{ label: "Home", href: home }, ...pages] : pages
+  const pages = sectionsOf(ui).map((link) => (link.href.startsWith("/") ? { ...link, href: localePath(locale, link.href) } : link))
+  const sections = home ? [{ label: ui.menu.home, href: home }, ...pages] : pages
 
   const line = "absolute left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-ink transition-transform duration-300 ease-out motion-reduce:transition-none"
 
@@ -131,7 +133,7 @@ export default function SiteMenu({ home = "", locale = DEFAULT_LOCALE }: { home?
           type="button"
           aria-expanded={open}
           aria-controls="site-menu"
-          aria-label={open ? "Close menu" : "Open menu"}
+          aria-label={open ? ui.menu.close : ui.menu.open}
           onClick={() => setOpen((value) => !value)}
           className="relative isolate block size-14 rounded-full transition-transform duration-300 hover:scale-105 motion-reduce:transition-none motion-reduce:hover:scale-100 sm:size-16"
         >
@@ -142,7 +144,7 @@ export default function SiteMenu({ home = "", locale = DEFAULT_LOCALE }: { home?
         </button>
       </div>
 
-      <nav id="site-menu" aria-label="Main" data-open={open ? "" : undefined} inert={!open}>
+      <nav id="site-menu" aria-label={ui.menu.label} data-open={open ? "" : undefined} inert={!open}>
         <MenuGlass radius={28} className="menu-reveal" />
         <div className="menu-reveal relative flex h-full flex-col justify-between gap-10 px-8 pt-28 pb-12 sm:justify-start sm:gap-12 sm:px-10 sm:pt-28 sm:pb-10">
           <ul className="flex flex-col gap-2 text-6xl leading-[1.05] font-medium tracking-[-0.03em] sm:text-[3.25rem]">
@@ -152,12 +154,13 @@ export default function SiteMenu({ home = "", locale = DEFAULT_LOCALE }: { home?
                 link={link.href.startsWith("#") ? { ...link, href: home + link.href } : link}
                 index={index}
                 onNavigate={() => close(false)}
+                newTab={ui.site.newTab}
               />
             ))}
           </ul>
           <ul className="flex flex-col gap-1.5 text-3xl leading-snug font-medium tracking-[-0.01em] text-ink/80 sm:text-2xl">
             {SOCIALS.map((link, index) => (
-              <RollLink key={link.href} link={link} index={sections.length + index} onNavigate={() => close(false)} />
+              <RollLink key={link.href} link={link} index={sections.length + index} onNavigate={() => close(false)} newTab={ui.site.newTab} />
             ))}
           </ul>
         </div>

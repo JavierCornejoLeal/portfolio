@@ -3,7 +3,7 @@ import Layout from '@/layouts/Layout.astro';
 import { projects, type Project } from '@/data/projects';
 import SiteControls from '@/components/SiteControls.astro';
 import ProjectStory from '@/components/projects/ProjectStory.astro';
-import { stories } from '@/data/stories';
+import { storiesFor } from '@/data/stories';
 import PageFooter from '@/components/PageFooter';
 import { localeParams, localePath, toLocale } from '@/lib/i18n';
 
@@ -22,7 +22,7 @@ export function getStaticPaths() {
 const { project } = Astro.props as { project: Project };
 const locale = toLocale(Astro.params.locale);
 const home = localePath(locale, '/');
-const story = stories[project.slug];
+const story = storiesFor(locale)[project.slug];
 // The next project in the carousel's order; the last one leads back to the first.
 const next = projects[(projects.findIndex((entry) => entry.slug === project.slug) + 1) % projects.length];
 // Letters are numbered across the whole name, so the rise runs left to right through every word.
@@ -63,5 +63,5 @@ const words = project.name.split(' ').map((word) => [...word].map((letter) => ({
 		{story && <ProjectStory project={project} story={story} next={next} locale={locale} />}
 	</main>
 	<!-- The year comes from the visitor's clock, so the footer renders in the browser. -->
-	<PageFooter client:only="react" home={home} />
+	<PageFooter client:only="react" home={home} locale={locale} />
 </Layout>

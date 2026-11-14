@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css';
 import PageLoader from '@/components/PageLoader';
-import { DEFAULT_LOCALE, OG_LOCALES, type Locale } from '@/lib/i18n';
+import { DEFAULT_LOCALE, LOCALES, OG_LOCALES, basePath, localePath, type Locale } from '@/lib/i18n';
+import { uiFor } from '@/data/ui';
 
 interface Props {
 	title?: string;
@@ -17,21 +18,25 @@ interface Props {
 }
 
 const SITE_NAME = 'Javier Cornejo';
-const DEFAULT_DESCRIPTION =
-	'Javier Cornejo, full stack developer. Code you can see through: clear, honest software from database to pixel.';
 
 const {
 	title = SITE_NAME,
-	description = DEFAULT_DESCRIPTION,
-	noindex: noindexPage = false,
+	description,
+	noindex = false,
 	siteLoader = true,
 	revealOnLoad = false,
 	locale = DEFAULT_LOCALE
 } = Astro.props;
-// Pages in another language stay out of search until their copy is translated: their text is still English.
-const noindex = noindexPage || locale !== DEFAULT_LOCALE;
+const ui = uiFor(locale);
+const summary = description ?? ui.site.description;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
+// This same page in every language, for search engines; English is the default for everyone else.
+const page = basePath(Astro.url.pathname);
+const alternates = [
+	...LOCALES.map((option) => ({ hreflang: option, href: new URL(localePath(option, page), Astro.site).href })),
+	{ hreflang: 'x-default', href: new URL(localePath(DEFAULT_LOCALE, page), Astro.site).href }
+];
 const ogImage = new URL('/og-image.png', Astro.site);
 
 const person = {
@@ -89,9 +94,10 @@ const person = {
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
-		<meta name="description" content={description} />
+		<meta name="description" content={summary} />
 		<meta name="author" content={SITE_NAME} />
 		{noindex ? <meta name="robots" content="noindex, follow" /> : <link rel="canonical" href={canonical} />}
+		{!noindex && alternates.map((alternate) => <link rel="alternate" hreflang={alternate.hreflang} href={alternate.href} />)}
 		<meta name="theme-color" content="#070907" />
 		<meta name="color-scheme" content="dark" />
 
@@ -104,17 +110,17 @@ const person = {
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content={SITE_NAME} />
 		<meta property="og:title" content={title} />
-		<meta property="og:description" content={description} />
+		<meta property="og:description" content={summary} />
 		<meta property="og:url" content={canonical} />
 		<meta property="og:image" content={ogImage} />
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
-		<meta property="og:image:alt" content="Javier Cornejo, full stack developer" />
+		<meta property="og:image:alt" content={ui.site.imageAlt} />
 		<meta property="og:locale" content={OG_LOCALES[locale]} />
 
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={title} />
-		<meta name="twitter:description" content={description} />
+		<meta name="twitter:description" content={summary} />
 		<meta name="twitter:image" content={ogImage} />
 
 		{!noindex && <script type="application/ld+json" set:html={JSON.stringify(person)} />}
@@ -125,7 +131,7 @@ const person = {
 				<div aria-hidden="true">
 					<PageLoader client:only="react" />
 				</div>
-				<p class="sr-only" role="status">Loading</p>
+				<p class="sr-only" role="status">{ui.site.loading}</p>
 			</div>
 		)}
 		<slot />
